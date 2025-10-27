@@ -1,0 +1,67 @@
+# Chiltrix Heat Pump - Trigger-Based Sensors
+# These sensors update at specific times or events
+template:
+
+  - trigger:
+    - platform: time
+      at: "23:59:45"
+  - sensor:
+    - name: "Energy Input (max)"
+      unique_id: cx_input_max
+      state: >
+        {{ states('sensor.cx_daily_energy_input') }}
+      state_class: measurement
+      unit_of_measurement: "kWh"
+
+  - trigger:
+    - platform: time
+      at: "23:59:45"
+  - sensor:
+    - name: "Energy Output (max)"
+      unique_id: cx_output_max
+      state: >
+        {{ states('sensor.cx_daily_energy_output') }}
+      state_class: measurement
+      unit_of_measurement: "kWh"
+
+  - trigger:
+    - platform: state
+      entity_id: sensor.cx_cop
+  - sensor:
+    - name: "CX Last Known COP"
+      unique_id: cx_last_known_cop
+      state: >
+        {% set current_cop = trigger.to_state.state %}
+        {% set old_value = this.state if this is not none else 'unknown' %}
+        
+        {% if current_cop not in ['unknown', 'unavailable', 'none'] %}
+          {% set cop_num = current_cop | float(-1) %}
+          {% if cop_num > 0 and cop_num < 10 %}
+            {{ cop_num | round(2) }}
+          {% else %}
+            {{ old_value }}
+          {% endif %}
+        {% else %}
+          {{ old_value }}
+        {% endif %}
+      device_class: power_factor
+      state_class: measurement
+
+  - trigger:
+    - platform: state
+      entity_id: sensor.cx_cop
+      to:
+  - sensor:
+    - name: "CX Last Known COP"
+      unique_id: cx_last_known_cop
+      state_class: measurement
+      state: >-
+        {% if trigger.to_state.state not in ['unknown', 'unavailable'] %}
+          {{ trigger.to_state.state }}
+        {% else %}
+          {{ states('sensor.cx_last_known_cop') }}
+        {% endif %}
+  # ========================================================================
+  # LIFETIME COST TRACKING
+  # ========================================================================
+  # Add lifetime cost tracking sensors below if needed

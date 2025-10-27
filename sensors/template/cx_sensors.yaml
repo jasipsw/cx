@@ -1,0 +1,228 @@
+# Chiltrix Heat Pump - Template Sensors (CORRECTED)
+# Fixed: Power calculation, fan speeds, temperature units
+
+- sensor:
+    # ------------------------------------------------------------------------
+    # Operating Mode (Text Conversion)
+    # ------------------------------------------------------------------------
+
+    - name: "CX Operating Mode"
+      unique_id: cx_operating_mode_text
+      state: >-
+        {% set mode = states('sensor.cx50_operating_mode') | int(0) %}
+        {% if mode == 0 %}Cool
+        {% elif mode == 1 %}Heat
+        {% elif mode == 2 %}DHW
+        {% elif mode == 3 %}Cool + DHW
+        {% elif mode == 4 %}Heat + DHW
+        {% else %}Unknown
+        {% endif %}
+
+    # ------------------------------------------------------------------------
+    # Temperature Delta (ΔT) - CORRECTED
+    # ------------------------------------------------------------------------
+
+    - name: "CX Water Temperature Delta"
+      unique_id: cx_water_temp_delta_celsius
+      unit_of_measurement: "°C"
+      state_class: measurement
+      icon: mdi:delta
+      state: >
+        {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
+        {% set outlet = states('sensor.cx50_outlet_water_temp_c') | float(0) %}
+        {{ (outlet - inlet) | round(2) }}
+
+    # ------------------------------------------------------------------------
+    # Electrical Power Input - CORRECTED (V × I)
+    # ------------------------------------------------------------------------
+
+    - name: "CX Electrical Power Input"
+      unique_id: cx_electrical_power_input
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      icon: mdi:flash
+      state: >
+        {% set voltage = states('sensor.cx50_input_ac_voltage') | float(0) %}
+        {% set current = states('sensor.cx50_input_ac_current') | float(0) %}
+        {{ (voltage * current) | round(0) }}
+      availability: >
+        {{ states('sensor.cx50_input_ac_voltage') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_input_ac_current') not in ['unknown', 'unavailable'] }}
+
+    - name: "CX Electrical Power Input kW"
+      unique_id: cx_electrical_power_input_kw
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      icon: mdi:transmission-tower
+      state: >
+        {% set power = states('sensor.cx_electrical_power_input') | float(0) / 1000 %}
+        {{ power | round(3) }}
+
+    # ------------------------------------------------------------------------
+    # Compressor Speed (Percentage) - CORRECTED
+    # ------------------------------------------------------------------------
+
+    - name: "CX Compressor Speed"
+      unique_id: cx_compressor_speed_pct
+      unit_of_measurement: "%"
+      state_class: measurement
+      state: >-
+        {% set freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+        {% set max_freq = 120 %}
+        {{ ((freq / max_freq) * 100) | round(0) }}
+      availability: "{{ states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable'] }}"
+
+    # ------------------------------------------------------------------------
+    # Fan Speed (Average) - CORRECTED (divide by 10 for tenths of percent)
+    # ------------------------------------------------------------------------
+
+    - name: "CX Fan Speed"
+      unique_id: cx_fan_speed_pct
+      unit_of_measurement: "%"
+      state_class: measurement
+      state: >-
+        {% set fan1 = states('sensor.cx50_c45_ec_fan_motor_1_speed') | float(0) %}
+        {% set fan2 = states('sensor.cx50_c46_ec_fan_motor_2_speed') | float(0) %}
+        {# Values are in tenths of percent, so divide by 10 #}
+        {% set avg_speed = ((fan1 + fan2) / 2) / 10 %}
+        {{ avg_speed | round(1) }}
+
+    # ------------------------------------------------------------------------
+    # Thermal Power Output (Q) - CORRECTED
+    # Formula: Q = ṁ × Cp × ΔT
+    # ------------------------------------------------------------------------
+
+    - name: "CX Thermal Power Output"
+      unique_id: cx_thermal_power_output
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      icon: mdi:fire
+      state: >-
+        {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
+        {% set outlet = states('sensor.cx50_outlet_water_temp_c') | float(0) %}
+        {% set flow_lpm = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {% set density = states('input_number.cx_fluid_density') | float(1025) %}
+        {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+
+        {% set delta_t = outlet - inlet %}
+        {% set flow_lps = flow_lpm / 60 %}
+        {% set flow_kgs = (flow_lps * density) / 1000 %}
+        {% set specific_heat_j = specific_heat * 1000 %}
+        {% set thermal_output = flow_kgs * specific_heat_j * delta_t %}
+        {{ thermal_output | round(0) }}
+      availability: >-
+        {{ states('sensor.cx50_inlet_water_temp_c') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_outlet_water_temp_c') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
+
+    - name: "CX Thermal Power Output kW"
+      unique_id: cx_thermal_power_output_kw
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      icon: mdi:lightning-bolt-circle
+      state: >
+        {% set thermal_power = states('sensor.cx_thermal_power_output') | float(0) / 1000 %}
+        {{ thermal_power | round(2) }}
+
+    # ------------------------------------------------------------------------
+    # COP Calculation - CORRECTED (uses calculated electrical power)
+    # Formula: COP = Thermal Power Output / Electrical Power Input
+    # ------------------------------------------------------------------------
+
+    - name: "CX COP"
+      unique_id: cx_cop
+      state_class: measurement
+      icon: mdi:gauge
+      state: >-
+        {% set input_power = states('sensor.cx_electrical_power_input') | float(0) %}
+        {% set output_power = states('sensor.cx_thermal_power_output') | float(0) %}
+        {% if input_power > 100 and output_power > 0 %}
+          {{ (output_power / input_power) | round(2) }}
+        {% else %}
+          unavailable
+        {% endif %}
+      availability: >-
+        {% set input_power = states('sensor.cx_electrical_power_input') | float(0) %}
+        {{ input_power > 100 }}
+
+    # ------------------------------------------------------------------------
+    # COP by Operating Mode
+    # ------------------------------------------------------------------------
+
+    - name: "CX COP Heating"
+      unique_id: cx_cop_heating
+      state_class: measurement
+      icon: mdi:fire
+      state: >
+        {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
+        {% set cop = states('sensor.cx_cop') %}
+        {% if operating_state == 2 and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+
+    - name: "CX COP Cooling"
+      unique_id: cx_cop_cooling
+      state_class: measurement
+      icon: mdi:snowflake
+      state: >
+        {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
+        {% set cop = states('sensor.cx_cop') %}
+        {% if operating_state == 1 and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+
+    - name: "CX COP DHW"
+      unique_id: cx_cop_dhw
+      state_class: measurement
+      icon: mdi:water-boiler
+      state: >
+        {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
+        {% set cop = states('sensor.cx_cop') %}
+        {% if operating_state == 4 and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+
+    # ------------------------------------------------------------------------
+    # Efficiency Rating (Human-readable)
+    # ------------------------------------------------------------------------
+
+    - name: "CX Efficiency Rating"
+      unique_id: cx_efficiency_rating
+      state: >
+        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% if cop >= 4.5 %}
+          Excellent
+        {% elif cop >= 3.5 %}
+          Very Good
+        {% elif cop >= 2.5 %}
+          Good
+        {% elif cop >= 1.5 %}
+          Fair
+        {% elif cop > 0 %}
+          Poor
+        {% else %}
+          Unknown
+        {% endif %}
+      icon: >
+        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% if cop >= 4.5 %}
+          mdi:star-circle
+        {% elif cop >= 3.5 %}
+          mdi:star
+        {% elif cop >= 2.5 %}
+          mdi:thumb-up
+        {% elif cop >= 1.5 %}
+          mdi:minus-circle
+        {% else %}
+          mdi:alert-circle
+        {% endif %}

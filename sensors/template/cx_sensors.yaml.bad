@@ -1,0 +1,138 @@
+# Chiltrix CX50 Template Sensors - FIXED for !include_dir_merge_list
+# Temperature conversions, COP calculations, and system monitoring
+
+# ==========================================
+# TEMPERATURE SENSORS (Celsius)
+# ==========================================
+
+- sensor:
+    - name: "CX Inlet Water Temp"
+      unique_id: cx_inlet_water_temp_c
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      state: "{{ states('sensor.cx50_inlet_water_temp_c') | float(0) }}"
+      availability: "{{ states('sensor.cx50_inlet_water_temp_c') not in ['unknown', 'unavailable'] }}"
+
+    - name: "CX Outlet Water Temp"
+      unique_id: cx_outlet_water_temp_c
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      state: "{{ states('sensor.cx50_outlet_water_temp_degc') | float(0) }}"
+      availability: "{{ states('sensor.cx50_outlet_water_temp_degc') not in ['unknown', 'unavailable'] }}"
+
+    - name: "CX Ambient Temp"
+      unique_id: cx_ambient_temp_c
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      state: "{{ states('sensor.cx50_ambient_temp_c') | float(0) }}"
+      availability: "{{ states('sensor.cx50_ambient_temp_c') not in ['unknown', 'unavailable'] }}"
+
+    - name: "CX DHW Setpoint"
+      unique_id: cx_dhw_setpoint_c
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state: "{{ states('sensor.cx50_dhw_target_temp_c') | float(0) }}"
+      availability: "{{ states('sensor.cx50_dhw_target_temp_c') not in ['unknown', 'unavailable'] }}"
+
+    # ==========================================
+    # OPERATING MODE TEXT
+    # ==========================================
+
+    - name: "CX Operating Mode"
+      unique_id: cx_operating_mode_text
+      state: >-
+        {% set mode = states('sensor.cx50_operating_mode') | int(0) %}
+        {% if mode == 0 %}Off
+        {% elif mode == 1 %}Cool
+        {% elif mode == 2 %}Heat
+        {% elif mode == 3 %}Auto
+        {% elif mode == 4 %}DHW
+        {% elif mode == 5 %}Cool + DHW
+        {% elif mode == 6 %}Heat + DHW
+        {% else %}Unknown
+        {% endif %}
+
+    # ==========================================
+    # POWER AND FLOW SENSORS
+    # ==========================================
+
+    - name: "CX Current Power"
+      unique_id: cx_current_power_w
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: "{{ states('sensor.cx50_compressor_current_value_p15') | float(0) }}"
+      availability: "{{ states('sensor.cx50_compressor_current_value_p15') not in ['unknown', 'unavailable'] }}"
+
+    - name: "CX Flow Rate"
+      unique_id: cx_flow_rate_lpm
+      unit_of_measurement: "L/M"
+      state_class: measurement
+      state: "{{ states('sensor.cx50_pump_flow_lpm') | float(0) }}"
+      availability: "{{ states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}"
+
+    - name: "CX Compressor Speed"
+      unique_id: cx_compressor_speed_pct
+      unit_of_measurement: "%"
+      state_class: measurement
+      state: >-
+        {% set freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+        {% set max_freq = 120 %}
+        {{ ((freq / max_freq) * 100) | round(0) }}
+      availability: "{{ states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable'] }}"
+
+    - name: "CX Fan Speed"
+      unique_id: cx_fan_speed_pct
+      unit_of_measurement: "%"
+      state_class: measurement
+      state: >-
+        {% set fan1 = states('sensor.cx50_c45_ec_fan_motor_1_speed') | float(0) %}
+        {% set fan2 = states('sensor.cx50_c46_ec_fan_motor_2_speed') | float(0) %}
+        {% set max_speed = 100 %}
+        {{ (((fan1 + fan2) / 2 / max_speed) * 100) | round(0) }}
+
+    # ==========================================
+    # THERMAL OUTPUT POWER CALCULATION
+    # ==========================================
+
+    - name: "CX Output Power"
+      unique_id: cx_output_power_w
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >-
+        {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
+        {% set outlet = states('sensor.cx50_outlet_water_temp_degc') | float(0) %}
+        {% set flow_lpm = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {% set delta_t = outlet - inlet %}
+        {% set flow_lps = flow_lpm / 60 %}
+        {% set specific_heat = 4186 %}
+        {% set thermal_output = flow_lps * specific_heat * delta_t %}
+        {{ thermal_output | round(0) }}
+      availability: >-
+        {{ states('sensor.cx50_inlet_water_temp_c') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_outlet_water_temp_degc') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
+
+    # ==========================================
+    # COP CALCULATION (with availability template)
+    # ==========================================
+
+    - name: "CX COP"
+      unique_id: cx_cop
+      state_class: measurement
+      state: >-
+        {% set input_power = states('sensor.cx50_compressor_current_value_p15') | float(0) %}
+        {% set output_power = states('sensor.cx_output_power_w') | float(0) %}
+        {% if input_power > 100 and output_power > 0 %}
+          {{ (output_power / input_power) | round(2) }}
+        {% else %}
+          unavailable
+        {% endif %}
+      availability: >-
+        {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+        {% set input_power = states('sensor.cx50_compressor_current_value_p15') | float(0) %}
+        {{ compressor_freq > 10 and input_power > 100 }}
