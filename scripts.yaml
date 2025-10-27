@@ -1,0 +1,299 @@
+wtw_preset_0:
+  alias: Comfoairq stand 0
+  icon: mdi:fan-auto
+  sequence:
+    - service: fan.turn_off
+      target:
+        entity_id: fan.comfoairq
+
+wtw_preset_1:
+  alias: Comfoairq stand 1
+  icon: mdi:fan-speed-1
+  sequence:
+    - service: fan.set_percentage
+      target:
+        entity_id: fan.comfoairq
+      data:
+        percentage: 33
+
+wtw_preset_2:
+  alias: Comfoairq stand 2
+  icon: mdi:fan-speed-2
+  sequence:
+    - service: fan.set_percentage
+      target:
+        entity_id: fan.comfoairq
+      data:
+        percentage: 66
+
+wtw_preset_3:
+  alias: Comfoairq stand 3
+  icon: mdi:fan-speed-3
+  sequence:
+    - service: fan.set_percentage
+      target:
+        entity_id: fan.comfoairq
+      data:
+        percentage: 100
+
+# Chiltrix Heat Pump - Helper Scripts and Automations
+# Add to configuration.yaml:
+# script: !include automation_scripts.yaml
+
+# ============================================================================
+# MODE CONTROL SCRIPTS
+# ============================================================================
+
+cx_set_heating:
+  alias: "Chiltrix - Set Heating Mode"
+  sequence:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.cx_climate_control
+      data:
+        hvac_mode: heat
+    - service: notify.persistent_notification
+      data:
+        title: "Heat Pump Mode Changed"
+        message: "Switched to Heating Mode"
+
+cx_set_cooling:
+  alias: "Chiltrix - Set Cooling Mode"
+  sequence:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.cx_climate_control
+      data:
+        hvac_mode: cool
+    - service: notify.persistent_notification
+      data:
+        title: "Heat Pump Mode Changed"
+        message: "Switched to Cooling Mode"
+
+cx_set_dhw:
+  alias: "Chiltrix - Set DHW Mode"
+  sequence:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.cx_dhw_priority_control
+    - service: notify.persistent_notification
+      data:
+        title: "Heat Pump Mode Changed"
+        message: "DHW Priority Mode Enabled"
+
+cx_set_auto:
+  alias: "Chiltrix - Set Auto Mode"
+  sequence:
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.cx_climate_control
+      data:
+        hvac_mode: auto
+    - service: notify.persistent_notification
+      data:
+        title: "Heat Pump Mode Changed"
+        message: "Switched to Auto Mode"
+
+# ============================================================================
+# PRESET MODE SCRIPTS
+# ============================================================================
+
+cx_eco_mode:
+  alias: "Chiltrix - Eco Mode"
+  sequence:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.cx_climate_control
+      data:
+        temperature: 20 # Lower heating setpoint
+    - service: switch.turn_on
+      target:
+        entity_id: switch.cx_silent_mode_control
+    - service: notify.persistent_notification
+      data:
+        title: "Eco Mode Activated"
+        message: "Temperature reduced, silent mode enabled"
+
+cx_comfort_mode:
+  alias: "Chiltrix - Comfort Mode"
+  sequence:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.cx_climate_control
+      data:
+        temperature: 22 # Comfortable heating setpoint
+    - service: switch.turn_off
+      target:
+        entity_id: switch.cx_silent_mode_control
+    - service: notify.persistent_notification
+      data:
+        title: "Comfort Mode Activated"
+        message: "Temperature set to 22°C, normal operation"
+
+cx_boost_mode:
+  alias: "Chiltrix - Boost Mode"
+  sequence:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.cx_climate_control
+      data:
+        temperature: 25 # Higher heating setpoint
+    - service: switch.turn_off
+      target:
+        entity_id: switch.cx_silent_mode_control
+    - service: notify.persistent_notification
+      data:
+        title: "Boost Mode Activated"
+        message: "Maximum heating performance"
+
+# ============================================================================
+# SYSTEM MAINTENANCE SCRIPTS
+# ============================================================================
+
+cx_power_cycle:
+  alias: "Chiltrix - Power Cycle System"
+  sequence:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.cx_power
+    - delay:
+        seconds: 10
+    - service: switch.turn_on
+      target:
+        entity_id: switch.cx_power
+    - service: notify.persistent_notification
+      data:
+        title: "System Power Cycled"
+        message: "Heat pump restarted - allow 2 minutes for initialization"
+# ============================================================================
+# SMART AUTOMATIONS
+# ============================================================================
+# Add to automations.yaml or create via UI
+
+# Example: Auto switch to Eco mode during peak electricity hours
+# automation:
+#   - alias: "Chiltrix - Auto Eco During Peak Hours"
+#     trigger:
+#       - platform: time
+#         at: "16:00:00"  # Peak hours start
+#     condition:
+#       - condition: state
+#         entity_id: sensor.cx_current_time_period
+#         state: "Peak"
+#     action:
+#       - service: script.cx_eco_mode
+#
+#   - alias: "Chiltrix - Resume Normal After Peak"
+#     trigger:
+#       - platform: time
+#         at: "21:00:00"  # Peak hours end
+#     action:
+#       - service: script.cx_comfort_mode
+
+# Example: Alert on high COP (excellent performance)
+#   - alias: "Chiltrix - Excellent Performance Alert"
+#     trigger:
+#       - platform: numeric_state
+#         entity_id: sensor.cx_cop
+#         above: 4.5
+#         for:
+#           minutes: 30
+#     action:
+#       - service: notify.mobile_app
+#         data:
+#           title: "🌟 Excellent Performance!"
+#           message: "Heat pump COP is {{ states('sensor.cx_cop') }} - running very efficiently!"
+
+# Example: Alert on error
+#   - alias: "Chiltrix - Error Alert"
+#     trigger:
+#       - platform: state
+#         entity_id: binary_sensor.cx_error_status
+#         to: 'on'
+#     action:
+#       - service: notify.mobile_app
+#         data:
+#           title: "⚠️ Heat Pump Error"
+#           message: "Error Code: {{ states('sensor.cx_error_code') }}"
+#           data:
+#             priority: high
+#             ttl: 0
+
+# Example: Defrost notification
+#   - alias: "Chiltrix - Defrost Cycle Started"
+#     trigger:
+#       - platform: state
+#         entity_id: binary_sensor.cx_defrost_active
+#         to: 'on'
+#     action:
+#       - service: notify.persistent_notification
+#         data:
+#           title: "Defrost Cycle"
+#           message: "Heat pump has entered defrost mode - temporary performance reduction"
+
+# Example: Daily cost summary
+#   - alias: "Chiltrix - Daily Cost Summary"
+#     trigger:
+#       - platform: time
+#         at: "23:00:00"
+#     action:
+#       - service: notify.mobile_app
+#         data:
+#           title: "💰 Daily Heat Pump Summary"
+#           message: |
+#             Today's Cost: ${{ states('sensor.cx_estimated_daily_cost') }}
+#             Avg COP: {{ states('sensor.cx_cop_avg_daily') }}
+#             Runtime: {{ (states('sensor.cx_run_hours')|float * 24)|round(1) }}h
+#             Savings vs Gas: ${{ (states('sensor.cx_savings_vs_gas')|float * 8)|round(2) }}
+
+# Example: Weather-based mode switching
+#   - alias: "Chiltrix - Auto Mode Based on Weather"
+#     trigger:
+#       - platform: numeric_state
+#         entity_id: weather.home
+#         attribute: temperature
+#         below: 10
+#     action:
+#       - service: script.cx_set_heating
+#
+#   - alias: "Chiltrix - Cooling When Hot"
+#     trigger:
+#       - platform: numeric_state
+#         entity_id: weather.home
+#         attribute: temperature
+#         above: 25
+#     action:
+#       - service: script.cx_set_cooling
+
+# Example: Optimize for TOU rates
+#   - alias: "Chiltrix - Preheat Before Peak Hours"
+#     trigger:
+#       - platform: time
+#         at: "15:00:00"  # 1 hour before peak
+#     condition:
+#       - condition: state
+#         entity_id: binary_sensor.cx_heating_mode
+#         state: 'on'
+#     action:
+#       - service: script.cx_boost_mode  # Boost before expensive peak hours
+#       - delay:
+#           minutes: 45
+#       - service: script.cx_eco_mode  # Reduce during peak
+
+# Example: Maintenance reminder
+#   - alias: "Chiltrix - Maintenance Reminder"
+#     trigger:
+#       - platform: numeric_state
+#         entity_id: sensor.cx_run_hours
+#         above: 1000  # Every 1000 hours
+#     action:
+#       - service: notify.persistent_notification
+#         data:
+#           title: "🔧 Maintenance Due"
+#           message: |
+#             Your heat pump has run for {{ states('sensor.cx_run_hours') }} hours.
+#             Recommended actions:
+#             - Check air filters
+#             - Inspect outdoor unit
+#             - Check refrigerant levels
+#             - Clean coils

@@ -1,0 +1,55 @@
+# Home Assistant Configuration
+# Reorganized for better maintainability
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Core includes
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+modbus: !include modbus.yaml
+
+# TLS with letsencrypt add-on
+http:
+  server_port: 443
+  ssl_certificate: /ssl/fullchain.pem
+  ssl_key: /ssl/privkey.pem
+
+# Logging configuration
+logger:
+  default: info
+  logs:
+    custom_components.hbx_sensorlinx: debug
+    homeassistant.components.modbus: debug
+    pymodbus: debug
+
+sensor: !include sensors/power_grid_sensors.yaml
+
+template: !include_dir_merge_list sensors/template/
+
+# Helper entities
+input_number: !include helpers/input_number.yaml
+input_select: !include helpers/input_select.yaml
+input_boolean: !include helpers/input_boolean.yaml
+
+
+lovelace:
+  dashboards:
+    cx-diagnostic: 
+      mode: yaml
+      title: CX Diagnostic
+      icon: mdi:bug
+      show_in_sidebar: true
+      filename: dashboards/dashboard_diagnostic.yaml
+
+    cx-modbus: 
+      mode: yaml
+      title: CX Modbus
+      icon: mdi:bug
+      show_in_sidebar: true
+      filename: dashboards/dashboard_modbus.yaml

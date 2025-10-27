@@ -1,0 +1,156 @@
+- id: '1731981239266'
+  name: Backyard  Off
+  entities:
+    light.backyard_west:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Backyard West
+      supported_features: 0
+      state: 'off'
+    light.backyard_east:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Backyard East
+      supported_features: 0
+      state: 'off'
+    light.patio_family_room_recessed:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Patio Family Room Recessed
+      supported_features: 0
+      state: 'off'
+    light.patio_recessed_office:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Patio Recessed Office
+      supported_features: 0
+      state: 'off'
+    light.patio_recessed_bedroom:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Patio Recessed Bedroom
+      supported_features: 0
+      state: 'off'
+    light.deck_sconce:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Deck Sconce
+      supported_features: 0
+      state: 'off'
+  metadata:
+    light.backyard_west:
+      entity_only: true
+    light.backyard_east:
+      entity_only: true
+    light.patio_family_room_recessed:
+      entity_only: true
+    light.patio_recessed_office:
+      entity_only: true
+    light.patio_recessed_bedroom:
+      entity_only: true
+    light.deck_sconce:
+      entity_only: true
+- id: '1731982548885'
+  name: Backyard On
+  entities: {}
+  metadata: {}
+- id: '1734919693023'
+  name: Permiter
+  entities:
+    light.driveway_sconce:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Driveway Sconce
+      supported_features: 0
+      state: 'off'
+    update.driveway_sconce:
+      auto_update: false
+      display_precision: 0
+      installed_version: 2.1.25
+      in_progress: false
+      latest_version: 2.1.25
+      release_summary:
+      release_url:
+      skipped_version:
+      title:
+      update_percentage:
+      device_class: firmware
+      friendly_name: Driveway Sconce
+      supported_features: 23
+      state: 'off'
+    button.driveway_sconce_identify:
+      device_class: identify
+      friendly_name: Driveway Sconce Identify
+      state: unknown
+    number.driveway_sconce_on_level:
+      min: 0
+      max: 255
+      step: 1
+      mode: box
+      friendly_name: Driveway Sconce On level
+      state: '255'
+    number.driveway_sconce_on_off_transition_time:
+      min: 0
+      max: 65534
+      step: 0.1
+      mode: box
+      unit_of_measurement: s
+      friendly_name: Driveway Sconce On/Off transition time
+      state: '0.0'
+    select.driveway_sconce_power_on_behavior_on_startup:
+      options:
+      - 'on'
+      - 'off'
+      - toggle
+      - previous
+      friendly_name: Driveway Sconce Power-on behavior on startup
+      state: previous
+    light.shed_sconce:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Shed Sconce
+      supported_features: 0
+      state: 'off'
+    light.cavern_sconce:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Cavern Sconce
+      supported_features: 0
+      state: 'off'
+    light.patio_bedroom:
+      supported_color_modes:
+      - onoff
+      friendly_name: Patio Bedroom
+      supported_features: 0
+      state: unavailable
+    light.patio_family_room:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Patio Family Room
+      supported_features: 0
+      state: 'off'
+    light.patio_office:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Patio Office
+      supported_features: 0
+      state: 'off'
+    light.front_porch_wall:
+      supported_color_modes:
+      - onoff
+      color_mode:
+      friendly_name: Front Porch Wall
+      supported_features: 0
+      state: 'off'
+  metadata: {}

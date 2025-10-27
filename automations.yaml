@@ -1,0 +1,346 @@
+- id: '1720885682891'
+  alias: Unlock Doors In The Morning
+  description: Unlock Doors In The Morning
+  triggers:
+  - at: 05:55:00
+    trigger: time
+  conditions: []
+  actions:
+  - metadata: {}
+    data:
+      code: '22594059'
+    target:
+      device_id:
+      - 587b37bf0f53a2f77c480ce504688a13
+      entity_id:
+      - lock.workshop_double_door
+      - lock.my_door
+    action: lock.unlock
+  - data:
+      message: Morning Door Unlock automation has run
+      title: Morning Door Unlock automation has run
+    action: notify.mobile_app_pixel_8_pro
+  mode: single
+- id: '1720885979266'
+  alias: Evening Door Lock
+  description: ''
+  triggers:
+  - at: '19:00:00'
+    trigger: time
+  conditions: []
+  actions:
+  - metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - lock.my_door
+      - lock.workshop_double_door
+      - lock.front_door
+      device_id: 7d153866c0b2b32b60b33f3227e3685f
+    action: lock.lock
+  - metadata: {}
+    data:
+      message: Evening Door Lock automation has run
+      title: Evening Door Lock automation has run
+    action: notify.mobile_app_pixel_8_pro
+  mode: single
+- id: '1721126838040'
+  alias: 'Home automation '
+  description: ''
+  triggers:
+  - device_id: 5fb9f37038b9ead0a180e3a147474dae
+    domain: device_tracker
+    entity_id: b0b8141d2569cde5cfb79cccb180ef09
+    type: enters
+    zone: zone.home
+    trigger: device
+  - device_id: 5fb9f37038b9ead0a180e3a147474dae
+    domain: device_tracker
+    entity_id: b0b8141d2569cde5cfb79cccb180ef09
+    type: leaves
+    zone: zone.home
+    trigger: device
+  - trigger: zone
+    entity_id: device_tracker.lgs4_a5_256_apr2024
+    zone: zone.home
+    event: enter
+  conditions: []
+  actions:
+  - metadata: {}
+    data:
+      title: Jeff home
+      message: Someone is transitioned zone home
+    action: notify.mobile_app_pixel_8_pro
+  mode: single
+- id: '1721127753249'
+  alias: Jeff zone notify
+  description: ''
+  use_blueprint:
+    path: homeassistant/notify_leaving_zone.yaml
+    input:
+      person_entity: person.jeff
+      zone_entity: zone.home
+      notify_device: 5fb9f37038b9ead0a180e3a147474dae
+- id: '1721127803290'
+  alias: 'Linda zone notify '
+  description: ''
+  use_blueprint:
+    path: homeassistant/notify_leaving_zone.yaml
+    input:
+      person_entity: person.linda
+      zone_entity: zone.home
+      notify_device: 5fb9f37038b9ead0a180e3a147474dae
+- id: '1731116968380'
+  alias: humid turn up fan
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.master_bath_humidity_2
+    above: 65
+  conditions: []
+  actions:
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: Master Bath is Humid
+  mode: single
+- id: '1731347689269'
+  alias: Unlock Doors for Linda
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - person.linda
+    from: not_home
+    to: home
+  conditions: []
+  actions:
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.mudroom
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.front_door
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: Your doors have been unlocked for you
+  mode: single
+- id: '1731366239999'
+  alias: Unlock Doors For Jeff
+  description: ''
+  triggers:
+  - trigger: zone
+    entity_id: person.jeff
+    zone: zone.near_home
+    event: enter
+  conditions: []
+  actions:
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.mudroom
+  - action: lock.unlock
+    metadata: {}
+    data: {}
+    target:
+      entity_id: lock.front_door
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: Welcome Home!  The mudroom and front door  have been unlocked for you
+        :)
+    target:
+      entity_id: person.jeff
+  - action: notify.mobile_app_pixel_8_pro
+    metadata: {}
+    data:
+      message: Welcome Home!  The mudroom and front door  have been unlocked for you
+        :)
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: Welcome Home!  The mudroom and front door  have been unlocked for you
+        :)
+  mode: single
+- id: '1732041097525'
+  alias: Kitchen Light Motion
+  description: ''
+  use_blueprint:
+    path: Blackshome/sensor-light.yaml
+    input:
+      motion_trigger:
+      - binary_sensor.kitchen_lights_sensors
+      light_switch:
+        entity_id:
+        - light.pantry_cabinet
+        - light.kitchen_cabinet
+      time_delay: 20
+      night_lights_conditions: []
+      include_sun: sun_enabled
+      sun_elevation_rising: 3
+- id: '1732060411007'
+  alias: Start kitchen light timer
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.kitchen_lights_sensors
+    to: 'on'
+    from: 'off'
+  conditions: []
+  actions:
+  - action: timer.start
+    metadata: {}
+    data: {}
+    target:
+      entity_id: timer.upstairs_light_timer
+  mode: single
+- id: '1732836109928'
+  alias: Entrance Lights on at Sunset
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 00:15:00
+  conditions: []
+  actions:
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      label_id: entrance_light
+  mode: single
+- id: '1734371418731'
+  alias: Mudroom driveway light turning on turns on  garage light
+  description: ''
+  triggers:
+  - type: turned_on
+    device_id: 6d50f3bb4ef33d4be996932b4fc50626
+    entity_id: e1700c5801168b2766540b3bc4bde8b0
+    domain: light
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 18d461dfd0c26fb71ea7a91e85ca11ab
+    entity_id: 61c07151cfd07658efd6048a07e48c32
+    domain: light
+  - type: turn_on
+    device_id: 83333838aaced608d2e153afd7e5d65f
+    entity_id: 251c90afd8b2c92fbc62d28c52f2a9bd
+    domain: light
+  - type: turn_on
+    device_id: cf14bb166bd0db6bb58a1f86eb7e3a1e
+    entity_id: c501ee27ab7abe50d1f3b33b56a3efdf
+    domain: light
+  mode: single
+- id: '1734371514735'
+  alias: Mudroom driveway light turning off turns off garage light
+  description: ''
+  triggers:
+  - type: turned_off
+    device_id: 6d50f3bb4ef33d4be996932b4fc50626
+    entity_id: e1700c5801168b2766540b3bc4bde8b0
+    domain: light
+    trigger: device
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 18d461dfd0c26fb71ea7a91e85ca11ab
+    entity_id: 61c07151cfd07658efd6048a07e48c32
+    domain: light
+  - type: turn_off
+    device_id: 83333838aaced608d2e153afd7e5d65f
+    entity_id: 251c90afd8b2c92fbc62d28c52f2a9bd
+    domain: light
+  - type: turn_off
+    device_id: cf14bb166bd0db6bb58a1f86eb7e3a1e
+    entity_id: c501ee27ab7abe50d1f3b33b56a3efdf
+    domain: light
+  mode: single
+- id: '1735826596716'
+  alias: Turn off outside lights in the morning
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 00:15:00
+  conditions: []
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      label_id: outside_light
+  mode: single
+- id: '1735828671998'
+  alias: Turn off Outside Lights for the Night
+  description: ''
+  triggers:
+  - trigger: time
+    at: '23:30:00'
+  conditions: []
+  actions:
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      label_id: outside_light
+  mode: single
+- id: '1736962206042'
+  alias: Batteries Fully Charged
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.envoy_202425002148_battery
+    above: 98
+  conditions: []
+  actions:
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: Perhaps lower the reserve setting to store more energy from the sun?
+      title: 50 Clark Batteries are Fully Charged
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: 50 Clark Batteries are Fully Charged
+    enabled: false
+  - action: notify.mobile_app_pixel_8_pro
+    metadata: {}
+    data:
+      title: 50 Clark Batteries are Fully Charged
+    enabled: false
+  mode: single
+- id: '1739892026124'
+  alias: Reset EV Charger Meter
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.garage_ev_charger_watts
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+    below: 1
+  conditions: []
+  actions:
+  - action: utility_meter.reset
+    metadata: {}
+    data: {}
+    target:
+      entity_id: sensor.car_charger
+  - action: notify.mobile_app_google_pixel_watch_2
+    metadata: {}
+    data:
+      message: Charge Complete
+  mode: single
