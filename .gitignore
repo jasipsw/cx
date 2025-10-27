@@ -5,6 +5,8 @@
 !*.yaml
 !.gitignore
 !*.md
+! ./sensors
+| ./dashboards
 
 # Ignore folders.
 .storage

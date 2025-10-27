@@ -1,88 +1,299 @@
-title: CX Diagnostic Dashboard
-views:
-  - title: Modbus
-    cards:
-      - type: markdown
-        title: "📊 CX50-2 Modbus Register Map (IOM Reference)"
-        content: |
-          | Dec | Hex | Type | Sensor Name | Entity ID | Description (IOM) | Value |
-          |-----|-----|------|-------------|-----------|-------------------|-------|
-          | 0 | 0x0000 | Coil | Power Control | `switch.cx50_power` | Power on/off control | {{ states('switch.cx50_power') }} |
-          | 0 | 0x0000 | Bin | Power Status | `binary_sensor.cx50_power_status` | Power status readback | {{ states('binary_sensor.cx50_power_status') }} |
-          | 1 | 0x0001 | Reg | Climate Control | `climate.cx50_climate_control` | Operation mode control | {{ states('climate.cx50_climate_control') }} |
-          | 1 | 0x0001 | Bin | Heating Mode | `binary_sensor.cx50_heating_mode` | Heating mode active | {{ states('binary_sensor.cx50_heating_mode') }} |
-          | 2 | 0x0002 | Bin | Cooling Mode | `binary_sensor.cx50_cooling_mode` | Cooling mode active | {{ states('binary_sensor.cx50_cooling_mode') }} |
-          | 4 | 0x0004 | Bin | DHW Mode Active | `binary_sensor.cx50_dhw_mode_active` | Domestic hot water mode | {{ states('binary_sensor.cx50_dhw_mode_active') }} |
-          | 5 | 0x0005 | Bin | Defrost Active | `binary_sensor.cx50_defrost_active` | Defrost cycle running | {{ states('binary_sensor.cx50_defrost_active') }} |
-          | 6 | 0x0006 | Bin | Pump Enabled | `binary_sensor.cx50_pump_enabled` | Circulation pump status | {{ states('binary_sensor.cx50_pump_enabled') }} |
-          | 202 | 0x00CA | Sens | Inlet Water Temp | `sensor.cx50_inlet_water_temp_c` | **C02** - Water inlet temp (°C×10) | {{ states('sensor.cx50_inlet_water_temp_c') }} °C |
-          | 203 | 0x00CB | Sens | Outlet Water Temp | `sensor.cx50_outlet_water_temp_c` | **C03** - Water outlet temp (°C×10) | {{ states('sensor.cx50_outlet_water_temp_c') }} °C |
-          | 204 | 0x00CC | Sens | Ambient Temp | `sensor.cx50_ambient_temp_c` | **C04** - Ambient temp (°C×10) | {{ states('sensor.cx50_ambient_temp_c') }} °C |
-          | 205 | 0x00CD | Sens | Coil Temp | `sensor.cx50_coil_temp_c` | **C05** - Coil temp (°C×10) | {{ states('sensor.cx50_coil_temp_c') }} °C |
-          | 206 | 0x00CE | Sens | Discharge Temp | `sensor.cx50_discharge_temp_c` | **C06** - Compressor discharge temp (°C×10) | {{ states('sensor.cx50_discharge_temp_c') }} °C |
-          | 207 | 0x00CF | Sens | Suction Temp | `sensor.cx50_suction_temp_c` | **C07** - Suction temp (°C×10) | {{ states('sensor.cx50_suction_temp_c') }} °C |
-          | 209 | 0x00D1 | Sens | Setpoint Temp | `sensor.cx50_setpoint_temp_c` | **C09** - Setpoint temp (°C×10) | {{ states('sensor.cx50_setpoint_temp_c') }} °C |
-          | 213 | 0x00D5 | Sens | DHW Setpoint | `sensor.cx50_dhw_setpoint_c` | **C13** - DHW setpoint (°C×10) | {{ states('sensor.cx50_dhw_setpoint_c') }} °C |
-          | 214 | 0x00D6 | Sens | Antifreeze Temp | `sensor.cx50_antifreeze_temp_c` | **C14** - Antifreeze setpoint (°C×10) | {{ states('sensor.cx50_antifreeze_temp_c') }} °C |
-          | 243 | 0x00F3 | Sens | Operating State | `sensor.cx50_operating_state` | Current operating state (0=Off, 1=Heat, 2=Cool, 3=Auto, 4=DHW, 5=Defrost, 6=Error) | {{ states('sensor.cx50_operating_state') }} |
-          | 244 | 0x00F4 | Sens | Error Code | `sensor.cx50_error_code` | Active error code (0=No Error) | {{ states('sensor.cx50_error_code') }} |
-          | 244 | 0x00F4 | Bin | Error Status | `binary_sensor.cx50_error_status` | Error present flag | {{ states('binary_sensor.cx50_error_status') }} |
-          | 256 | 0x0100 | Sens | Current Power | `sensor.cx50_current_power` | Current power consumption (W) | {{ states('sensor.cx50_current_power') }} W |
-          | 256 | 0x0100 | Sens | Input AC Voltage | `sensor.cx50_input_ac_voltage` | Input AC voltage | {{ states('sensor.cx50_input_ac_voltage') }} V |
-          | 256 | 0x0100 | Sens | Input AC Current | `sensor.cx50_input_ac_current` | Input AC current | {{ states('sensor.cx50_input_ac_current') }} A |
-          | 257 | 0x0101 | Sens | Flow Rate | `sensor.cx50_pump_flow_lpm` | Water flow rate (L/min×10) | {{ states('sensor.cx50_pump_flow_lpm') }} L/min |
-          | 258 | 0x0102 | Sens | Compressor Speed | `sensor.cx50_compressor_speed` | Compressor speed (%) | {{ states('sensor.cx50_compressor_speed') }} % |
-          | 258 | 0x0102 | Sens | Compressor Frequency | `sensor.cx50_compressor_frequency` | Compressor frequency (Hz) | {{ states('sensor.cx50_compressor_frequency') }} Hz |
-          | 259 | 0x0103 | Sens | Fan Speed | `sensor.cx50_fan_speed` | Fan speed (%) | {{ states('sensor.cx50_fan_speed') }} % |
-          | 259 | 0x0103 | Sens | Fan Motor 1 Speed | `sensor.cx50_c45_ec_fan_motor_1_speed` | EC fan motor 1 speed (%×10) | {{ states('sensor.cx50_c45_ec_fan_motor_1_speed') }} |
-          | 259 | 0x0103 | Sens | Fan Motor 2 Speed | `sensor.cx50_c46_ec_fan_motor_2_speed` | EC fan motor 2 speed (%×10) | {{ states('sensor.cx50_c46_ec_fan_motor_2_speed') }} |
-          | 260 | 0x0104 | Sens | Pump Speed | `sensor.cx50_pump_speed` | Circulation pump speed (%) | {{ states('sensor.cx50_pump_speed') }} % |
-          | 261 | 0x0105 | Sens | System Pressure | `sensor.cx50_system_pressure` | Refrigerant system pressure (bar×10) | {{ states('sensor.cx50_system_pressure') }} bar |
-          | 262 | 0x0106 | Coil | Silent Mode Control | `switch.cx50_silent_mode_control` | Silent mode on/off control | {{ states('switch.cx50_silent_mode_control') }} |
-          | 262 | 0x0106 | Bin | Silent Mode | `binary_sensor.cx50_silent_mode` | Silent mode status | {{ states('binary_sensor.cx50_silent_mode') }} |
-          | 263 | 0x0107 | Coil | DHW Priority Control | `switch.cx50_dhw_priority_control` | DHW priority on/off control | {{ states('switch.cx50_dhw_priority_control') }} |
-          | 263 | 0x0107 | Bin | DHW Priority | `binary_sensor.cx50_dhw_priority` | DHW priority status | {{ states('binary_sensor.cx50_dhw_priority') }} |
-          | 264 | 0x0108 | Sens | Total Run Hours | `sensor.cx50_total_run_hours` | Total compressor runtime (hours, 32-bit) | {{ states('sensor.cx50_total_run_hours') }} h |
-          | 281 | 0x0119 | Sens | Compressor Starts | `sensor.cx50_compressor_starts` | Total compressor start count (32-bit) | {{ states('sensor.cx50_compressor_starts') }} |
-          | 285 | 0x011D | Sens | Defrost Count | `sensor.cx50_defrost_count` | Total defrost cycle count | {{ states('sensor.cx50_defrost_count') }} |
+title: CX MODBUS
+path: yyyy
+type: markdown
+content: >+
+  | Dec | Param | Sensor Name | Entity ID | Description (IOM) | Value |
 
-          ---
+  |-----|-------|-------------|-----------|-------------------|-------|
 
-          ### Register Address Map Overview
+  | **CX P-PARAMETERS** |
 
-          **C-Parameters (Status/Sensor Values - Read-Only)**
-          - **Base Address:** 200 (0xC8)
-          - **Formula:** C-Parameter# = Address - 200
-          - **Purpose:** Real-time status values (temperatures, pressures, etc.)
-          - **From IOM Manual pages 59-60:**
-            - **C00-C01** = Addresses 200-201
-            - **C02** = Address 202 (Water inlet temp)
-            - **C03** = Address 203 (Water outlet temp)
-            - **C04** = Address 204 (Ambient temp)
-            - **C05** = Address 205 (Coil temp)
-            - **C06** = Address 206 (Compressor discharge temp)
-            - **C07** = Address 207 (Suction temp)
-            - **C08** = Address 208
-            - **C09** = Address 209 (Setpoint temp)
-            - **C10-C12** = Addresses 210-212
-            - **C13** = Address 213 (DHW setpoint)
-            - **C14** = Address 214 (Antifreeze setpoint)
-            - **C15-C70** = Addresses 215-270 (additional status values)
+  | 141 | 0x8D | Operating Mode | `sensor.cx50_operating_mode` | Operating mode
+  selection | {{ states('sensor.cx50_operating_mode') }} |
 
-          **P-Parameters (Configuration Settings - Read/Write)**
-          - **Base Address:** Likely 100 (0x64) - **Not currently monitored**
-          - **Formula:** P-Parameter# = Address - 100 (estimated)
-          - **Purpose:** System configuration (operation modes, validation settings, etc.)
-          - **From IOM Manual pages 54-58:** P00-P119 (120 parameters)
-          - **Examples from IOM:**
-            - P00: Power-down recovery function
-            - P03-P10: System validation settings
-            - P08: DHW validation
-            - P15+: Various configuration parameters
-          - **Status Registers (from CX34 analysis):**
-            - Addresses 214-221: P03-P10 status flags (validation states)
+  | 142 | 0x8E | Cooling Target Temp | `sensor.cx50_cooling_target_temp_c` |
+  Cooling target temp (°C×10) | {{ states('sensor.cx50_cooling_target_temp_c')
+  }} °C |
 
-          **Note:** P-Parameter configuration registers (100-219) are not currently being read.
-          To monitor/modify P-Parameters, add sensors/switches for addresses 100-219 to cx_modbus.yaml.
+  | 143 | 0x8F | Heating Target Temp | `sensor.cx50_heating_target_temp_c` |
+  Heating target temp (°C×10) | {{ states('sensor.cx50_heating_target_temp_c')
+  }} °C |
 
-          **Legend:** Sens=Sensor (read-only), Bin=Binary Sensor (read-only), Coil=Switch (read/write), Reg=Register (read/write)
+  | 144 | 0x90 | DHW Target Temp | `sensor.cx50_dhw_target_temp_c` | DHW target
+  temp (°C×10) | {{ states('sensor.cx50_dhw_target_temp_c') }} °C |
+
+  | 159 | P59 |  Antifreeze Temp | `sensor.cx_antifreeze_temperature` | **P59**
+  - Antifreeze setpoint (°C×10) | {{ states('sensor.cx_antifreeze_temperature')
+  }} °C |
+
+  | 227 | P27 |  Max speed of compressor % | `sensor.cx50_copressor_max_percent`
+  | **P27** Max speed of compressor %55~100% | {{
+  states('sensor.cx50_copressor_max_percent') }} Hz |
+
+  | **CX C-PARAMETERS** |
+
+  | 200 | C00 |  Water Inlet Temp | `sensor.cx50_c00_c` | **C00** - Water inlet
+  temp (°C×10) | {{ states('sensor.cx50_c00_c') }} °C |
+
+  | 201 | C01 |  Compressor Discharge | `sensor.cx50_c01_c` | **C01** -
+  Compressor discharge temp (ain1) (°C×10) | {{ states('sensor.cx50_c01_c') }}
+  °C |
+
+  | 202 | C02 |  Water Inlet Temp | `sensor.cx_water_inlet_temperature` |
+  **C02** - Water inlet temp (°C×10) | {{
+  states('sensor.cx_water_inlet_temperature') }} °C |
+
+  | 202 | C02 |  CX50 C02 | `sensor.cx50_c02_c` | **C02** - Water inlet temp
+  (°C×10) | {{ states('sensor.cx50_c02_c') }} °C |
+
+  | 203 | C03 |  Water Outlet Temp | `sensor.cx_water_outlet_temperature` |
+  **C03** - Water outlet temp (°C×10) | {{
+  states('sensor.cx_water_outlet_temperature') }} °C |
+
+  | 203 | C03 |  CX50 C03 | `sensor.cx50_c03_c` | **C03** - Water outlet temp
+  (°C×10) | {{ states('sensor.cx50_c03_c') }} °C |
+
+  | 204 | C04 |  Ambient Temp | `sensor.cx_ambient_temperature` | **C04** -
+  Ambient temp (°C×10) | {{ states('sensor.cx_ambient_temperature') }} °C |
+
+  | 204 | C04 |  CX50 C04 | `sensor.cx50_c04_c` | **C04** - Ambient temp (°C×10)
+  | {{ states('sensor.cx50_c04_c') }} °C |
+
+  | 205 | C05 |  Coil Temp | `sensor.cx_coil_temperature` | **C05** - Coil temp
+  (°C×10) | {{ states('sensor.cx_coil_temperature') }} °C |
+
+  | 205 | C05 |  CX50 Outlet Water | `sensor.cx50_outlet_water_temp_c` | **C05**
+  - Coil/outlet temp (°C×10) | {{ states('sensor.cx50_outlet_water_temp_c') }}
+  °C |
+
+  | 206 | C06 |  Discharge Temp | `sensor.cx_discharge_temperature` | **C06** -
+  Compressor discharge temp (°C×10) | {{
+  states('sensor.cx_discharge_temperature') }} °C |
+
+  | 206 | C06 |  CX50 C06 | `sensor.cx50_c06_c` | **C06** - Compressor discharge
+  temp (°C×10) | {{ states('sensor.cx50_c06_c') }} °C |
+
+  | 207 | C07 |  Suction Temp | `sensor.cx_suction_temperature` | **C07** -
+  Suction temp (°C×10) | {{ states('sensor.cx_suction_temperature') }} °C |
+
+  | 209 | C09 |  Setpoint Temp | `sensor.cx_setpoint_temperature` | **C09** -
+  Setpoint temp (°C×10) | {{ states('sensor.cx_setpoint_temperature') }} °C |
+
+  | 209 | C09 |  CX50 C09 | `sensor.cx50_c09` | **C09** - Setpoint temp (°C×10)
+  | {{ states('sensor.cx50_c09') }} |
+
+  | 213 | C13 |  Flow Rate LPM | `sensor.cx50_pump_flow_lpm` | Water flow rate
+  (L/min×10) | {{ states('sensor.cx50_pump_flow_lpm') }} L/min |
+
+  | 213 | C13 |  Flow Rate GPM | `sensor.cx50_pump_flow_gpm` | Water flow rate
+  (gal/min) | {{ states('sensor.cx50_pump_flow_gpm') }} gal/min |
+
+  | 214 | C14 |  P03 Status | `sensor.cx50_c14` | **C14** - Antifreeze setpoint
+  (°C×10) | {{ states('sensor.cx50_c14') }} |
+
+  | 215 | C15 |  P04 Status | `sensor.cx50_c15` | **C15** - 1 Air source；0
+  Ground Source | {{ states('sensor.cx50_c15') }} |
+
+  | 216 | C16 |  P05 Status | `sensor.cx50_c16` | **C16** - AC heating temp
+  control method  | {{ states('sensor.cx50_c16') }} |
+
+  | 217 | C17 |  P06 Status | `sensor.cx50_c17` | **C17** - Defrost method | {{
+  states('sensor.cx50_c17') }} |
+
+  | 218 | C18 |  P07 Status | `sensor.cx50_c18` | **C18** - Free cooling:0
+  valid, 1,invalid | {{ states('sensor.cx50_c18') }} |
+
+  | 219 | C19 |  P08 Status | `sensor.cx50_c19` | **C19** - 0 DHW valid；1 DHW
+  invalid | {{ states('sensor.cx50_c19') }} |
+
+  | 220 | C20 |  P09 Status | `sensor.cx50_c20` | **C20** - 0 Cooling valid； ； 1
+  Cooling  invalid | {{ states('sensor.cx50_c20') }} |
+
+  | 221 | C21 |  P10 Status | `sensor.cx50_c21` | **C21** - AC heating valid； 0:
+  valid 1:  invalid | {{ states('sensor.cx50_c21') }} |
+
+  | 222 | C22 |  high pressure switch status | `sensor.cx50_c22` | **C22** -
+  1（on）；0（off） | {{ states('sensor.cx50_c22') }} |
+
+  | 223 | C23 |  low pressure switch status | `sensor.cx50_c23` | **C23** -
+  1（on）；0（off） | {{ states('sensor.cx50_c23') }} |
+
+  | 224 | C24 |  inner water flow switch | `sensor.cx50_c24` | **C24** -
+  1（on）；0（off） | {{ states('sensor.cx50_c24') }} |
+
+  | 225 | C25 |  CX50 C25 | `sensor.cx50_c25` | **C25** - 1（on）；0（off） | {{
+  states('sensor.cx50_c25') }} |
+
+  | 226 | C26 |  CX50 C26 | `sensor.cx50_c26` | **C26** - Status value | {{
+  states('sensor.cx50_c26') }} |
+
+  | 228 | C28 |  CX50 C28 | `sensor.cx50_c28` | **C28** - Status value | {{
+  states('sensor.cx50_c28') }} |
+
+  | 229 | C29 |  CX50 C29 | `sensor.cx50_c29` | **C29** - Status value | {{
+  states('sensor.cx50_c29') }} |
+
+  | 230 | C30 |  CX50 C30 | `sensor.cx50_c30` | **C30** - Status value | {{
+  states('sensor.cx50_c30') }} |
+
+  | 231 | C31 |  CX50 C31 | `sensor.cx50_c31` | **C31** - Status value | {{
+  states('sensor.cx50_c31') }} |
+
+  | 232 | C32 |  CX50 C32 | `sensor.cx50_c32` | **C32** - Status value | {{
+  states('sensor.cx50_c32') }} |
+
+  | 233 | C33 |  CX50 C33 | `sensor.cx50_c33` | **C33** - Status value | {{
+  states('sensor.cx50_c33') }} |
+
+  | 234 | C34 |  CX50 C34 | `sensor.cx50_c34` | **C34** - Status value | {{
+  states('sensor.cx50_c34') }} |
+
+  | 235 | C35 |  CX50 C35 | `sensor.cx50_c35` | **C35** - Status value | {{
+  states('sensor.cx50_c35') }} |
+
+  | 236 | C36 |  CX50 C36 | `sensor.cx50_c36` | **C36** - Status value | {{
+  states('sensor.cx50_c36') }} |
+
+  | 237 | C37 |  CX50 C37 | `sensor.cx50_c37` | **C37** - Status value | {{
+  states('sensor.cx50_c37') }} |
+
+  | 238 | C38 |  CX50 C38 | `sensor.cx50_c38` | **C38** - Status value | {{
+  states('sensor.cx50_c38') }} |
+
+  | 239 | C39 |  CX50 C39 | `sensor.cx50_c39` | **C39** - Status value | {{
+  states('sensor.cx50_c39') }} |
+
+  | 240 | C40 |  CX50 C40 | `sensor.cx50_c40` | **C40** - Status value | {{
+  states('sensor.cx50_c40') }} |
+
+  | 241 | C41 |  CX50 C41 | `sensor.cx50_c41_c` | **C41** - Temperature (°C×10)
+  | {{ states('sensor.cx50_c41_c') }} °C |
+
+  | 242 | C42 |  CX50 C42 | `sensor.cx50_c42_c` | **C42** - Temperature (°C×10)
+  | {{ states('sensor.cx50_c42_c') }} °C |
+
+  | 243 | C43 |  CX50 C43 | `sensor.cx50_c43` | **C43** - Running returning
+  lubrication oil function (1：On； 0： Off) | {{ states('sensor.cx50_c43') }} |
+
+  | 244 | C44 |  CX50 C44 Fan Type | `sensor.cx50_c44_fan_type` | **C44** - Fan
+  type (fan type 0：AC fan；1：EC fan) | {{ states('sensor.cx50_c44_fan_type') }} |
+
+  | 245 | C45 |  EC Fan Motor 1 Speed | `sensor.cx50_c45_ec_fan_motor_1_speed` |
+  **C45** - EC fan motor 1 speed (EC fan motor 1 speed 0~3000) | {{
+  states('sensor.cx50_c45_ec_fan_motor_1_speed') }} % |
+
+  | 246 | C46 |  EC Fan Motor 2 Speed | `sensor.cx50_c46_ec_fan_motor_2_speed` |
+  **C46** - EC fan motor 2 speed (EC fan motor 1 speed 0~3000) | {{
+  states('sensor.cx50_c46_ec_fan_motor_2_speed') }} % |
+
+  | 247 | C47 |  Manual Speed of the c4 water pump | `sensor.cx50_c47` | **C47**
+  - Manual Speed of the c4 water pump (0：AC WATER PUMP；1：EC WATER PUMP)  | {{
+  states('sensor.cx50_c47') }} % |
+
+  | 248 | C48 |  water pump1 speed | `sensor.cx50_c48` | **C48** - water pump1
+  speed 1~10 (10 means 100%)| {{ states('sensor.cx50_c48') }} % |
+
+  | 249 | C49 |  water pump2 speed | `sensor.cx50_c49` | **C49** - water pump1
+  speed 1~10 (10 means 100%) | {{ states('sensor.cx50_c49') }} % |
+
+  | 255 | C55 |  Input AC Voltage | `sensor.cx50_input_ac_voltage` | Input AC
+  voltage (V) | {{ states('sensor.cx50_input_ac_voltage') }} V |
+
+  | 256 | C56 |  Current Power | `sensor.cx_current_power` | Current power
+  consumption (W) | {{ states('sensor.cx_current_power') }} W |
+
+  | 256 | C56 |  Input AC Current | `sensor.cx50_input_ac_current` | Input AC
+  current (A×10) | {{ states('sensor.cx50_input_ac_current') }} A |
+
+  | 257 | C57 |  Compressor Phase Current |
+  `sensor.cx50_compressor_phase_current` | Compressor phase current (A×10) | {{
+  states('sensor.cx50_compressor_phase_current') }} A |
+
+  | 258 | C58 |  Bus Line Voltage | `sensor.cx50_bus_line_voltage` | DC bus
+  voltage (V) | {{ states('sensor.cx50_bus_line_voltage') }} V |
+
+  | 259 | C59 |  Fan shutdown Code | `sensor.cx50_c59` | **C59** Hexadecimal
+  values| {{ states('sensor.cx50_c59') }} % |
+
+  | 260 | C60 |  C60 IPM Temp | `sensor.cx50_c60_ipm_temp` | **C60** - IPM
+  module temperature | {{ states('sensor.cx50_c60_ipm_temp') }} |
+
+  | 261 | C61 |  C61 Total Runtime |
+  `sensor.cx50_c61_compressor_total_running_time` | **C61** - Compressor total
+  running time | {{ states('sensor.cx50_c61_compressor_total_running_time') }} |
+
+  | 262 | C62 |  C62 E-Heater Power |
+  `sensor.cx50_c62_e_heater_compensation_power` | **C62** - Electric heater
+  compensation power | {{ states('sensor.cx50_c62_e_heater_compensation_power')
+  }} |
+
+  | 263 | C63 |  C63 DIN6 Switch | `sensor.cx50_c63_din6_ac_heating_mode_switch`
+  | **C63** - DIN6 AC/heating mode switch 0=OPEN;1=CLOSE | {{
+  states('sensor.cx50_c63_din6_ac_heating_mode_switch') }} |
+
+  | 264 | C64 |  C64 DIN7 Switch | `sensor.cx50_c64_din7_ac_heating_mode_switch`
+  | **C64** - DIN7 AC/heating mode switch 0=OPEN;1=CLOSE | {{
+  states('sensor.cx50_c64_din7_ac_heating_mode_switch') }} |
+
+  | 265 | C65 |  Target temperature of air conditioning heating |
+  `sensor.cx50_c65` | **C65** Target temperature of air conditioning heating -
+  0~60℃ | {{ states('sensor.cx50_c64_din7_ac_heating_mode_switch') }} |
+
+  | 266 | C66 |  Target temperature of DHW| `sensor.cx50_c66` | **C66** Target
+  temperature of DHW  20~70℃ | {{
+  states('sensor.cx50_c64_din7_ac_heating_mode_switch') }} |
+
+  | 267 | C67 |  Target temperature of air conditioning cooling |
+  `sensor.cx50_c67` | **C67** - Target temperature of air conditioning cooling
+  5~60℃ | {{ states('sensor.cx50_c67') }} |
+
+  | 268 | C68 |  Indoor temperature | `sensor.cx50_c68` | **C68** - Indoor
+  temperature (P119 must be 1) | {{ states('sensor.cx50_c68') }} |
+
+  | 269 | C69 |  Indoor humidity | `sensor.cx50_c69` | **C69** - Indoor humidity
+  (P119 must be 1) | {{ states('sensor.cx50_c69') }} |
+
+  | 270 | C70 |  Indoor dew point temperature  | `sensor.cx50_c70` | **C70** -
+  Indoor dew point temperature (P119 must be 1) | {{ states('sensor.cx50_c70')
+  }} |
+
+
+
+  | **BINARY SENSORS & CONTROLS** |
+
+  | 0 | 0x00 |  Power Control | `switch.cx_power` | Power on/off control | {{
+  states('switch.cx_power') }} |
+
+  | 0 | 0x00 |  Power Status | `binary_sensor.cx_power_status` | Power status
+  readback | {{ states('binary_sensor.cx_power_status') }} |
+
+  | 1 | 0x01 |  Climate Control | `climate.cx_climate_control` | Operation mode
+  control | {{ states('climate.cx_climate_control') }} |
+
+  | 1 | 0x01 |  Heating Mode | `binary_sensor.cx_heating_mode` | Heating mode
+  active | {{ states('binary_sensor.cx_heating_mode') }} |
+
+  | 2 | 0x02 |  Cooling Mode | `binary_sensor.cx_cooling_mode` | Cooling mode
+  active | {{ states('binary_sensor.cx_cooling_mode') }} |
+
+  | 4 | 0x04 |  DHW Mode Active | `binary_sensor.cx_dhw_mode` | Domestic hot
+  water mode | {{ states('binary_sensor.cx_dhw_mode') }} |
+
+  | 5 | 0x05 |  Defrost Active | `binary_sensor.cx_defrost_active` | Defrost
+  cycle running | {{ states('binary_sensor.cx_defrost_active') }} |
+
+  | 6 | 0x06 |  Pump Enabled | `binary_sensor.cx_pump_enabled` | Circulation
+  pump status | {{ states('binary_sensor.cx_pump_enabled') }} |
+
+  | 244 | C44 | Error Code | `sensor.cx_error_code` | **C44** - Active error
+  code (0=No Error) | {{ states('sensor.cx_error_code') }} |
+
+  | 244 | C44 | Error Status | `binary_sensor.cx_error_status` | Error present
+  flag | {{ states('binary_sensor.cx_error_status') }} |
+
+  | 243 | C43 | Operating State | `sensor.cx_operating_state` | **C43** -
+  Current state (0=Off, 1=Heat, 2=Cool, 3=Auto, 4=DHW, 5=Defrost, 6=Error) | {{
+  states('sensor.cx_operating_state') }} |
+
+grid_options:
+  columns: full
