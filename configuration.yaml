@@ -29,6 +29,7 @@ logger:
     pymodbus: debug
 
 sensor: !include sensors/power_grid_sensors.yaml
+utility_meter: !include sensors/utility_meters.yaml
 
 template: !include_dir_merge_list sensors/template/
 

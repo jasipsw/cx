@@ -74,7 +74,7 @@
       state_class: measurement
       icon: mdi:transmission-tower
       state: >
-        {% set power = states('sensor.cx_electrical_power_input') | float(0) / 1000 %}
+        {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) / 1000 %}
         {{ power | round(3) }}
 
     # ------------------------------------------------------------------------
@@ -155,15 +155,15 @@
       state_class: measurement
       icon: mdi:gauge
       state: >-
-        {% set input_power = states('sensor.cx_electrical_power_input') | float(0) %}
-        {% set output_power = states('sensor.cx_thermal_power_output') | float(0) %}
+        {% set input_power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+        {% set output_power = states('sensor.heat_pump_thermal_power_output') | float(0) %}
         {% if input_power > 100 and output_power > 0 %}
           {{ (output_power / input_power) | round(2) }}
         {% else %}
           unavailable
         {% endif %}
       availability: >-
-        {% set input_power = states('sensor.cx_electrical_power_input') | float(0) %}
+        {% set input_power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
         {{ input_power > 100 }}
 
     # ------------------------------------------------------------------------
