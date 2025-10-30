@@ -28,7 +28,10 @@ logger:
     homeassistant.components.modbus: debug
     pymodbus: debug
 
-sensor: !include sensors/power_grid_sensors.yaml
+sensor: 
+  - !include sensors/power_grid_sensors.yaml
+  - !include sensors/energy_integration.yaml
+
 utility_meter: !include sensors/utility_meters.yaml
 
 template: !include_dir_merge_list sensors/template/
@@ -54,3 +57,10 @@ lovelace:
       icon: mdi:bug
       show_in_sidebar: true
       filename: dashboards/dashboard_modbus.yaml
+      
+    cx-energy:
+      mode: yaml
+      title: Energy Analysis
+      icon: mdi:chart-bar
+      show_in_sidebar: true
+      filename: dashboards/dashboard_energy.yaml
