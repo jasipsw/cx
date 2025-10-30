@@ -1,0 +1,97 @@
+# Chiltrix CX50 Binary Sensors
+# Status indicators for dashboard
+
+- binary_sensor:
+    # ==========================================
+    # SYSTEM STATUS
+    # ==========================================
+    
+    - name: "CX Power Status"
+      unique_id: cx_power_status
+      device_class: power
+      state: >-
+        {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+        {{ compressor_freq > 0 }}
+    
+    - name: "CX Defrost Active"
+      unique_id: cx_defrost_active
+      device_class: cold
+      state: >-
+        {% set c28 = states('sensor.cx50_c28') | float(0) %}
+        {{ c28 == 1 }}
+    
+    - name: "CX Error Status"
+      unique_id: cx_error_status
+      device_class: problem
+      state: >-
+        {% set error_code = states('sensor.cx_error_code') | int(0) %}
+        {{ error_code > 0 }}
+    
+    - name: "A/H Dehumidification"
+      unique_id: a_h_dehumidification
+      state: >
+        {{ is_state('binary_sensor.a_h_condensation_threshold', 'on') 
+          and
+            ( is_state( 'binary_sensor.a_h_main_floor_on', 'on')
+              or is_state( 'binary_sensor.a_h_lower_level_on', 'on')
+              or is_state( 'binary_sensor.a_h_master_suite_on', 'on') )
+        }}
+
+    - name: "A/H Condensation Threshold"
+      unique_id: a_h_condensation_threshold
+      state: >
+        {% if states( 'sensor.kitchen_comfort_dew_point' ) | int(0) > states( 'sensor.shellyplus1_c4d8d5543fc0_temperature_3')  | int(0) %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "cx_heating_mode"
+      unique_id: cx_heating_mode
+      state: >
+        {% set x = states('sensor.cx50_c30') | int(0) %}
+        {% if x |int (0) == 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "cx_dhw_mode"
+      unique_id: cx_dhw_mode
+      state: >
+        {% set x = states('sensor.cx50_c31') | int %}
+        {% if x |int(0) == 0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "CX Running"
+      unique_id: cx_running
+      state: >
+        {% if has_value('sensor.cx50_compressor_frequency') %}
+          {% set cx_freq  = states('sensor.cx50_compressor_frequency') | int(0) %}
+        {% else %}
+          {% set cx_freq = 0 | int(0) %}
+        {% endif %}
+
+        {% if cx_freq == 0 %}
+          Off
+        {% else %}
+          On
+        {% endif %}
+
+    - name: "CX Auxiliary Electric Heater"
+      unique_id: cx_aux_electric_heater
+      state: >
+        {% if has_value('sensor.cx50_c62_e_heater_compensation_power') %}
+          {% set x  = states('sensor.cx50_c62_e_heater_compensation_power') | int(0) %}
+        {% else %}
+          {% set x = 0 | int(0) %}
+        {% endif %}
+
+        {% if x == 0 %}
+          Off
+        {% else %}
+          On
+        {% endif %}
