@@ -25,14 +25,14 @@
 !automations/
 !automations/**
 
-!themes/
-!themes/**
+themes/
+themes/**
 
 !custom_components/
-!custom_components/**
+custom_components/**
 
-!www/
-!www/**
+www/
+www/**
 
 # Ignore these sensitive directories even if whitelisted above
 .storage/
