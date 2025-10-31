@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+# Input Select Helpers for CX50 Heat Pump Configuration
 # Chiltrix Heat Pump - Input Select Helpers
 # Dropdown selections for rate structures and fuel comparisons
 
@@ -28,8 +28,7 @@ cx_comparison_fuel:
     - "Electric Resistance"
   initial: "Natural Gas"
   icon: mdi:fire
-=======
-# Input Select Helpers for CX50 Heat Pump Configuration
+
 
 # Optimization Phase Selector
 # Tracks which optimization phase is currently active
@@ -42,4 +41,3 @@ optimization_phase:
     - "Phase 3: Supply Temp 82°F (Target)"
   initial: "Baseline (Current Settings)"
   icon: mdi:progress-clock
->>>>>>> origin/claude/start-working-011CUfCRSzzGbd9EmZ8nUBcs
