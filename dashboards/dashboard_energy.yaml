@@ -203,6 +203,8 @@ views:
             name: Defrost Active
           - entity: binary_sensor.cx50_error_status_2
             name: Error Status
+          - entity: sensor.heat_pump_operating_mode
+            name: Operating Mode
 
   # ========================================================================
   # Phase Implementation & Settings

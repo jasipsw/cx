@@ -1044,8 +1044,8 @@
       slave: 1
       scan_interval: 10
     
-    - name: "CX Error Status"
-      unique_id: cx_error_status
+    - name: "CX50 Error Status"
+      unique_id: cx50_error_status
       address: 244  # 0xF4 - non-zero value means error
       slave: 1
       scan_interval: 10
