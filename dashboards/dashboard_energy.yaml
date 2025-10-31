@@ -426,6 +426,53 @@ views:
             name: Buffer Flow Sensor
 
       # ------------------------------------------------------------------------
+      # System Distribution Analysis
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: System Distribution Analysis (HP Output vs HVAC Load)
+        entities:
+          - entity: sensor.heat_pump_thermal_power_output
+            name: Heat Pump Output
+          - entity: sensor.hvac_thermal_power_used
+            name: HVAC Load
+          - type: divider
+          - entity: sensor.system_distribution_losses
+            name: Distribution Losses
+          - entity: sensor.system_distribution_efficiency
+            name: System Efficiency
+          - entity: sensor.system_loss_analysis
+            name: Status
+
+      - type: history-graph
+        title: Heat Pump Output vs HVAC Load (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.heat_pump_thermal_power_output
+            name: HP Output
+          - entity: sensor.hvac_thermal_power_used
+            name: HVAC Load
+          - entity: sensor.system_distribution_losses
+            name: Losses
+
+      # ------------------------------------------------------------------------
+      # Temperature Comparison (Diagnostic)
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Temperature Sensor Comparison
+        entities:
+          - entity: sensor.heat_pump_outlet_temperature
+            name: HP Outlet (CX50 Modbus)
+          - entity: sensor.hvac_buffer_tank_supply_temperature
+            name: Buffer Supply (Shelly)
+          - type: divider
+          - entity: sensor.heat_pump_delta_t
+            name: HP Delta T
+          - entity: sensor.hvac_buffer_tank_delta_t
+            name: Buffer Delta T (°F)
+          - entity: sensor.hvac_buffer_tank_delta_t_celsius
+            name: Buffer Delta T (°C)
+
+      # ------------------------------------------------------------------------
       # HVAC Load Question
       # ------------------------------------------------------------------------
       - type: markdown
@@ -435,28 +482,30 @@ views:
           **Question from Issue #1:**
           "Why does HVAC load not more closely match thermal output?"
 
-          **Possible Explanations:**
-          1. **System Losses:**
-             - Piping heat loss between heat pump and buffer tank
-             - Buffer tank standby losses
-             - Distribution losses to air handlers
+          **BUG FIXED (2025-10-31):**
+          The HVAC Thermal Power Used sensor was using **Fahrenheit** delta T in a formula
+          that expects **Celsius**, causing a **1.8x overcalculation**.
 
-          2. **Measurement Timing:**
-             - Heat pump output measured at unit
-             - HVAC load measured at distribution points
-             - Time lag between measurements
+          **Fix Applied:**
+          - Now uses Celsius temperatures directly from Shelly sensors
+          - Calculates delta T in Celsius for Q = ṁ × Cp × ΔT formula
+          - Added new sensor: `sensor.hvac_buffer_tank_delta_t_celsius`
+          - Expected result: HVAC load should drop by ~44% to correct value
 
-          3. **Buffer Tank Stratification:**
-             - Temperature stratification in buffer tank
-             - Mixing losses during charge/discharge cycles
+          **Monitor These Sensors:**
+          - `sensor.system_distribution_efficiency` - Should be 80-95%
+          - `sensor.system_distribution_losses` - Actual watts lost in distribution
+          - `sensor.system_loss_analysis` - Automatic status interpretation
 
-          4. **Sensor Calibration:**
-             - Flow sensor accuracy
-             - Temperature sensor calibration differences
-             - Shelly sensors vs Modbus sensors
+          **Remaining Possible Discrepancies:**
+          1. **Piping Losses:** Heat loss between heat pump and buffer tank
+          2. **Buffer Tank Losses:** Standby heat loss from tank
+          3. **Flow Rate Differences:** Different flow sensors on HP vs buffer
+          4. **Timing Lag:** Measurements not perfectly synchronized
+          5. **Sensor Calibration:** Temperature or flow sensor accuracy
 
-          **Action Items:**
-          - Compare buffer tank supply temp (Shelly) vs heat pump outlet (CX50)
-          - Monitor buffer tank delta T during charge cycles
-          - Calculate system efficiency = HVAC load / Heat pump output
-          - Track losses = Heat pump output - HVAC load
+          **If HVAC load still exceeds HP output after fix:**
+          - Check flow sensor readings: `cx50_pump_flow_lpm` vs `hydronic_flow_flow_rate`
+          - Verify Shelly temperature sensors are working correctly
+          - Look for negative values in `sensor.system_distribution_losses`
+          - This would indicate HVAC load > HP output (physically impossible)

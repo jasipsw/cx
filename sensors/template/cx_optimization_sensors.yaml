@@ -276,3 +276,72 @@
         {% else %}
           {{ states('sensor.heat_pump_cop') }}
         {% endif %}
+
+    # ------------------------------------------------------------------------
+    # System Distribution Losses (Heat Pump Output vs HVAC Load)
+    # Tracks energy lost between heat pump and point of use
+    # ------------------------------------------------------------------------
+
+    - name: "System Distribution Losses"
+      unique_id: system_distribution_losses
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      icon: mdi:leak
+      state: >-
+        {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
+        {% set losses = hp_output - hvac_load %}
+        {{ losses | round(0) }}
+      availability: >-
+        {{ states('sensor.heat_pump_thermal_power_output') not in ['unavailable', 'unknown']
+           and states('sensor.hvac_thermal_power_used') not in ['unavailable', 'unknown'] }}
+
+    - name: "System Distribution Efficiency"
+      unique_id: system_distribution_efficiency
+      unit_of_measurement: "%"
+      state_class: measurement
+      icon: mdi:percent
+      state: >-
+        {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
+        {% if hp_output > 100 %}
+          {{ ((hvac_load / hp_output) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+      availability: >-
+        {{ states('sensor.heat_pump_thermal_power_output') not in ['unavailable', 'unknown']
+           and states('sensor.hvac_thermal_power_used') not in ['unavailable', 'unknown'] }}
+
+    - name: "System Loss Analysis"
+      unique_id: system_loss_analysis
+      state: >-
+        {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
+        {% set efficiency = states('sensor.system_distribution_efficiency') | float(0) %}
+
+        {% if hp_output < 100 %}
+          Heat pump idle
+        {% elif hvac_load > hp_output %}
+          ERROR: HVAC load ({{ (hvac_load/1000) | round(1) }}kW) > HP output ({{ (hp_output/1000) | round(1) }}kW) - Check sensors!
+        {% elif efficiency >= 90 %}
+          Excellent ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+        {% elif efficiency >= 80 %}
+          Good ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+        {% elif efficiency >= 70 %}
+          Fair ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+        {% elif efficiency >= 50 %}
+          Poor ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+        {% else %}
+          Critical ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss) - Investigate!
+        {% endif %}
+      icon: >-
+        {% set efficiency = states('sensor.system_distribution_efficiency') | float(0) %}
+        {% if efficiency >= 85 %}
+          mdi:check-circle
+        {% elif efficiency >= 70 %}
+          mdi:alert-circle-outline
+        {% else %}
+          mdi:alert-circle
+        {% endif %}
