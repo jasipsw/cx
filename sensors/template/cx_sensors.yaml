@@ -27,6 +27,24 @@
         {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
         {{ (inlet * 1.8 + 32.0) | round(2) }}
 
+    - name: "Heat Pump Target Heating Temperature"
+      unique_id: heat_pump_target_heating_temperature
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:thermometer
+      state: >
+        {% set temp = states('sensor.cx50_heating_target_temp_c') | float(0) %}
+        {{ (temp * 1.8 + 32.0) | round(2) }}
+
+    - name: "Heat Pump Ambient Temperature"
+      unique_id: heat_pump_ambient_temperature
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:thermometer
+      state: >
+        {% set temp = states('sensor.cx50_ambient_temp_c') | float(0) %}
+        {{ (temp * 1.8 + 32.0) | round(2) }}
+
     - name: "Heat Pump Outlet Temperature"
       unique_id: heat_pump_outlet_temperature
       unit_of_measurement: "°F"

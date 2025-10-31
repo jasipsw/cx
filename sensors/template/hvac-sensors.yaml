@@ -7,27 +7,45 @@
     # ------------------------------------------------------------------------
 
     - name: "HVAC Buffer Tank Return Temperature"
+      unique_id: hvac_buffer_tank_return_temperature
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:thermometer
       state: >-
         {% set return = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-        {{ return | round(0) }}
+        {{ (return * 1.8 + 32.0) | round(2) }}
 
     - name: "HVAC Buffer Tank Supply Temperature"
+      unique_id: hvac_buffer_tank_supply_termperature
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:thermometer      
       state: >-
         {% set supply = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
-        {{ supply | round(0) }}
+        {{ (supply * 1.8 + 32.0) | round(2) }}
 
     - name: "HVAC Buffer Tank Flow Rate"
+      unique_id: hvac_buffer_tank_flow_rate
+      unit_of_measurement: "L/min"
+      device_class: volume_flow_rate
+      state_class: measurement
+      icon: mdi:waves-arrow-left
       state: >-
-        {% set flow  = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+        {% set flow  = states('sensor.hydronic_flow_flow_rate') | float(0) %}
         {{ flow | round(0) }}
 
     - name: "HVAC Buffer Tank Delta T"
+      unique_id: hvac_buffer_tank_delta_t
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:delta      
       state: >-
         {% set return = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
         {% set supply = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
         {% set flow  = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
         {% set delta_t = supply - return %}
         {{ delta_t | round(0) }}
+         
 
     - name: "HVAC Thermal Power Used"
       unique_id: hvac_thermal_power_used

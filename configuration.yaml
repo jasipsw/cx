@@ -28,9 +28,7 @@ logger:
     homeassistant.components.modbus: debug
     pymodbus: debug
 
-sensor: 
-  - !include sensors/power_grid_sensors.yaml
-  - !include sensors/energy_integration.yaml
+sensor: !include sensors/power_grid_sensors.yaml
 
 utility_meter: !include sensors/utility_meters.yaml
 

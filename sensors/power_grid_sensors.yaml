@@ -198,3 +198,72 @@
       value_template: "26880"
       unit_of_measurement: "Wh"
       unique_id: battery_rated_capacity
+
+
+
+- platform: integration
+  source: sensor.heat_pump_thermal_power_output
+  name: "CX Output Power Interval"
+  unique_id: cx_output_power_interval
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+- platform: integration
+  source: sensor.heat_pump_electrical_power_input
+  name: "CX Input Power kWh"
+  unique_id: cx_input_power_kwh
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+- platform: integration
+  source: sensor.hvac_thermal_power_used
+  name: "HVAC Thermal Energy Used"
+  unique_id: hvac_thermal_energy_used
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3      
+
+
+# ============================================================================
+# HEAT PUMP OPTIMIZATION SENSORS
+# ============================================================================
+
+# Track if heat pump is running (binary)
+- platform: template
+  sensors:
+    heat_pump_running:
+      friendly_name: "Heat Pump Running"
+      value_template: >-
+        {{ states('sensor.heat_pump_electrical_power_input') | float(0) > 500 }}
+
+# Track supply temperature
+- platform: template
+  sensors:
+    heat_pump_supply_temp:
+      friendly_name: "Heat Pump Supply Temperature"
+      unit_of_measurement: "°F"
+      value_template: >-
+        {{ states('sensor.heat_pump_outlet_temperature') | float(0) }}
+
+# Calculate current efficiency (COP)
+- platform: template
+  sensors:
+    heat_pump_current_cop:
+      friendly_name: "Heat Pump Current COP"
+      value_template: >-
+        {% set thermal_w = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {% set elec_w = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+        {% if elec_w > 500 %}
+          {{ (thermal_w / elec_w) | round(2) }}
+        {% else %}
+          unavailable
+        {% endif %}
+
+
+        
+        
