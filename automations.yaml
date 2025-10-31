@@ -344,3 +344,126 @@
     data:
       message: Charge Complete
   mode: single
+- id: 'cx_optimization_phase_1'
+  alias: CX Optimization Phase 1 - Buffer Differential 18°F
+  description: Implement Phase 1 - Increase buffer differential from 10°F to 18°F by adjusting heating setpoint
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.optimization_phase
+    to: "Phase 1: Buffer Differential 18°F"
+  conditions: []
+  actions:
+  - action: number.set_value
+    target:
+      entity_id: input_number.buffer_differential_target
+    data:
+      value: 18
+  - action: number.set_value
+    target:
+      entity_id: input_number.heat_pump_supply_temp_target
+    data:
+      value: 90
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: "Phase 1 activated: Buffer differential target set to 18°F, supply temp 90°F. Monitor cycle duration for improvements."
+      title: CX50 Optimization Phase 1 Active
+  mode: single
+- id: 'cx_optimization_phase_2'
+  alias: CX Optimization Phase 2 - Supply Temp 85°F
+  description: Implement Phase 2 - Lower supply temperature from 90°F to 85°F (29.4°C)
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.optimization_phase
+    to: "Phase 2: Supply Temp 85°F"
+  conditions: []
+  actions:
+  - action: number.set_value
+    target:
+      entity_id: number.cx50_heating_setpoint_c
+    data:
+      value: 29.4
+  - action: number.set_value
+    target:
+      entity_id: input_number.heat_pump_supply_temp_target
+    data:
+      value: 85
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: "Phase 2 activated: Supply temperature lowered to 85°F (29.4°C). Monitor COP improvements."
+      title: CX50 Optimization Phase 2 Active
+  mode: single
+- id: 'cx_optimization_phase_3'
+  alias: CX Optimization Phase 3 - Supply Temp 82°F (Target)
+  description: Implement Phase 3 - Fine-tune to 82°F (27.8°C) targeting manufacturer specifications
+  triggers:
+  - trigger: state
+    entity_id:
+    - input_select.optimization_phase
+    to: "Phase 3: Supply Temp 82°F (Target)"
+  conditions: []
+  actions:
+  - action: number.set_value
+    target:
+      entity_id: number.cx50_heating_setpoint_c
+    data:
+      value: 27.8
+  - action: number.set_value
+    target:
+      entity_id: input_number.heat_pump_supply_temp_target
+    data:
+      value: 82
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: "Phase 3 activated: Supply temperature optimized to 82°F (27.8°C). Target COP: 4.55. Monitor performance closely."
+      title: CX50 Optimization Phase 3 Active
+  mode: single
+- id: 'cx_short_cycle_alert'
+  alias: CX Short Cycle Alert
+  description: Alert when heat pump short cycles (runtime < 10 minutes)
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.heat_pump_running
+    from: "on"
+    to: "off"
+  conditions:
+  - condition: template
+    value_template: "{{ states('sensor.heat_pump_current_cycle_duration') | float(0) < 600 and states('sensor.heat_pump_current_cycle_duration') | float(0) > 0 }}"
+  - condition: state
+    entity_id: input_boolean.enable_short_cycle_alerts
+    state: "on"
+  actions:
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: "Heat pump short cycled: {{ (states('sensor.heat_pump_current_cycle_duration') | float(0) / 60) | round(1) }} minutes runtime. Target: {{ states('input_number.minimum_runtime_target') }} minutes."
+      title: CX50 Short Cycle Detected
+  mode: single
+- id: 'cx_target_cop_achieved'
+  alias: CX Target COP Achieved Alert
+  description: Alert when heat pump achieves target COP
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.heat_pump_cop
+    above: 4.5
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  conditions:
+  - condition: state
+    entity_id: input_boolean.enable_cop_optimization
+    state: "on"
+  actions:
+  - action: notify.notify
+    metadata: {}
+    data:
+      message: "Excellent! Heat pump COP reached {{ states('sensor.heat_pump_cop') }} - at or above manufacturer's 4.55 rating!"
+      title: CX50 Target COP Achieved!
+  mode: single
