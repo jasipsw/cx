@@ -13,18 +13,11 @@
         {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
         {{ compressor_freq > 0 }}
     
-    - name: "CX Defrost Active"
-      unique_id: cx_defrost_active
-      device_class: cold
-      state: >-
-        {% set c28 = states('sensor.cx50_c28') | float(0) %}
-        {{ c28 == 1 }}
-    
     - name: "CX Error Status"
       unique_id: cx_error_status
       device_class: problem
       state: >-
-        {% set error_code = states('sensor.cx_error_code') | int(0) %}
+        {% set error_code = states('sensor.cx50_error_code') | int(0) %}
         {{ error_code > 0 }}
     
     - name: "A/H Dehumidification"
