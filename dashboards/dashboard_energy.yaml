@@ -191,15 +191,25 @@ views:
       - type: entities
         title: Operating State
         entities:
+<<<<<<< HEAD
           - entity: sensor.heat_pump_compressor_speed
+=======
+          - entity: sensor.heat_pump_operating_mode
+            name: Operating Mode
+          - entity: sensor.heat_pump_compressor_speed_2
+>>>>>>> origin/claude/start-working-011CUfCRSzzGbd9EmZ8nUBcs
             name: Compressor Speed
-          - entity: sensor.heat_pump_fan_speed
+          - entity: sensor.heat_pump_fan_speed_2
             name: Fan Speed
-          - entity: sensor.heat_pump_efficiency_rating
+          - entity: sensor.heat_pump_efficiency_rating_2
             name: Efficiency Rating
+<<<<<<< HEAD
           - entity: binary_sensor.cx_defrost_active
+=======
+          - entity: binary_sensor.cx50_defrost_active_2
+>>>>>>> origin/claude/start-working-011CUfCRSzzGbd9EmZ8nUBcs
             name: Defrost Active
-          - entity: binary_sensor.cx50_error_status
+          - entity: binary_sensor.cx50_error_status_2
             name: Error Status
           - entity: sensor.heat_pump_operating_mode
             name: Operating Mode
