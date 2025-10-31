@@ -1,4 +1,8 @@
 node_modules/
-dist/
+dist/*.map
+dist/*.d.ts
 *.log
 .DS_Store
+
+# Keep the compiled JS file for HACS
+!dist/*.js
