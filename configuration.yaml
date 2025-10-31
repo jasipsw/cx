@@ -24,9 +24,9 @@ http:
 logger:
   default: info
   logs:
-    custom_components.hbx_sensorlinx: debug
-    homeassistant.components.modbus: debug
-    pymodbus: debug
+    custom_components.hbx_sensorlinx: info
+    homeassistant.components.modbus: info
+    pymodbus: info
 
 sensor: !include sensors/power_grid_sensors.yaml
 

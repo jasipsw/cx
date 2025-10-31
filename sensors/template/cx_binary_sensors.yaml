@@ -95,3 +95,21 @@
         {% else %}
           On
         {% endif %}
+        
+    - name: "Grid Power Status"
+      unique_id: "grid_power_status"
+      state: >
+        {% if is_state('binary_sensor.enpower_202413002436_grid_status', 'on') %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "Grid Power Outage"
+      unique_id: "grid_power_outage"
+      state: >
+        {% if is_state('binary_sensor.enpower_202413002436_grid_status', 'on') %}
+          Off
+        {% else %}
+          On
+        {% endif %}

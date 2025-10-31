@@ -24,21 +24,21 @@
         {% set supply = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
         {{ (supply * 1.8 + 32.0) | round(2) }}
 
+    # - name: "HVAC Buffer Tank Flow Rate"
+    #   unique_id: hvac_buffer_tank_flow_rate
+    #   unit_of_measurement: "L/min"
+    #   device_class: volume_flow_rate
+    #   state_class: measurement
+    #   icon: mdi:waves-arrow-left
+    #   state: >-
+    #     {# TEMPORARILY using CX50 flow sensor instead of hydronic_flow_flow_rate #}
+    #     {# hydronic_flow_flow_rate appears to be reading 6x too high #}
+    #     {# TODO: Calibrate hydronic flow sensor or determine correct scaling factor #}
+    #     {% set flow  = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+    #     {{ flow | round(0) }}
+
     - name: "HVAC Buffer Tank Flow Rate"
       unique_id: hvac_buffer_tank_flow_rate
-      unit_of_measurement: "L/min"
-      device_class: volume_flow_rate
-      state_class: measurement
-      icon: mdi:waves-arrow-left
-      state: >-
-        {# TEMPORARILY using CX50 flow sensor instead of hydronic_flow_flow_rate #}
-        {# hydronic_flow_flow_rate appears to be reading 6x too high #}
-        {# TODO: Calibrate hydronic flow sensor or determine correct scaling factor #}
-        {% set flow  = states('sensor.cx50_pump_flow_lpm') | float(0) %}
-        {{ flow | round(0) }}
-
-    - name: "HVAC Buffer Tank Flow Rate (Original)"
-      unique_id: hvac_buffer_tank_flow_rate_original
       unit_of_measurement: "L/min"
       device_class: volume_flow_rate
       state_class: measurement
