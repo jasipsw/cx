@@ -473,6 +473,45 @@ views:
             name: Buffer Delta T (°C)
 
       # ------------------------------------------------------------------------
+      # Flow Sensor Comparison (Critical Diagnostic!)
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Flow Sensor Comparison (CRITICAL)
+        entities:
+          - entity: sensor.cx50_pump_flow_lpm
+            name: CX50 Flow (Modbus)
+          - entity: sensor.hydronic_flow_flow_rate
+            name: Hydronic Flow (Separate Sensor)
+          - entity: sensor.hvac_buffer_tank_flow_rate
+            name: HVAC Flow (CORRECTED - using CX50)
+          - type: divider
+          - entity: sensor.flow_sensor_discrepancy_ratio
+            name: Discrepancy Ratio
+          - entity: sensor.flow_sensor_discrepancy_analysis
+            name: Analysis
+
+      - type: markdown
+        content: |
+          ### ⚠️ Flow Sensor Issue Detected
+
+          **Root Cause of 11x HVAC Load Overcalculation:**
+
+          Two compounding bugs:
+          1. **Temperature units** (1.8x): Using °F in °C formula ✅ FIXED
+          2. **Flow sensor discrepancy** (~6x): Hydronic flow sensor reading 6x too high ✅ FIXED
+
+          **Total overcalculation:** 1.8 × 6 = 10.8x ≈ 11x
+
+          **Temporary Fix Applied:**
+          - HVAC thermal power now uses CX50 flow sensor (same as heat pump)
+          - Original hydronic flow reading preserved in separate sensor
+
+          **Next Steps:**
+          - Verify hydronic flow sensor calibration
+          - Check if sensor has wrong scaling factor (e.g., GPH instead of LPM?)
+          - Monitor `sensor.flow_sensor_discrepancy_ratio` when running
+
+      # ------------------------------------------------------------------------
       # HVAC Load Question
       # ------------------------------------------------------------------------
       - type: markdown

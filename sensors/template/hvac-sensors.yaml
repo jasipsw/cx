@@ -31,8 +31,65 @@
       state_class: measurement
       icon: mdi:waves-arrow-left
       state: >-
+        {# TEMPORARILY using CX50 flow sensor instead of hydronic_flow_flow_rate #}
+        {# hydronic_flow_flow_rate appears to be reading 6x too high #}
+        {# TODO: Calibrate hydronic flow sensor or determine correct scaling factor #}
+        {% set flow  = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {{ flow | round(0) }}
+
+    - name: "HVAC Buffer Tank Flow Rate (Original)"
+      unique_id: hvac_buffer_tank_flow_rate_original
+      unit_of_measurement: "L/min"
+      device_class: volume_flow_rate
+      state_class: measurement
+      icon: mdi:waves-arrow-left
+      state: >-
+        {# Original sensor reading from hydronic flow meter - appears miscalibrated #}
         {% set flow  = states('sensor.hydronic_flow_flow_rate') | float(0) %}
         {{ flow | round(0) }}
+
+    - name: "Flow Sensor Discrepancy Ratio"
+      unique_id: flow_sensor_discrepancy_ratio
+      state_class: measurement
+      icon: mdi:gauge
+      state: >-
+        {% set cx_flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {% set hydronic_flow = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+        {% if cx_flow > 1 %}
+          {{ (hydronic_flow / cx_flow) | round(2) }}
+        {% else %}
+          0
+        {% endif %}
+
+    - name: "Flow Sensor Discrepancy Analysis"
+      unique_id: flow_sensor_discrepancy_analysis
+      state: >-
+        {% set cx_flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {% set hydronic_flow = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+        {% set ratio = states('sensor.flow_sensor_discrepancy_ratio') | float(0) %}
+
+        {% if cx_flow < 1 %}
+          Heat pump idle
+        {% elif ratio < 1.2 %}
+          Excellent match ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+        {% elif ratio < 1.5 %}
+          Good match ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+        {% elif ratio < 2.0 %}
+          Acceptable ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+        {% elif ratio < 3.0 %}
+          Significant difference ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+        {% else %}
+          CRITICAL: Hydronic sensor {{ ratio }}x higher! (CX: {{ (cx_flow | round(1)) }}L/min, Hydronic: {{ (hydronic_flow | round(1)) }}L/min) - Sensor miscalibrated!
+        {% endif %}
+      icon: >-
+        {% set ratio = states('sensor.flow_sensor_discrepancy_ratio') | float(0) %}
+        {% if ratio < 1.5 %}
+          mdi:check-circle
+        {% elif ratio < 3.0 %}
+          mdi:alert-circle-outline
+        {% else %}
+          mdi:alert-circle
+        {% endif %}
 
     - name: "HVAC Buffer Tank Delta T"
       unique_id: hvac_buffer_tank_delta_t
