@@ -22,6 +22,9 @@
 !scripts/
 !scripts/**
 
+!heat-pump-flow-card/
+!heat-pump-flow-card/**
+
 !automations/
 !automations/**
 
