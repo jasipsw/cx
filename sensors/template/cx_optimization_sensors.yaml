@@ -150,7 +150,7 @@
       unique_id: heat_pump_startup_energy_penalty
       unit_of_measurement: "Wh"
       device_class: energy
-      state_class: measurement
+#      state_class: measurement
       icon: mdi:alert-octagon
       state: >-
         {% set in_startup = is_state('binary_sensor.heat_pump_in_startup_phase', 'on') %}
