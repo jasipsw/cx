@@ -1053,6 +1053,67 @@
   # ============================================================================
   # CONTROL SWITCHES (Coils)
   # ============================================================================
+  # ============================================================================
+  # NUMBER CONTROLS (Writable Parameters)
+  # ============================================================================
+  numbers:
+    - name: "CX50 Heating Setpoint"
+      unique_id: cx50_heating_setpoint_c
+      address: 143  # P03 - AC heating target temp
+      slave: 1
+      data_type: uint16
+      min: 15
+      max: 60
+      step: 0.5
+      scale: 0.1
+      precision: 1
+      unit_of_measurement: "°C"
+      device_class: temperature
+      mode: slider
+      scan_interval: 30
+
+    - name: "CX50 Cooling Setpoint"
+      unique_id: cx50_cooling_setpoint_c
+      address: 142  # P02 - AC cooling target temp
+      slave: 1
+      data_type: uint16
+      min: 5
+      max: 30
+      step: 0.5
+      scale: 0.1
+      precision: 1
+      unit_of_measurement: "°C"
+      device_class: temperature
+      mode: slider
+      scan_interval: 30
+
+    - name: "CX50 DHW Setpoint"
+      unique_id: cx50_dhw_setpoint_c
+      address: 144  # P04 - DHW target temp
+      slave: 1
+      data_type: uint16
+      min: 20
+      max: 70
+      step: 0.5
+      scale: 0.1
+      precision: 1
+      unit_of_measurement: "°C"
+      device_class: temperature
+      mode: slider
+      scan_interval: 30
+
+    - name: "CX50 Compressor Max Percentage"
+      unique_id: cx50_compressor_max_percentage
+      address: 127  # P-13 - Compressor max speed
+      slave: 1
+      data_type: uint16
+      min: 30
+      max: 100
+      step: 1
+      unit_of_measurement: "%"
+      mode: slider
+      scan_interval: 30
+
   switches:
     - name: "CX Power"
       unique_id: cx_power_switch
@@ -1062,7 +1123,7 @@
       command_on: 1
       command_off: 0
       scan_interval: 10
-    
+
     - name: "CX Silent Mode Control"
       unique_id: cx_silent_mode_control
       address: 262  # 0x106
@@ -1071,7 +1132,7 @@
       command_on: 1
       command_off: 0
       scan_interval: 10
-    
+
     - name: "CX DHW Priority Control"
       unique_id: cx_dhw_priority_control
       address: 263  # 0x107

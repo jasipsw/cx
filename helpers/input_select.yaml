@@ -1,0 +1,13 @@
+# Input Select Helpers for CX50 Heat Pump Configuration
+
+# Optimization Phase Selector
+# Tracks which optimization phase is currently active
+optimization_phase:
+  name: Optimization Phase
+  options:
+    - "Baseline (Current Settings)"
+    - "Phase 1: Buffer Differential 18°F"
+    - "Phase 2: Supply Temp 85°F"
+    - "Phase 3: Supply Temp 82°F (Target)"
+  initial: "Baseline (Current Settings)"
+  icon: mdi:progress-clock

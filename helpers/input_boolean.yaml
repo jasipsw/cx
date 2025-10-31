@@ -1,0 +1,19 @@
+# Input Boolean Helpers for CX50 Heat Pump Configuration
+
+# Enable optimization tracking
+enable_cop_optimization:
+  name: Enable COP Optimization Tracking
+  initial: true
+  icon: mdi:chart-line
+
+# Enable short cycle alerts
+enable_short_cycle_alerts:
+  name: Enable Short Cycle Alerts
+  initial: true
+  icon: mdi:alert
+
+# Enable startup penalty tracking
+enable_startup_penalty_tracking:
+  name: Enable Startup Penalty Tracking
+  initial: true
+  icon: mdi:rocket-launch

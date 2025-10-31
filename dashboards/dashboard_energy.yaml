@@ -1,0 +1,462 @@
+# CX50 Heat Pump Energy & Optimization Dashboard
+# Purpose: Visualize COP performance, cycle analysis, and optimization progress
+# Goal: Track improvements from current 2.0-2.5 COP to manufacturer's 4.55 rating
+
+title: Energy Analysis
+views:
+  - title: COP Optimization
+    path: cop-optimization
+    icon: mdi:chart-line
+    cards:
+      # ------------------------------------------------------------------------
+      # Header Card - Current Status Overview
+      # ------------------------------------------------------------------------
+      - type: markdown
+        content: |
+          # CX50 Heat Pump Optimization Dashboard
+          **Goal:** Improve COP from 2.0-2.5 to manufacturer rating of 4.55
+
+          **Root Cause:** Short cycling (5 min runtime, 1 hour off) with large startup penalties
+
+          **Strategy:** Three-phase optimization
+          - Phase 1: Increase buffer differential 10°F → 18°F
+          - Phase 2: Lower supply temperature 90°F → 85°F
+          - Phase 3: Fine-tune to 82°F (manufacturer optimal)
+
+      # ------------------------------------------------------------------------
+      # Current Performance Metrics
+      # ------------------------------------------------------------------------
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.heat_pump_cop
+            name: Current COP
+            min: 0
+            max: 6
+            needle: true
+            severity:
+              green: 4.0
+              yellow: 3.0
+              red: 0
+
+          - type: gauge
+            entity: sensor.heat_pump_cycle_efficiency
+            name: Efficiency vs Target
+            unit: "%"
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 85
+              yellow: 60
+              red: 0
+
+          - type: gauge
+            entity: sensor.heat_pump_cop_improvement_needed
+            name: COP Gap to Target
+            min: 0
+            max: 3
+            needle: true
+            severity:
+              red: 2.0
+              yellow: 1.0
+              green: 0
+
+      # ------------------------------------------------------------------------
+      # Cycle Status Cards
+      # ------------------------------------------------------------------------
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: binary_sensor.heat_pump_running
+            name: Heat Pump Status
+            icon: mdi:heat-pump
+
+          - type: entity
+            entity: sensor.heat_pump_current_cycle_duration_minutes
+            name: Current Cycle Runtime
+            icon: mdi:timer
+
+          - type: entity
+            entity: sensor.heat_pump_off_time_duration
+            name: Off Time
+            icon: mdi:timer-off
+
+          - type: entity
+            entity: sensor.heat_pump_cycle_ratio_warning
+            name: Cycle Status
+            icon: mdi:information
+
+      # ------------------------------------------------------------------------
+      # Startup vs Steady State Comparison
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Startup Penalty Analysis
+        entities:
+          - entity: binary_sensor.heat_pump_in_startup_phase
+            name: In Startup Phase
+          - entity: binary_sensor.heat_pump_in_steady_state
+            name: In Steady State
+          - entity: sensor.heat_pump_startup_phase_cop
+            name: Startup Phase COP
+          - entity: sensor.heat_pump_steady_state_cop
+            name: Steady State COP
+          - entity: sensor.heat_pump_startup_energy_penalty
+            name: Startup Energy Penalty
+          - type: divider
+          - entity: sensor.heat_pump_short_cycle_alert
+            name: Short Cycle Alert
+
+      # ------------------------------------------------------------------------
+      # COP Trend Graph
+      # ------------------------------------------------------------------------
+      - type: history-graph
+        title: COP Over Time
+        hours_to_show: 24
+        entities:
+          - entity: sensor.heat_pump_cop
+            name: Overall COP
+          - entity: sensor.heat_pump_startup_phase_cop
+            name: Startup COP
+          - entity: sensor.heat_pump_steady_state_cop
+            name: Steady State COP
+
+      # ------------------------------------------------------------------------
+      # Temperature Monitoring
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Temperature Monitoring
+        entities:
+          - entity: sensor.heat_pump_inlet_temperature
+            name: Inlet Temperature
+          - entity: sensor.heat_pump_outlet_temperature
+            name: Outlet Temperature
+          - entity: sensor.heat_pump_delta_t
+            name: Delta T
+          - type: divider
+          - entity: sensor.hvac_buffer_tank_supply_temperature
+            name: Buffer Tank Supply
+          - entity: sensor.hvac_buffer_tank_return_temperature
+            name: Buffer Tank Return
+          - entity: sensor.hvac_buffer_tank_delta_t
+            name: Buffer Tank Delta T
+          - type: divider
+          - entity: sensor.heat_pump_ambient_temperature
+            name: Ambient Temperature
+
+      # ------------------------------------------------------------------------
+      # Power & Flow Monitoring
+      # ------------------------------------------------------------------------
+      - type: horizontal-stack
+        cards:
+          - type: entities
+            title: Electrical Input
+            entities:
+              - entity: sensor.heat_pump_electrical_power_input
+                name: Power Input (W)
+              - entity: sensor.heat_pump_electrical_power_input_kw
+                name: Power Input (kW)
+              - entity: sensor.cx50_input_ac_voltage
+                name: Voltage
+              - entity: sensor.cx50_input_ac_current
+                name: Current
+
+          - type: entities
+            title: Thermal Output
+            entities:
+              - entity: sensor.heat_pump_thermal_power_output
+                name: Thermal Output (W)
+              - entity: sensor.heat_pump_thermal_power_output_kw
+                name: Thermal Output (kW)
+              - entity: sensor.cx50_pump_flow_lpm
+                name: Flow Rate (LPM)
+              - entity: sensor.cx50_pump_flow_gpm
+                name: Flow Rate (GPM)
+
+      # ------------------------------------------------------------------------
+      # Energy Consumption Graphs
+      # ------------------------------------------------------------------------
+      - type: history-graph
+        title: Power Input vs Thermal Output (24h)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.heat_pump_electrical_power_input
+            name: Electrical Input
+          - entity: sensor.heat_pump_thermal_power_output
+            name: Thermal Output
+
+      # ------------------------------------------------------------------------
+      # Operating State
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Operating State
+        entities:
+          - entity: sensor.heat_pump_operating_mode
+            name: Operating Mode
+          - entity: sensor.heat_pump_compressor_speed
+            name: Compressor Speed
+          - entity: sensor.heat_pump_fan_speed
+            name: Fan Speed
+          - entity: sensor.heat_pump_efficiency_rating
+            name: Efficiency Rating
+          - entity: binary_sensor.cx50_defrost_active
+            name: Defrost Active
+          - entity: binary_sensor.cx50_error_status
+            name: Error Status
+
+  # ========================================================================
+  # Phase Implementation & Settings
+  # ========================================================================
+  - title: Optimization Settings
+    path: optimization-settings
+    icon: mdi:cog
+    cards:
+      # ------------------------------------------------------------------------
+      # Phase Selection
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Optimization Phase Control
+        entities:
+          - entity: input_select.optimization_phase
+            name: Current Phase
+          - entity: input_boolean.enable_cop_optimization
+            name: Enable Optimization Tracking
+          - entity: input_boolean.enable_short_cycle_alerts
+            name: Enable Short Cycle Alerts
+          - entity: input_boolean.enable_startup_penalty_tracking
+            name: Enable Startup Penalty Tracking
+
+      # ------------------------------------------------------------------------
+      # Target Settings (Sliders)
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Optimization Targets
+        entities:
+          - entity: input_number.buffer_differential_target
+            name: Buffer Differential Target
+          - entity: input_number.heat_pump_supply_temp_target
+            name: Supply Temperature Target
+          - entity: input_number.target_cop
+            name: Target COP
+          - entity: input_number.minimum_runtime_target
+            name: Minimum Runtime Target
+          - entity: input_number.startup_phase_duration
+            name: Startup Phase Duration
+
+      # ------------------------------------------------------------------------
+      # Fluid Properties
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Fluid Properties
+        entities:
+          - entity: input_number.cx_fluid_density
+            name: Fluid Density
+          - entity: input_number.cx_fluid_specific_heat
+            name: Specific Heat Capacity
+
+      # ------------------------------------------------------------------------
+      # Modbus Control (Quick Actions)
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: CX50 Quick Controls
+        entities:
+          - entity: switch.cx_power
+            name: Heat Pump Power
+          - entity: number.cx50_heating_setpoint_c
+            name: Heating Setpoint
+          - entity: number.cx50_cooling_setpoint_c
+            name: Cooling Setpoint
+          - entity: number.cx50_dhw_setpoint_c
+            name: DHW Setpoint
+          - entity: number.cx50_compressor_max_percentage
+            name: Max Compressor Speed
+
+  # ========================================================================
+  # Cycle Analysis & History
+  # ========================================================================
+  - title: Cycle Analysis
+    path: cycle-analysis
+    icon: mdi:chart-bar
+    cards:
+      # ------------------------------------------------------------------------
+      # Cycle Duration Histogram
+      # ------------------------------------------------------------------------
+      - type: history-graph
+        title: Cycle Duration History (48h)
+        hours_to_show: 48
+        entities:
+          - entity: sensor.heat_pump_current_cycle_duration_minutes
+            name: Runtime (minutes)
+          - entity: sensor.heat_pump_off_time_duration
+            name: Off Time (minutes)
+
+      # ------------------------------------------------------------------------
+      # COP by Cycle Phase
+      # ------------------------------------------------------------------------
+      - type: statistics-graph
+        title: COP Statistics (7 days)
+        chart_type: line
+        period: day
+        days_to_show: 7
+        entities:
+          - entity: sensor.heat_pump_cop
+        stat_types:
+          - mean
+          - min
+          - max
+
+      # ------------------------------------------------------------------------
+      # Energy Consumption Analysis
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Energy Tracking (Daily)
+        entities:
+          - entity: sensor.cx_daily_energy_input
+            name: CX Energy Input
+          - entity: sensor.cx_daily_energy_output
+            name: CX Energy Output
+          - entity: sensor.cx_monthly_energy_input
+            name: Monthly Input
+          - entity: sensor.cx_monthly_energy_output
+            name: Monthly Output
+
+      # ------------------------------------------------------------------------
+      # Daily Energy Bar Chart
+      # ------------------------------------------------------------------------
+      - type: history-graph
+        title: Daily Energy Input & Output
+        hours_to_show: 168
+        entities:
+          - entity: sensor.cx_daily_energy_input
+            name: Energy Input
+          - entity: sensor.cx_daily_energy_output
+            name: Energy Output
+
+      # ------------------------------------------------------------------------
+      # Runtime Statistics
+      # ------------------------------------------------------------------------
+      - type: markdown
+        content: |
+          ## Cycle Statistics Analysis
+
+          **Short Cycling Problem:**
+          - Current: 5 min runtime → 60 min off
+          - Startup penalty dominates efficiency
+          - Target: 15+ min runtime → 30 min off
+
+          **Optimization Progress:**
+          Monitor the "Cycle Duration History" graph above to track improvements
+          as we implement each phase of the optimization plan.
+
+  # ========================================================================
+  # Technical Details & Diagnostics
+  # ========================================================================
+  - title: Technical Details
+    path: technical-details
+    icon: mdi:information
+    cards:
+      # ------------------------------------------------------------------------
+      # Calculation Methods
+      # ------------------------------------------------------------------------
+      - type: markdown
+        content: |
+          ## Heat Pump Performance Calculations
+
+          ### COP (Coefficient of Performance)
+          ```
+          COP = Thermal Power Output / Electrical Power Input
+          ```
+
+          ### Thermal Power Output (Q)
+          ```
+          Q = ṁ × Cp × ΔT
+
+          Where:
+          - ṁ = mass flow rate (kg/s)
+          - Cp = specific heat capacity (J/kg·°C)
+          - ΔT = outlet temp - inlet temp (°C)
+          ```
+
+          ### Electrical Power Input
+          ```
+          P = V × I
+
+          Where:
+          - V = AC voltage (V)
+          - I = AC current (A)
+          ```
+
+          ### Startup Energy Penalty
+          Estimated extra energy consumed during startup vs steady state operation.
+          Based on COP difference between startup phase (<3 min) and steady state (>3 min).
+
+          ### Target Performance
+          - Manufacturer Rating: COP 4.55 at 47°F ambient
+          - Current Performance: COP 2.0-2.5
+          - Gap: ~2.0 COP points (82% improvement needed)
+
+      # ------------------------------------------------------------------------
+      # Sensor Status
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Sensor Health Status
+        entities:
+          - entity: sensor.cx50_inlet_water_temp_c
+            name: Inlet Temp Sensor
+          - entity: sensor.cx50_outlet_water_temp_c
+            name: Outlet Temp Sensor
+          - entity: sensor.cx50_pump_flow_lpm
+            name: Flow Sensor
+          - entity: sensor.cx50_input_ac_voltage
+            name: Voltage Sensor
+          - entity: sensor.cx50_input_ac_current
+            name: Current Sensor
+
+      # ------------------------------------------------------------------------
+      # Buffer Tank Sensors
+      # ------------------------------------------------------------------------
+      - type: entities
+        title: Buffer Tank Sensor Status
+        entities:
+          - entity: sensor.shellyplus1_c4d8d5543fc0_temperature
+            name: Supply Temp Sensor (Shelly)
+          - entity: sensor.shellyplus1_c4d8d5543fc0_temperature_3
+            name: Return Temp Sensor (Shelly)
+          - entity: sensor.hydronic_flow_flow_rate
+            name: Buffer Flow Sensor
+
+      # ------------------------------------------------------------------------
+      # HVAC Load Question
+      # ------------------------------------------------------------------------
+      - type: markdown
+        content: |
+          ## HVAC Load vs Thermal Output Analysis
+
+          **Question from Issue #1:**
+          "Why does HVAC load not more closely match thermal output?"
+
+          **Possible Explanations:**
+          1. **System Losses:**
+             - Piping heat loss between heat pump and buffer tank
+             - Buffer tank standby losses
+             - Distribution losses to air handlers
+
+          2. **Measurement Timing:**
+             - Heat pump output measured at unit
+             - HVAC load measured at distribution points
+             - Time lag between measurements
+
+          3. **Buffer Tank Stratification:**
+             - Temperature stratification in buffer tank
+             - Mixing losses during charge/discharge cycles
+
+          4. **Sensor Calibration:**
+             - Flow sensor accuracy
+             - Temperature sensor calibration differences
+             - Shelly sensors vs Modbus sensors
+
+          **Action Items:**
+          - Compare buffer tank supply temp (Shelly) vs heat pump outlet (CX50)
+          - Monitor buffer tank delta T during charge cycles
+          - Calculate system efficiency = HVAC load / Heat pump output
+          - Track losses = Heat pump output - HVAC load

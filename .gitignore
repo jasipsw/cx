@@ -1,32 +1,80 @@
-.gitignore file for your config dir.
-# An * ensures that everything will be ignored.
+# .gitignore file for Home Assistant config dir
+# Strategy: Ignore everything by default, then whitelist specific files and directories
+
+# Ignore everything by default
 *
-# You can whitelist files/folders with !, these will not be ignored.
+
+# Whitelist key file types
 !*.yaml
-!.gitignore
 !*.md
-! ./sensors
-| ./dashboards
+!.gitignore
 
-# Ignore folders.
-.storage
-.cloud
-.google.token
-.ssh
+# Whitelist important directories (need to whitelist directory before files inside)
+!helpers/
+!helpers/**
 
-# Ensure these YAML files are ignored, otherwise your secret data/credentials will leak.
-ip_bans.yaml
+!sensors/
+!sensors/**
+
+!dashboards/
+!dashboards/**
+
+!scripts/
+!scripts/**
+
+!automations/
+!automations/**
+
+!themes/
+!themes/**
+
+!custom_components/
+!custom_components/**
+
+!www/
+!www/**
+
+# Ignore these sensitive directories even if whitelisted above
+.storage/
+.cloud/
+.ssh/
+deps/
+tts/
+
+# Ignore sensitive YAML files with secrets/credentials
 secrets.yaml
+ip_bans.yaml
 known_devices.yaml
+.ip_authenticated.yaml
+
+# Ignore certificates and keys
 *.crt
 *.csr
 *.key
+*.pem
+id_rsa*
 .google.token
 .uuid
+
+# Ignore database files
 *.db
-*.db*
-*.db-*
-id_rsa*
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Ignore log files
 home-assistant.log
 home-assistant.log.*
-.ip_authenticated.yaml
+*.log
+OZW_Log.txt
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.swp
+*.bak
+*~
