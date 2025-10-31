@@ -1,0 +1,29 @@
+# Chiltrix Heat Pump - Input Select Helpers
+# Dropdown selections for rate structures and fuel comparisons
+
+cx_rate_structure:
+  name: "Rate Structure"
+  options:
+    - "Flat Rate"
+    - "Time of Use (TOU)"
+    - "TOU with Mid-Peak"
+  initial: "Flat Rate"
+  icon: mdi:format-list-bulleted
+
+cx_weekend_rate_type:
+  name: "Weekend Rate Type"
+  options:
+    - "Always Off-Peak"
+    - "Same as Weekday"
+  initial: "Always Off-Peak"
+  icon: mdi:calendar-weekend
+
+cx_comparison_fuel:
+  name: "Comparison Fuel"
+  options:
+    - "Natural Gas"
+    - "Heating Oil"
+    - "Propane"
+    - "Electric Resistance"
+  initial: "Natural Gas"
+  icon: mdi:fire

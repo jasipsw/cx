@@ -1,0 +1,135 @@
+# Chiltrix Heat Pump - Input Number Helpers
+# Configuration values for CX calculations and cost tracking
+
+cx_fluid_specific_heat:
+  name: "CX Fluid Specific Heat"
+  min: 3.5
+  max: 4.5
+  step: 0.01
+  initial: 3.95
+  unit_of_measurement: "kJ/(kg·°C)"
+  mode: box
+  icon: mdi:water-thermometer
+
+cx_fluid_density:
+  name: "CX Fluid Density"
+  min: 900
+  max: 1100
+  step: 1
+  initial: 970
+  unit_of_measurement: "kg/m³"
+  mode: box
+  icon: mdi:weight
+
+# Electric rates
+cx_electric_rate_flat:
+  name: "Electric Rate (Flat)"
+  min: 0.01
+  max: 1.00
+  step: 0.001
+  initial: 0.15
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+cx_electric_rate_peak:
+  name: "Electric Rate (Peak)"
+  min: 0.01
+  max: 1.00
+  step: 0.001
+  initial: 0.25
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+cx_electric_rate_mid_peak:
+  name: "Electric Rate (Mid-Peak)"
+  min: 0.01
+  max: 1.00
+  step: 0.001
+  initial: 0.18
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+cx_electric_rate_off_peak:
+  name: "Electric Rate (Off-Peak)"
+  min: 0.01
+  max: 1.00
+  step: 0.001
+  initial: 0.10
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+# Peak hour times
+cx_peak_start_hour:
+  name: "Peak Start Hour"
+  min: 0
+  max: 23
+  step: 1
+  initial: 16
+  mode: slider
+  icon: mdi:clock-start
+
+cx_peak_end_hour:
+  name: "Peak End Hour"
+  min: 0
+  max: 23
+  step: 1
+  initial: 21
+  mode: slider
+  icon: mdi:clock-end
+
+# Fuel comparison rates
+cx_gas_rate:
+  name: "Natural Gas Rate"
+  min: 0.01
+  max: 5.00
+  step: 0.01
+  initial: 1.50
+  unit_of_measurement: "$/therm"
+  mode: box
+  icon: mdi:fire
+
+cx_oil_rate:
+  name: "Heating Oil Rate"
+  min: 0.01
+  max: 10.00
+  step: 0.01
+  initial: 4.00
+  unit_of_measurement: "$/gallon"
+  mode: box
+  icon: mdi:barrel
+
+cx_propane_rate:
+  name: "Propane Rate"
+  min: 0.01
+  max: 10.00
+  step: 0.01
+  initial: 3.50
+  unit_of_measurement: "$/gallon"
+  mode: box
+  icon: mdi:gas-cylinder
+
+cx_gas_furnace_efficiency:
+  name: "Gas Furnace Efficiency"
+  min: 70
+  max: 98
+  step: 1
+  initial: 85
+  unit_of_measurement: "%"
+  mode: slider
+  icon: mdi:gauge
+
+
+# Heat pump optimization threshold
+heat_pump_delta_t_threshold:
+  name: "Heat Pump Delta-T Threshold"
+  min: -2.0
+  max: 5.0
+  step: 0.1
+  initial: 0.0
+  unit_of_measurement: "°F"
+  mode: box
+  icon: mdi:thermometer-lines

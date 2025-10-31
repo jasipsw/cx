@@ -1,0 +1,17 @@
+# Chiltrix Heat Pump - Input Boolean Helpers
+# Toggle switches for enabling features
+
+cx_enable_tou_rates:
+  name: "Enable TOU Rates"
+  initial: false
+  icon: mdi:clock-outline
+
+cx_enable_seasonal_rates:
+  name: "Enable Seasonal Rates"
+  initial: false
+  icon: mdi:weather-partly-cloudy
+
+cx_track_savings:
+  name: "Track Savings vs Alternative Fuel"
+  initial: true
+  icon: mdi:piggy-bank
