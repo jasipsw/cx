@@ -193,18 +193,17 @@ views:
         entities:
           - entity: sensor.heat_pump_operating_mode
             name: Operating Mode
-          - entity: sensor.heat_pump_compressor_speed_2
+          - entity: sensor.heat_pump_compressor_speed
             name: Compressor Speed
-          - entity: sensor.heat_pump_fan_speed_2
+          - entity: sensor.heat_pump_fan_speed
             name: Fan Speed
-          - entity: sensor.heat_pump_efficiency_rating_2
+          - entity: sensor.heat_pump_efficiency_rating
             name: Efficiency Rating
-          - entity: binary_sensor.cx50_defrost_active_2
+          - entity: binary_sensor.cx50_defrost_active
             name: Defrost Active
-          - entity: binary_sensor.cx50_error_status_2
+          - entity: binary_sensor.cx50_error_status
             name: Error Status
-          - entity: sensor.heat_pump_operating_mode
-            name: Operating Mode
+
 
   # ========================================================================
   # Phase Implementation & Settings
