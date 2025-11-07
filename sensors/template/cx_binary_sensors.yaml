@@ -2,6 +2,7 @@
 # Status indicators for dashboard
 
 - binary_sensor:
+
     # ==========================================
     # SYSTEM STATUS
     # ==========================================
@@ -106,3 +107,67 @@
         {% else %}
           On
         {% endif %}
+
+    - name: "Test G2 Valve"
+      unique_id: test_g2_valve
+      state: >
+        {{ states('input_boolean.test_g2_valve') }}        
+
+    - name: "Main Floor Radiant"
+      unique_id: "radiant_main_floor"
+      state: >
+        {% if states('sensor.main_floor_demand_1' ) | float(0) > 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "Bedroom Radiant"
+      unique_id: "radiant_bedroom"
+      state: >
+        {% if states('sensor.bedroom_demand_1' ) | float(0) > 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+
+    - name: "Family Room Radiant"
+      unique_id: "radiant_family_room"
+      state: >
+        {% if states('sensor.family_room_demand_1' ) | float(0) > 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+
+
+    - name: "Front Bedroom Radiant"
+      unique_id: "radiant_front_bedroom"
+      state: >
+        {% if states('sensor.front_bedroom_demand_1' ) | float(0) > 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+
+    - name: "Master Suite Radiant"
+      unique_id: "radiant_master_suite"
+      state: >
+        {% if states('sensor.master_suite_demand_1' ) | float(0) > 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "Office Radiant"
+      unique_id: "radiant_office"
+      state: >
+        {% if states('sensor.office_3_demand_1' ) | float(0) > 0.0 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+

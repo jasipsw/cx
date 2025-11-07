@@ -1,347 +1,164 @@
-# CX50 Heat Pump Optimization Sensors
-# Purpose: Track heat pump cycles, startup penalties, and steady-state efficiency
-# Goal: Improve COP from 2.0-2.5 to manufacturer's 4.55 rating
-
 - binary_sensor:
-    # ------------------------------------------------------------------------
-    # Heat Pump Running Detection
-    # Detects when heat pump is actively running (power > 500W threshold)
-    # ------------------------------------------------------------------------
+  # CX50 Heat Pump Optimization Sensors
+  # Purpose: Track heat pump cycles, startup penalties, and steady-state efficiency
+  # Goal: Improve COP from 2.0-2.5 to manufacturer's 4.55 rating
 
-    - name: "Heat Pump Running"
-      unique_id: heat_pump_running
-      state: >-
-        {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-        {{ power > 500 }}
-      device_class: running
-      icon: mdi:heat-pump
-      availability: >-
-        {{ states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable'] }}
+  # ------------------------------------------------------------------------
+  # Heat Pump Running Detection
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Running"
+    unique_id: heat_pump_running
+    state: >-
+      {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+      {{ power > 500 }}
+    device_class: running # Valid for binary_sensor
+    icon: mdi:heat-pump
+    availability: >-
+      {{ states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable'] }}
 
-    # ------------------------------------------------------------------------
-    # Heat Pump Startup Phase Detection
-    # First 3 minutes of operation after startup (180 seconds)
-    # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # Heat Pump Startup Phase Detection
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump In Startup Phase"
+    unique_id: heat_pump_in_startup_phase
+    state: >-
+      {% set cycle_time = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+      {{ cycle_time > 0 and cycle_time < 180 }}
+    icon: mdi:rocket-launch
 
-    - name: "Heat Pump In Startup Phase"
-      unique_id: heat_pump_in_startup_phase
-      state: >-
-        {% set cycle_time = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {{ cycle_time > 0 and cycle_time < 180 }}
-      icon: mdi:rocket-launch
+  # ------------------------------------------------------------------------
+  # Heat Pump Steady State Detection
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Steady State"
+    unique_id: heat_pump_steady_state
+    state: >-
+      {% set cycle_time = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+      {% set remaining_time = states('sensor.heat_pump_current_cycle_remaining') | float(0) %}
+      {{ cycle_time > 180 and remaining_time > 10 }} # Arbitrary 10s buffer before cycle end
+    icon: mdi:check-circle-outline
 
-    # ------------------------------------------------------------------------
-    # Heat Pump Steady State Detection
-    # After startup phase (> 3 minutes of continuous operation)
-    # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # Short Cycle Detection
+  # MOVED from the broken, separate block into this main block
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Last Cycle Was Short"
+    unique_id: heat_pump_last_cycle_was_short
+    state: >-
+      {% set last_cycle = states('sensor.heat_pump_last_cycle_duration') | float(0) %}
+      {{ last_cycle > 0 and last_cycle < 300 }}
+    icon: mdi:alert-circle
 
-    - name: "Heat Pump In Steady State"
-      unique_id: heat_pump_in_steady_state
-      state: >-
-        {% set cycle_time = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {{ cycle_time >= 180 }}
-      icon: mdi:speedometer
-
+# ------------------------------------------------------------------------
+# Calculated Sensors
+# This block is correct and remains as-is
+# ------------------------------------------------------------------------
 - sensor:
-    # ------------------------------------------------------------------------
-    # Cycle Duration Tracking
-    # Tracks how long the current heat pump cycle has been running
-    # ------------------------------------------------------------------------
+  - name: "Heat Pump Average Steady State COP"
+    unique_id: heat_pump_average_steady_state_cop
+    state_class: measurement
+    unit_of_measurement: "COP"
+    state: >-
+      {% set cop_entity = 'sensor.heat_pump_current_cop' %}
+      {% set steady_state = is_state('binary_sensor.heat_pump_steady_state', 'on') %}
+      {% set enable = is_state('input_boolean.enable_cop_optimization', 'on') %}
 
-    - name: "Heat Pump Current Cycle Duration"
-      unique_id: heat_pump_current_cycle_duration
-      unit_of_measurement: "s"
-      state_class: measurement
-      icon: mdi:timer
-      state: >-
-        {% set running = is_state('binary_sensor.heat_pump_running', 'on') %}
-        {% if running %}
-          {% set last_change = as_timestamp(states.binary_sensor.heat_pump_running.last_changed) %}
-          {% set now = as_timestamp(now()) %}
-          {{ (now - last_change) | int(0) }}
-        {% else %}
-          0
-        {% endif %}
+      {% if steady_state and enable %}
+        {{ states(cop_entity) }}
+      {% else %}
+        {{ states('sensor.heat_pump_average_steady_state_cop') }}
+      {% endif %}
+      
+  - name: "System Distribution Efficiency"
+    unique_id: system_distribution_efficiency
+    state_class: measurement
+    unit_of_measurement: "%"
+    state: >-
+      {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+      {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
 
-    - name: "Heat Pump Current Cycle Duration Minutes"
-      unique_id: heat_pump_current_cycle_duration_minutes
-      unit_of_measurement: "min"
-      state_class: measurement
-      icon: mdi:timer
-      state: >-
-        {% set seconds = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {{ (seconds / 60) | round(2) }}
+      {% if hp_output > 0 %}
+        {{ ((hvac_load / hp_output) * 100) | round(1) }}
+      {% else %}
+        0
+      {% endif %}
+    icon: mdi:percent
 
-    # ------------------------------------------------------------------------
-    # Startup Phase COP Tracking
-    # Tracks COP during the first 3 minutes (startup penalty period)
-    # ------------------------------------------------------------------------
+  - name: "System Loss Analysis"
+    unique_id: system_loss_analysis
+    state: >-
+      {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+      {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
+      {% set efficiency = states('sensor.system_distribution_efficiency') | float(0) %}
 
-    - name: "Heat Pump Startup Phase COP"
-      unique_id: heat_pump_startup_phase_cop
-      state_class: measurement
-      icon: mdi:rocket-launch
-      state: >-
-        {% set in_startup = is_state('binary_sensor.heat_pump_in_startup_phase', 'on') %}
-        {% set cop = states('sensor.heat_pump_cop') %}
-        {% if in_startup and cop not in ['unavailable', 'unknown'] %}
-          {{ cop }}
-        {% else %}
-          unavailable
-        {% endif %}
-      availability: >-
-        {{ is_state('binary_sensor.heat_pump_in_startup_phase', 'on')
-           and states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
+      {% if hp_output < 100 %}
+        Heat pump idle
+      {% elif hvac_load > hp_output %}
+        ERROR: HVAC load ({{ (hvac_load/1000) | round(1) }}kW) > HP output ({{ (hp_output/1000) | round(1) }}kW) - Check sensors!
+      {% elif efficiency >= 90 %}
+        Excellent ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+      {% elif efficiency >= 80 %}
+        Good ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+      {% elif efficiency >= 70 %}
+        Fair ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+      {% elif efficiency >= 50 %}
+        Poor ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+      {% else %}
+        Critical ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
+      {% endif %}
 
-    # ------------------------------------------------------------------------
-    # Steady State COP Tracking
-    # Tracks COP after startup phase (> 3 minutes of operation)
-    # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  # System Distribution Efficiency (Daily)
+  # Compares Energy Used by House (Load) vs. Energy Produced by HP (Source)
+  # Formula: Efficiency = (Load / Source) * 100
+  # ------------------------------------------------------------------------
+  - name: "System Distribution Efficiency (Daily)"
+    unique_id: system_distribution_efficiency_daily
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:percent
+    state: >-
+      {% set load_kwh = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
+      {% set source_kwh = states('sensor.hvac_hp_thermal_energy_produced_daily') | float(0) %}
+      
+      {% if source_kwh > 0.5 %}
+        {{ ((load_kwh / source_kwh) * 100) | round(1) }}
+      {% else %}
+        {{ 'unavailable' }}
+      {% endif %}      
 
-    - name: "Heat Pump Steady State COP"
-      unique_id: heat_pump_steady_state_cop
-      state_class: measurement
-      icon: mdi:speedometer
-      state: >-
-        {% set in_steady = is_state('binary_sensor.heat_pump_in_steady_state', 'on') %}
-        {% set cop = states('sensor.heat_pump_cop') %}
-        {% if in_steady and cop not in ['unavailable', 'unknown'] %}
-          {{ cop }}
-        {% else %}
-          unavailable
-        {% endif %}
-      availability: >-
-        {{ is_state('binary_sensor.heat_pump_in_steady_state', 'on')
-           and states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
+  # ------------------------------------------------------------------------
+  # Filtered Thermal Power (Space Heating ONLY)
+  # EXCLUDES DHW to isolate true Space Heating COP
+  # ------------------------------------------------------------------------
+  - name: "HP Space Heating Thermal Power (kW)"
+    unique_id: hp_space_heating_thermal_power_kw
+    unit_of_measurement: "kW"
+    device_class: power
+    state_class: measurement
+    icon: mdi:radiator
+    state: >-
+      {% if states('sensor.heat_pump_operating_mode') == 'Heat' %}
+        {% set watts = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {{ (watts / 1000) | round(3) }}
+      {% else %}
+        {{ 0.0 }}
+      {% endif %}      
 
-    # ------------------------------------------------------------------------
-    # Cycle Statistics
-    # ------------------------------------------------------------------------
-
-    - name: "Heat Pump Short Cycle Alert"
-      unique_id: heat_pump_short_cycle_alert
-      state: >-
-        {% set running = is_state('binary_sensor.heat_pump_running', 'on') %}
-        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {% if not running and duration > 0 and duration < 600 %}
-          Short Cycle ({{ (duration / 60) | round(1) }} min)
-        {% elif running and duration > 0 %}
-          Running ({{ (duration / 60) | round(1) }} min)
-        {% else %}
-          Idle
-        {% endif %}
-      icon: >-
-        {% set running = is_state('binary_sensor.heat_pump_running', 'on') %}
-        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {% if not running and duration > 0 and duration < 600 %}
-          mdi:alert-circle
-        {% elif running %}
-          mdi:play-circle
-        {% else %}
-          mdi:pause-circle
-        {% endif %}
-
-    # ------------------------------------------------------------------------
-    # Startup Energy Penalty Calculation
-    # Estimates extra energy consumed during startup vs steady state
-    # ------------------------------------------------------------------------
-
-    - name: "Heat Pump Startup Energy Penalty"
-      unique_id: heat_pump_startup_energy_penalty
-      unit_of_measurement: "Wh"
-      device_class: energy
-#      state_class: measurement
-      icon: mdi:alert-octagon
-      state: >-
-        {% set in_startup = is_state('binary_sensor.heat_pump_in_startup_phase', 'on') %}
-        {% set startup_cop = states('sensor.heat_pump_startup_phase_cop') | float(0) %}
-        {% set steady_cop = states('sensor.heat_pump_steady_state_cop') | float(0) %}
-        {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-
-        {% if in_startup and startup_cop > 0 and steady_cop > startup_cop %}
-          {# Extra energy = power * time * (1 - startup_cop/steady_cop) #}
-          {% set time_hours = duration / 3600 %}
-          {% set efficiency_loss = 1 - (startup_cop / steady_cop) %}
-          {{ (power * time_hours * efficiency_loss) | round(2) }}
-        {% else %}
-          0
-        {% endif %}
-
-    # ------------------------------------------------------------------------
-    # Cycle Efficiency Metrics
-    # Overall cycle performance compared to steady-state target
-    # ------------------------------------------------------------------------
-
-    - name: "Heat Pump Cycle Efficiency"
-      unique_id: heat_pump_cycle_efficiency
-      unit_of_measurement: "%"
-      state_class: measurement
-      icon: mdi:percent
-      state: >-
-        {% set current_cop = states('sensor.heat_pump_cop') | float(0) %}
-        {% set target_cop = 4.55 %}
-        {% if current_cop > 0 %}
-          {{ ((current_cop / target_cop) * 100) | round(1) }}
-        {% else %}
-          0
-        {% endif %}
-      availability: >-
-        {{ states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
-
-    - name: "Heat Pump COP Improvement Needed"
-      unique_id: heat_pump_cop_improvement_needed
-      state_class: measurement
-      icon: mdi:trending-up
-      state: >-
-        {% set current_cop = states('sensor.heat_pump_cop') | float(0) %}
-        {% set target_cop = 4.55 %}
-        {% if current_cop > 0 %}
-          {{ (target_cop - current_cop) | round(2) }}
-        {% else %}
-          unavailable
-        {% endif %}
-      availability: >-
-        {{ states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
-
-    # ------------------------------------------------------------------------
-    # Off-Time Tracking (Time between cycles)
-    # Tracks how long the heat pump has been idle
-    # ------------------------------------------------------------------------
-
-    - name: "Heat Pump Off Time Duration"
-      unique_id: heat_pump_off_time_duration
-      unit_of_measurement: "min"
-      state_class: measurement
-      icon: mdi:timer-off
-      state: >-
-        {% set running = is_state('binary_sensor.heat_pump_running', 'on') %}
-        {% if not running %}
-          {% set last_change = as_timestamp(states.binary_sensor.heat_pump_running.last_changed) %}
-          {% set now = as_timestamp(now()) %}
-          {{ ((now - last_change) / 60) | round(1) }}
-        {% else %}
-          0
-        {% endif %}
-
-    # ------------------------------------------------------------------------
-    # Cycle Ratio (Runtime vs Total Time)
-    # Indicates how much time heat pump spends running vs idle
-    # ------------------------------------------------------------------------
-
-    - name: "Heat Pump Cycle Ratio Warning"
-      unique_id: heat_pump_cycle_ratio_warning
-      state: >-
-        {% set runtime = states('sensor.heat_pump_current_cycle_duration') | float(0) / 60 %}
-        {% set offtime = states('sensor.heat_pump_off_time_duration') | float(0) %}
-        {% set running = is_state('binary_sensor.heat_pump_running', 'on') %}
-
-        {% if running and runtime < 10 and offtime > 30 %}
-          Short Cycling - Runtime: {{ runtime | round(1) }}m, Last Off: {{ offtime | round(0) }}m
-        {% elif running and runtime >= 10 %}
-          Healthy - Runtime: {{ runtime | round(1) }} minutes
-        {% elif not running and offtime > 60 %}
-          Long Idle - {{ offtime | round(0) }} minutes off
-        {% elif not running %}
-          Idle - {{ offtime | round(0) }} minutes off
-        {% else %}
-          Normal
-        {% endif %}
-      icon: >-
-        {% set runtime = states('sensor.heat_pump_current_cycle_duration') | float(0) / 60 %}
-        {% set offtime = states('sensor.heat_pump_off_time_duration') | float(0) %}
-        {% set running = is_state('binary_sensor.heat_pump_running', 'on') %}
-
-        {% if running and runtime < 10 and offtime > 30 %}
-          mdi:alert
-        {% elif running and runtime >= 10 %}
-          mdi:check-circle
-        {% else %}
-          mdi:information
-        {% endif %}
-
-    # ------------------------------------------------------------------------
-    # Average COP Over Last Cycle
-    # Uses statistics integration to calculate average COP for completed cycles
-    # ------------------------------------------------------------------------
-
-    - name: "Heat Pump Last Cycle Average COP"
-      unique_id: heat_pump_last_cycle_average_cop
-      state_class: measurement
-      icon: mdi:chart-line
-      state: >-
-        {% set avg_cop = states('sensor.heat_pump_cop_statistics_mean') %}
-        {% if avg_cop not in ['unavailable', 'unknown'] %}
-          {{ avg_cop }}
-        {% else %}
-          {{ states('sensor.heat_pump_cop') }}
-        {% endif %}
-
-    # ------------------------------------------------------------------------
-    # System Distribution Losses (Heat Pump Output vs HVAC Load)
-    # Tracks energy lost between heat pump and point of use
-    # ------------------------------------------------------------------------
-
-    - name: "System Distribution Losses"
-      unique_id: system_distribution_losses
-      unit_of_measurement: "W"
-      device_class: power
-      state_class: measurement
-      icon: mdi:leak
-      state: >-
-        {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
-        {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
-        {% set losses = hp_output - hvac_load %}
-        {{ losses | round(0) }}
-      availability: >-
-        {{ states('sensor.heat_pump_thermal_power_output') not in ['unavailable', 'unknown']
-           and states('sensor.hvac_thermal_power_used') not in ['unavailable', 'unknown'] }}
-
-    - name: "System Distribution Efficiency"
-      unique_id: system_distribution_efficiency
-      unit_of_measurement: "%"
-      state_class: measurement
-      icon: mdi:percent
-      state: >-
-        {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
-        {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
-        {% if hp_output > 100 %}
-          {{ ((hvac_load / hp_output) * 100) | round(1) }}
-        {% else %}
-          0
-        {% endif %}
-      availability: >-
-        {{ states('sensor.heat_pump_thermal_power_output') not in ['unavailable', 'unknown']
-           and states('sensor.hvac_thermal_power_used') not in ['unavailable', 'unknown'] }}
-
-    - name: "System Loss Analysis"
-      unique_id: system_loss_analysis
-      state: >-
-        {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
-        {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
-        {% set efficiency = states('sensor.system_distribution_efficiency') | float(0) %}
-
-        {% if hp_output < 100 %}
-          Heat pump idle
-        {% elif hvac_load > hp_output %}
-          ERROR: HVAC load ({{ (hvac_load/1000) | round(1) }}kW) > HP output ({{ (hp_output/1000) | round(1) }}kW) - Check sensors!
-        {% elif efficiency >= 90 %}
-          Excellent ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
-        {% elif efficiency >= 80 %}
-          Good ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
-        {% elif efficiency >= 70 %}
-          Fair ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
-        {% elif efficiency >= 50 %}
-          Poor ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss)
-        {% else %}
-          Critical ({{ efficiency }}% - {{ ((hp_output - hvac_load)/1000) | round(1) }}kW loss) - Investigate!
-        {% endif %}
-      icon: >-
-        {% set efficiency = states('sensor.system_distribution_efficiency') | float(0) %}
-        {% if efficiency >= 85 %}
-          mdi:check-circle
-        {% elif efficiency >= 70 %}
-          mdi:alert-circle-outline
-        {% else %}
-          mdi:alert-circle
-        {% endif %}
+  # ------------------------------------------------------------------------
+  # House Heat Loss Coefficient (HLC) - Energy-Based (The stable one)
+  # Formula: HLC = (Daily Energy / 24h) / Avg Delta T
+  # ------------------------------------------------------------------------
+  - name: "House Heat Loss Coefficient (Energy-Based)"
+    unique_id: house_heat_loss_coefficient_energy_based
+    unit_of_measurement: "kW/°C"
+    state_class: measurement
+    icon: mdi:home-thermometer
+    state: >-
+      {% set daily_kwh = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
+      {% set avg_delta_t_c = states('sensor.house_delta_t_c_24_hour_mean') | float(0) %}
+      
+      {% if avg_delta_t_c > 1.0 %}
+        {{ ((daily_kwh / 24.0) / avg_delta_t_c) | round(2) }}
+      {% else %}
+        {{ 'unavailable' }}
+      {% endif %}

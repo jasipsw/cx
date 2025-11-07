@@ -2,6 +2,7 @@
 # Fixed: Power calculation, fan speeds, temperature units
 
 - sensor:
+
     # ------------------------------------------------------------------------
     # Operating Mode (Text Conversion)
     # ------------------------------------------------------------------------
@@ -36,6 +37,15 @@
         {% set temp = states('sensor.cx50_heating_target_temp_c') | float(0) %}
         {{ (temp * 1.8 + 32.0) | round(2) }}
 
+    - name: "Heat Pump Target DHW Temperature"
+      unique_id: heat_pump_target_dhw_temperature
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:thermometer
+      state: >
+        {% set temp = states('sensor.cx50_dhw_target_temp_c') | float(0) %}
+        {{ (temp * 1.8 + 32.0) | round(2) }}        
+         
     - name: "Heat Pump Ambient Temperature"
       unique_id: heat_pump_ambient_temperature
       unit_of_measurement: "°F"
@@ -261,3 +271,65 @@
         {% else %}
           mdi:alert-circle
         {% endif %}
+
+    - name: "Heat Pump Thermal Power (kW)"
+      unique_id: "heat_pump_thermal_power_kw"
+      unit_of_measurement: "kW"
+      state_class: "measurement"
+      icon: mdi:sun-thermometer
+      
+      # Availability: Added check for the operating mode sensor
+      availability: >-
+        {% set bad_states = ['unavailable', 'unknown', 'none', ''] %}
+        
+        {% set flow_ok = states('sensor.cx50_pump_flow_gpm') not in bad_states %}
+        {% set t_out_ok = states('sensor.heat_pump_outlet_temperature') not in bad_states %}
+        {% set t_in_ok = states('sensor.heat_pump_inlet_temperature') not in bad_states %}
+        {% set cp_ok = states('input_number.cx_fluid_specific_heat') not in bad_states %}
+        {% set rho_ok = states('input_number.cx_fluid_density') not in bad_states %}
+        {% set mode_ok = states('sensor.heat_pump_operating_mode') not in bad_states %}
+        
+        {{ flow_ok and t_out_ok and t_in_ok and cp_ok and rho_ok and mode_ok }}
+        
+      # State: Calculates thermal power (Q) in kW
+      # NOW ONLY CALCULATES IF THE MODE IS 'Heat'
+      state: >-
+        {% set mode = states('sensor.heat_pump_operating_mode') %}
+
+        {# Only calculate if mode is 'Heat'. Exclude 'DHW', 'Cool', 'Cool + DHW', 'Heat + DHW' #}
+        {% if mode == 'Heat' %}
+          {% set flow_gpm = states('sensor.cx50_pump_flow_gpm') | float(0) %}
+          {% set t_out_f = states('sensor.heat_pump_outlet_temperature') | float(0) %}
+          {% set t_in_f = states('sensor.heat_pump_inlet_temperature') | float(0) %}
+          
+          {% set cp_fluid = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+          {% set rho_fluid = states('input_number.cx_fluid_density') | float(970) %}
+          
+          {% set flow_factor = 0.00006309 %} 
+          {% set delta_t_c = (t_out_f - t_in_f) / 1.8 %}
+          {% set mass_flow_rate_kg_s = flow_gpm * flow_factor * rho_fluid %}
+          {% set result_kw = mass_flow_rate_kg_s * cp_fluid * delta_t_c %}
+          
+          {{ result_kw | round(2) }}
+        
+        {% else %}
+          {# If mode is anything else (Off, DHW, Cool, etc.), HVAC power is 0 #}
+          {{ 0.0 }}
+        {% endif %}
+
+
+    - name: "Heat Pump Thermal Power (BTU/h)"
+      unique_id: "heat_pump_thermal_power_btu_h"
+      unit_of_measurement: "BTU/h"
+      state_class: "measurement"
+      device_class: "power"
+      icon: mdi:sun-thermometer-outline
+      
+      # Only available if the source kW sensor is available
+      availability: >-
+        {{ states('sensor.heat_pump_thermal_power_kw') | is_number }}
+        
+      # Conversion: 1 kW = 3412.14 BTU/h
+      state: >-
+        {% set kw_power = states('sensor.heat_pump_thermal_power_kw') | float(0) %}
+        {{ (kw_power * 3412.14) | round(0) }}      

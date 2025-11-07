@@ -7,6 +7,8 @@ default_config:
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
+  extra_module_url:
+    - /local/community/lovelace-card-mod/card-mod.js
 
 # Core includes
 automation: !include automations.yaml
@@ -28,11 +30,14 @@ logger:
     homeassistant.components.modbus: info
     pymodbus: info
 
-sensor: !include sensors/power_grid_sensors.yaml
-
-utility_meter: !include sensors/utility_meters.yaml
+# This section is for LEGACY sensor platforms (like 'filter', 'mqtt', etc.)
+# Combine all your legacy sensors (filter and power grid) into one file and include it here.
+sensor: !include sensors/legacy_sensors.yaml 
 
 template: !include_dir_merge_list sensors/template/
+utility_meter: !include sensors/utility_meters/utility_meters.yaml
+
+
 
 # Helper entities
 input_number: !include helpers/input_number.yaml
@@ -62,3 +67,5 @@ lovelace:
       icon: mdi:chart-bar
       show_in_sidebar: true
       filename: dashboards/dashboard_energy.yaml
+
+

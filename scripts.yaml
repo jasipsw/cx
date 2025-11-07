@@ -165,6 +165,120 @@ cx_power_cycle:
       data:
         title: "System Power Cycled"
         message: "Heat pump restarted - allow 2 minutes for initialization"
+##############################
+##############################
+# Test Input Helpers for Heat Pump Flow Card Development
+# Template Sensors (map to your config's entity names)
+ 
+set_test_heating_mode:
+  alias: "Test: Heating Mode"
+  sequence:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.test_hp_running
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.test_g2_valve
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.test_hp_mode
+      data:
+        option: "HEAT"
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_flow
+      data:
+        value: 20
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hvac_flow
+      data:
+        value: 25
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_fan_speed
+      data:
+        value: 75
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_power
+      data:
+        value: 2500
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_thermal
+      data:
+        value: 9000
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_outlet_temp
+      data:
+        value: 110
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_inlet_temp
+      data:
+        value: 95
+
+set_test_dhw_mode:
+  alias: "Test: DHW Mode"
+  sequence:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.test_hp_running
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.test_g2_valve
+    - service: input_select.select_option
+      target:
+        entity_id: input_select.test_hp_mode
+      data:
+        option: "HEAT + DHW"
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_flow
+      data:
+        value: 15
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_fan_speed
+      data:
+        value: 60
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_dhw_inlet_temp
+      data:
+        value: 120
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_dhw_outlet_temp
+      data:
+        value: 105
+
+set_test_hp_off:
+  alias: "Test: HP Off"
+  sequence:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.test_hp_running
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_flow
+      data:
+        value: 0
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_fan_speed
+      data:
+        value: 0
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.test_hp_power
+      data:
+        value: 0
+
+
+
 # ============================================================================
 # SMART AUTOMATIONS
 # ============================================================================
@@ -297,3 +411,5 @@ cx_power_cycle:
 #             - Inspect outdoor unit
 #             - Check refrigerant levels
 #             - Clean coils
+
+

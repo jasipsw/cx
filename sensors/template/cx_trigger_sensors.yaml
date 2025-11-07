@@ -1,6 +1,6 @@
 # Chiltrix Heat Pump - Trigger-Based Sensors
 # These sensors update at specific times or events
-template:
+
 
   - trigger:
     - platform: time
@@ -47,20 +47,20 @@ template:
       device_class: power_factor
       state_class: measurement
 
-  - trigger:
-    - platform: state
-      entity_id: sensor.cx_cop
-      to:
-  - sensor:
-    - name: "CX Last Known COP"
-      unique_id: cx_last_known_cop
-      state_class: measurement
-      state: >-
-        {% if trigger.to_state.state not in ['unknown', 'unavailable'] %}
-          {{ trigger.to_state.state }}
-        {% else %}
-          {{ states('sensor.cx_last_known_cop') }}
-        {% endif %}
+  # - trigger:
+  #   - platform: state
+  #     entity_id: sensor.cx_cop
+  #     to:
+  # - sensor:
+  #   - name: "CX Last Known COP"
+  #     unique_id: cx_last_known_cop
+  #     state_class: measurement
+  #     state: >-
+  #       {% if trigger.to_state.state not in ['unknown', 'unavailable'] %}
+  #         {{ trigger.to_state.state }}
+  #       {% else %}
+  #         {{ states('sensor.cx_last_known_cop') }}
+  #       {% endif %}
   # ========================================================================
   # LIFETIME COST TRACKING
   # ========================================================================

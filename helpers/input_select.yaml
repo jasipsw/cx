@@ -41,3 +41,13 @@ optimization_phase:
     - "Phase 3: Supply Temp 82°F (Target)"
   initial: "Baseline (Current Settings)"
   icon: mdi:progress-clock
+
+test_hp_mode:
+  name: Test Heat Pump Mode
+  options:
+    - "OFF"
+    - "HEAT"
+    - "COOL"
+    - "HEAT + DHW"
+    - "DHW"
+  icon: mdi:thermostat

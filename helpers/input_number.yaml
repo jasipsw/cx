@@ -206,3 +206,135 @@ startup_phase_duration:
   initial: 180
   unit_of_measurement: "s"
   icon: mdi:rocket-launch
+
+
+  #######################
+  # Flow rates
+test_hp_flow:
+  name: Test HP Flow Rate
+  min: 0
+  max: 50
+  step: 0.5
+  unit_of_measurement: "L/min"
+  icon: mdi:water-pump
+
+test_hvac_flow:
+  name: Test HVAC Flow Rate
+  min: 0
+  max: 50
+  step: 0.5
+  unit_of_measurement: "L/min"
+  icon: mdi:water-pump
+
+# HP Temperatures
+test_hp_outlet_temp:
+  name: Test HP Outlet Temp
+  min: 50
+  max: 140
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:thermometer-high
+
+test_hp_inlet_temp:
+  name: Test HP Inlet Temp
+  min: 40
+  max: 130
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:thermometer-low
+
+# Buffer Tank Temperatures
+test_buffer_supply_temp:
+  name: Test Buffer Supply Temp
+  min: 50
+  max: 140
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:thermometer
+
+test_buffer_return_temp:
+  name: Test Buffer Return Temp
+  min: 40
+  max: 130
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:thermometer
+
+# DHW Temperatures
+test_dhw_inlet_temp:
+  name: Test DHW Inlet Temp
+  min: 50
+  max: 140
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:thermometer-high
+
+test_dhw_outlet_temp:
+  name: Test DHW Outlet Temp
+  min: 40
+  max: 130
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:thermometer-low
+
+test_dhw_tank_temp:
+  name: Test DHW Tank Temp
+  min: 40
+  max: 140
+  step: 0.5
+  unit_of_measurement: "°F"
+  icon: mdi:water-boiler
+
+# Power and Performance
+test_hp_power:
+  name: Test HP Power Input
+  min: 0
+  max: 5000
+  step: 50
+  unit_of_measurement: "W"
+  icon: mdi:lightning-bolt
+
+test_hp_thermal:
+  name: Test HP Thermal Output
+  min: 0
+  max: 20000
+  step: 100
+  unit_of_measurement: "W"
+  icon: mdi:fire
+
+test_hvac_thermal:
+  name: Test HVAC Thermal Load
+  min: 0
+  max: 15000
+  step: 100
+  unit_of_measurement: "W"
+  icon: mdi:radiator
+
+test_fan_speed:
+  name: Test Fan Speed
+  min: 0
+  max: 100
+  step: 1
+  unit_of_measurement: "%"
+  icon: mdi:fan
+
+
+home_heat_loss_design_temperature:
+  name: "home_heat_loss_design_temperature"
+  min: -20
+  max: 70
+  step: 1
+  initial: 9
+  unit_of_measurement: "°F"
+  mode: box
+  icon: mdi:water-thermometer
+
+home_heat_loss_manual_j:
+  name: "Manual J Home Heat Loss"
+  min: 0
+  max: 100000
+  step: 1
+  initial: 46552
+  unit_of_measurement: "BTU/h"
+  icon: mdi:fire
+  mode: box

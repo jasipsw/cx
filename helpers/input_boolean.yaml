@@ -35,3 +35,11 @@ enable_startup_penalty_tracking:
   name: Enable Startup Penalty Tracking
   initial: true
   icon: mdi:rocket-launch
+
+test_hp_running:
+  name: Test Heat Pump Running
+  icon: mdi:heat-pump
+
+test_g2_valve:
+  name: Test G2 Valve (DHW Mode)
+  icon: mdi:valve
