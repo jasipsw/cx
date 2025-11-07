@@ -1,0 +1,10 @@
+# sensors/hvac_filter_sensors.yaml
+
+# - platform: filter
+#   name: "House Heat Loss Coefficient (kW/C) - Smoothed"
+#   unique_id: "house_heat_loss_coefficient_kw_c_smoothed"
+#   entity_id: sensor.house_heat_loss_coefficient_kw_c
+#   filters:
+#     # FIX: Use the standard list/dictionary syntax for the time_mean filter
+#     - time_mean:
+#         duration: "01:00:00"

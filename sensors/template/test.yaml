@@ -1,0 +1,120 @@
+
+- sensor:
+    # Heat Pump Sensors
+  - name: "Test CX50 Heat Pump Watts"
+    unique_id: test_cx50_heat_pump_watts
+    state: >
+      {{ states('input_number.test_hp_power') | float }}
+    unit_of_measurement: "W"
+    device_class: power
+  
+  - name: "Test Heat Pump Thermal Power Output"
+    unique_id: test_heat_pump_thermal_output
+    state: >
+      {{ states('input_number.test_hp_thermal') | float }}
+    unit_of_measurement: "W"
+    device_class: power
+  
+  - name: "Test Heat Pump COP"
+    unique_id: test_heat_pump_cop
+    state: >
+      {% set power = states('input_number.test_hp_power') | float %}
+      {% set thermal = states('input_number.test_hp_thermal') | float %}
+      {% if power > 0 %}
+        {{ (thermal / power) | round(2) }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "COP"
+  
+  - name: "Test Heat Pump Outlet Temperature"
+    unique_id: test_hp_outlet_temp
+    state: >
+      {{ states('input_number.test_hp_outlet_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+  
+  - name: "Test Heat Pump Inlet Temperature"
+    unique_id: test_hp_inlet_temp
+    state: >
+      {{ states('input_number.test_hp_inlet_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+  
+  - name: "Test CX50 Pump Flow LPM"
+    unique_id: test_cx50_pump_flow
+    state: >
+      {{ states('input_number.test_hp_flow') | float }}
+    unit_of_measurement: "L/min"
+  
+  - name: "Test Heat Pump Fan Speed"
+    unique_id: test_hp_fan_speed
+    state: >
+      {% if states('input_boolean.test_hp_running') == 'on' %}
+        {{ states('input_number.test_fan_speed') | float }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "%"
+  
+  - name: "Test Heat Pump Operating Mode"
+    unique_id: test_hp_mode
+    state: >
+      {% if states('input_boolean.test_hp_running') == 'on' %}
+        {{ states('input_select.test_hp_mode') }}
+      {% else %}
+        OFF
+      {% endif %}
+  
+  # Buffer Tank Sensors
+  - name: "Test HVAC Buffer Tank Supply Temperature"
+    unique_id: test_buffer_supply_temp
+    state: >
+      {{ states('input_number.test_buffer_supply_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+  
+  - name: "Test HVAC Buffer Tank Return Temperature"
+    unique_id: test_buffer_return_temp
+    state: >
+      {{ states('input_number.test_buffer_return_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+  
+  # HVAC Sensors
+  - name: "Test HVAC Thermal Power Used"
+    unique_id: test_hvac_thermal
+    state: >
+      {{ states('input_number.test_hvac_thermal') | float }}
+    unit_of_measurement: "W"
+    device_class: power
+  
+  - name: "Test Hydronic Flow Flow Rate"
+    unique_id: test_hvac_flow
+    state: >
+      {{ states('input_number.test_hvac_flow') | float }}
+    unit_of_measurement: "L/min"
+  
+  # DHW Sensors
+  - name: "Test DHW Coil Inlet Temp"
+    unique_id: test_dhw_inlet_temp
+    state: >
+      {{ states('input_number.test_dhw_inlet_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+  
+  - name: "Test DHW Coil Outlet Temp"
+    unique_id: test_dhw_outlet_temp
+    state: >
+      {{ states('input_number.test_dhw_outlet_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+  
+  - name: "Test DHW Tank Temp"
+    unique_id: test_dhw_tank_temp
+    state: >
+      {{ states('input_number.test_dhw_tank_temp') | float }}
+    unit_of_measurement: "°F"
+    device_class: temperature
+
+

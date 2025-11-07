@@ -1,0 +1,269 @@
+- sensor:
+  # ------------------------------------------------------------------------
+  # Thermal Power Use 
+  # Formula: Q = ṁ × Cp × ΔT
+  # ------------------------------------------------------------------------
+
+  - name: "HVAC Buffer Tank Return Temperature"
+    unique_id: hvac_buffer_tank_return_temperature
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    state: >-
+      {% set return = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {{ (return * 1.8 + 32.0) | round(2) }}
+
+  - name: "HVAC Buffer Tank Supply Temperature"
+    unique_id: hvac_buffer_tank_supply_temperature
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer      
+    state: >-
+      {% set supply = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {{ (supply * 1.8 + 32.0) | round(2) }}
+
+  - name: "HVAC Buffer Tank Flow Rate"
+    unique_id: hvac_buffer_tank_flow_rate
+    unit_of_measurement: "L/min"
+    device_class: volume_flow_rate
+    state_class: measurement
+    icon: mdi:waves-arrow-left
+    state: >-
+      {% set flow  = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+      {{ flow | round(0) }}
+
+  - name: "Flow Sensor Discrepancy Ratio"
+    unique_id: flow_sensor_discrepancy_ratio
+    state_class: measurement
+    icon: mdi:gauge
+    state: >-
+      {% set cx_flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+      {% set hydronic_flow = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+      {% if cx_flow > 1 %}
+        {{ (hydronic_flow / cx_flow) | round(2) }}
+      {% else %}
+        0
+      {% endif %}
+
+  - name: "Flow Sensor Discrepancy Analysis"
+    unique_id: flow_sensor_discrepancy_analysis
+    state: >-
+      {% set cx_flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+      {% set hydronic_flow = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+      {% set ratio = states('sensor.flow_sensor_discrepancy_ratio') | float(0) %}
+
+      {% if cx_flow < 1 %}
+        Heat pump idle
+      {% elif ratio < 1.2 %}
+        Excellent match ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+      {% elif ratio < 1.5 %}
+        Good match ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+      {% elif ratio < 2.0 %}
+        Acceptable ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+      {% elif ratio < 3.0 %}
+        Significant difference ({{ ratio }}x - {{ (cx_flow | round(1)) }}L/min vs {{ (hydronic_flow | round(1)) }}L/min)
+      {% else %}
+        CRITICAL: Hydronic sensor {{ ratio }}x higher! (CX: {{ (cx_flow | round(1)) }}L/min, Hydronic: {{ (hydronic_flow | round(1)) }}L/min) - Sensor miscalibrated!
+      {% endif %}
+    icon: >-
+      {% set ratio = states('sensor.flow_sensor_discrepancy_ratio') | float(0) %}
+      {% if ratio < 1.5 %}
+        mdi:check-circle
+      {% elif ratio < 3.0 %}
+        mdi:alert-circle-outline
+      {% else %}
+        mdi:alert-circle
+      {% endif %}
+
+  - name: "HVAC Buffer Tank Delta T"
+    unique_id: hvac_buffer_tank_delta_t
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:delta      
+    state: >-
+      {% set return = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
+      {% set supply = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
+      {% set delta_t = supply - return %}
+      {{ delta_t | round(2) }}
+
+  - name: "HVAC Buffer Tank Delta T Celsius"
+    unique_id: hvac_buffer_tank_delta_t_celsius
+    unit_of_measurement: "°C"
+    state_class: measurement
+    icon: mdi:delta
+    state: >-
+      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set delta_t_c = supply_c - return_c %}
+      {{ delta_t_c | round(2) }}
+
+  - name: "House Heat Loss - (BTU/h)"
+    unique_id: "house_heat_loss_btu_h"
+    unit_of_measurement: "BTU/h"
+    state_class: "measurement"
+    icon: mdi:fire
+    state: >-
+      {% set kw_power = states('sensor.house_heat_loss_kw') | float(0) %}
+      {{ (kw_power * 3412.14) | round(0) }}
+  
+  # ------------------------------------------------------------------------
+  # Raw Delta T (Indoor Target - Outdoor) in Celsius
+  # MISSING: Add this block at the end of hvac_sensors.yaml
+  # ------------------------------------------------------------------------
+  - name: "House Delta T (C) - Raw"
+    unique_id: house_delta_t_c_raw
+    unit_of_measurement: "°C"
+    state_class: measurement
+    state: >-
+      {% set t_in_f = states('input_number.house_target_temp') | float(0) %}
+      {% set t_out_f = states('sensor.outdoor_temperature') | float(0) %}
+
+      {% set delta_t_c = ((t_in_f - t_out_f) / 1.8) %} 
+
+      {% if delta_t_c > 1.0 %}
+        {{ delta_t_c | round(1) }}
+      {% else %}
+        {{ 1.0 | round(1) }} 
+      {% endif %}
+
+  - name: "Heat Loss Calculation Status"
+    unique_id: "heat_loss_calc_status_check"
+    icon: mdi:alert-circle-check-outline
+    
+    state: >-
+      {% set inputs = {
+          'Flow Rate': states('sensor.hvac_buffer_tank_flow_rate'),
+          'Supply Temp': states('sensor.hvac_buffer_tank_supply_temperature'),
+          'Return Temp': states('sensor.hvac_buffer_tank_return_temperature'),
+          'Outdoor Temp': states('sensor.outdoor_temperature'),
+          'Specific Heat': states('input_number.cx_fluid_specific_heat'),
+          'Density': states('input_number.cx_fluid_density')
+      } %}
+
+      {% set unavailable_sensors = [] %}
+      
+      {% for name, state in inputs.items() %}
+        {% if state is in ['unavailable', 'unknown', 'none', ''] or state | float(0) == 0 %}
+          {% set unavailable_sensors = unavailable_sensors + [name] %}
+        {% endif %}
+      {% endfor %}
+
+      {% if unavailable_sensors | length > 0 %}
+        Unavailable: {{ unavailable_sensors | join(', ') }}
+      {% else %}
+        OK - All inputs valid
+      {% endif %}
+
+  - name: "HVAC Thermal Power Used"
+    unique_id: hvac_thermal_power_used
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:fire
+    availability: >-
+      {{ states('sensor.shellyplus1_c4d8d5543fc0_temperature') not in ['unknown', 'unavailable']
+          and states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') not in ['unknown', 'unavailable']
+          and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
+    state: >-
+      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      {% set density = states('input_number.cx_fluid_density') | float(970) %}
+      {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+
+      {% set delta_t_c = supply_c - return_c %}
+
+      {% set flow_lps = flow_lpm / 60 %}
+      {% set flow_kgs = (flow_lps * density) / 1000 %}
+      {% set specific_heat_j = specific_heat * 1000 %}
+      {% set thermal_output = flow_kgs * specific_heat_j * delta_t_c %}
+      {{ thermal_output | round(0) }}
+
+
+  - name: "House Heat Loss (kW)"
+    unique_id: house_heat_loss_kw
+    unit_of_measurement: "kW"
+    state_class: "measurement"
+    icon: mdi:fire
+    
+    # availability: >-
+    #   {% set bad_states = ['unavailable', 'unknown', 'none', ''] %}
+      
+    #   {% set flow_ok = states('sensor.hvac_buffer_tank_flow_rate') not in bad_states %}
+    #   {% set t_sup_ok = states('sensor.hvac_buffer_tank_supply_temperature') not in bad_states %}
+    #   {% set t_ret_ok = states('sensor.hvac_buffer_tank_return_temperature') not in bad_states %}
+    #   {% set cp_ok = states('input_number.cx_fluid_specific_heat') not in bad_states %}
+    #   {% set rho_ok = states('input_number.cx_fluid_density') not in bad_states %}
+      
+    #   {{ flow_ok and t_sup_ok and t_ret_ok and cp_ok and rho_ok }}
+      
+    state: >-
+      {% set flow_gpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      {% set t_sup_f = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
+      {% set t_ret_f = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
+      
+      {% set cp_fluid = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+      {% set rho_fluid = states('input_number.cx_fluid_density') | float(970) %}
+      
+      {% set flow_factor = 0.00006309 %}
+      {% set delta_t_c = (t_sup_f - t_ret_f) / 1.8 %}
+      
+      {% set mass_flow_rate_kg_s = flow_gpm * flow_factor * rho_fluid %}
+      {% set result_kw = mass_flow_rate_kg_s * cp_fluid * delta_t_c %}
+      
+      {{ result_kw | round(2) }}
+
+  - name: "House Projected Max Heat Loss (kW)"
+    unique_id: "house_projected_max_heat_loss_kw"
+    unit_of_measurement: "kW"
+    state_class: "measurement"
+    icon: mdi:home-lightning-bolt
+
+    availability: >-
+      {{ states('sensor.house_heat_loss_coefficient_kw_c') | is_number }}
+
+    state: >-
+      {% set loss_coefficient = states('sensor.house_heat_loss_coefficient_kw_c') | float(0) %} 
+      {% set indoor_temp = states('sensor.average_room_temperature') | float(0) %}       
+      {% set design_temp = states('input_number.hvac_design_temperature') | float(0) %}       
+      {% set design_htd_c = (indoor_temp - design_temp) / 1.8 | abs %} 
+      {{ (loss_coefficient * design_htd_c) | round(2) }}
+
+  - name: "House Projected Max Heat Loss (BTU/h)"
+    unique_id: "house_projected_max_heat_loss_btu_h"
+    unit_of_measurement: "BTU/h"
+    state_class: "measurement"
+    icon: mdi:home-lightning-bolt
+    
+    availability: >-
+      {{ states('sensor.house_projected_max_heat_loss_kw') | is_number }}
+
+    state: >-
+      {% set kw_max_loss = states('sensor.house_projected_max_heat_loss_kw') | float(0) %}
+      {{ (kw_max_loss * 3412.14) | round(0) }}        
+
+
+  - name: "House Heat Loss Coefficient (kW/C)"
+    unique_id: "house_heat_loss_coefficient_kw_c"
+    unit_of_measurement: "kW/°C"
+    state_class: "measurement"
+    icon: mdi:ruler-square-compass
+
+    state: >-
+      {% set heat_loss_kw = states('sensor.house_heat_loss_kw') | float(0) %}
+
+      {% if heat_loss_kw > 0.05 %}
+
+        {% set t_in_f = states('sensor.average_room_temperature') | float(0) %}
+        {% set t_out_f = states('sensor.outdoor_temperature') | float(0) %}
+        {% set delta_t_c = ((t_in_f - t_out_f) / 1.8) | abs %} 
+        
+        {% if delta_t_c > 2.0 %}
+          {{ (heat_loss_kw / delta_t_c) | round(2) }}
+        {% else %}
+          {{ 'unavailable' }}
+        {% endif %}
+
+      {% else %}
+        {{ 'unavailable' }}
+      {% endif %}

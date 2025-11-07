@@ -1,0 +1,289 @@
+# Use the STATISTICS platform instead of FILTER
+- platform: statistics
+  name: "House Heat Loss Coefficient (kW/C) - Time Mean"
+  unique_id: "house_heat_loss_coefficient_kw_c_time_mean"
+  entity_id: sensor.house_heat_loss_coefficient_kw_c
+  state_characteristic: mean
+  # This calculates the mean of all data points over the last 60 minutes
+  max_age:
+    hours: 1
+  sampling_size: 1000  # Set a high sampling size for accuracy
+  precision: 2
+
+# Power and Grid Sensors
+# Leviton Current Transformers and Power Monitoring
+
+- platform: template
+  sensors:
+    grid_power_consumption_watts:
+      value_template: >-
+        {% set enphase_grid_kw = states('sensor.envoy_202425002148_current_net_power_consumption') | float %}
+        {% set enphase_grid_watts  = enphase_grid_kw * 1000 | float %}
+        {% set lc2_grid_watts  = states('sensor.lc2_grid_power_watts_2') | int(0) %}
+        {% set x  = lc2_grid_watts + enphase_grid_watts | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      unique_id: grid_power_consumption_watts
+      friendly_name: Grid Power Consumption
+
+    lc_shed_lc_watts:
+      value_template: "{{ ( states('sensor.sub_panel_watts_2') | int(0) ) }}"
+      unit_of_measurement: "W"
+      friendly_name: Shed LC CT1
+      unique_id: lc_shed_lc_watts
+
+    lc_shed_ct1_watts:
+      value_template: "{{ ( states('sensor.sub_panel_watts_2') | int(0) ) }}"
+      unit_of_measurement: "W"
+      friendly_name: Shed LC CT1
+      unique_id: lc_shed_ct1_watts
+
+    lc_shed_ct2_watts:
+      value_template: "{{ ( states('sensor.enphase_feed_to_shed_watts') | int(0) ) }}"
+      unit_of_measurement: "W"
+      friendly_name: Shed LC CT2
+      unique_id: lc_shed_ct2_watts
+
+    lc_shed_ct3_watts:
+      value_template: "{{ ( states('sensor.shed_ct_grid_to_lc2_watts') | int(0) ) }}"
+      unit_of_measurement: "W"
+      friendly_name: Shed LC CT3
+      unique_id: lc_shed_ct3_watts
+
+    lc_house1_ct1_watts:
+      value_template: "{{ ( states('sensor.main_panel_watts_2') | int(0) ) }}"
+      unit_of_measurement: "W"
+      friendly_name: House1 LC CT1
+      unique_id: lc_house1_ct1_watts
+
+    lc_house2_ct1_watts:
+      value_template: "{{ ( states('sensor.house2_lc_watts') | int(0) ) }}"
+      unit_of_measurement: "W"
+      friendly_name: House2 LC CT1
+      unique_id: lc_house2_ct1_watts
+
+    lc_shed_total_watts:
+      value_template: >-
+        {% set ct1  = states('sensor.lc_shed_ct1_watts') | int(0) %}
+        {% set ct2  = states('sensor.lc_shed_ct2_watts') | int(0) %}
+        {% set ct3  = states('sensor.lc_shed_ct3_watts') | int(0) %}
+        {% set x  = ct1 + ct2 + ct3 | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Shed LC Total
+      unique_id: lc_shed_total_watts
+
+    lc_shed_watts:
+      value_template: >-
+        {% set ct1  = states('sensor.lc_shed_ct1_watts') | int(0) %}
+        {% set ct2  = states('sensor.lc_shed_ct2_watts') | int(0) %}
+        {% set ct3  = states('sensor.lc_shed_ct3_watts') | int(0) %}
+        {% set x  = ct1 + ct2 + ct3 | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Shed Load Center
+      unique_id: lc_shed_watts
+
+    lc_shed_other_watts:
+      value_template: >-
+        {% set shed_total  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set x  = shed_total - hp_in | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Shed LC Other
+      unique_id: lc_shed_other_watts
+
+    shed_load_center_exclude_watts:
+      value_template: >-
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {{ hp_in | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Shed LC Heat Pump
+      unique_id: shed_load_center_exclude_watts
+
+    shed_load_center_net_consumption_watts:
+      value_template: >-
+        {% set shed_total  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set x  = shed_total - hp_in | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Shed LC Net
+      unique_id: shed_load_center_net_consumption_watts
+
+    lc_house1_other_watts:
+      value_template: >-
+        {% set house1_total  = states('sensor.lc_house1_ct1_watts') | int(0) %}
+        {% set aux_heater  = states('sensor.aux_heat_power_watts') | int(0) %}
+        {% set x  = house1_total - aux_heater | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: House1 LC Other
+      unique_id: lc_house1_other_watts
+
+    lc_house2_other_watts:
+      value_template: >-
+        {% set house2_total  = states('sensor.lc_house2_ct1_watts') | int(0) %}
+        {{ house2_total | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: House2 LC Other
+      unique_id: lc_house2_other_watts
+
+    shed_load_center_other_watts:
+      value_template: >-
+        {% set shed_total  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set x  = shed_total - hp_in | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Shed LC Other
+      unique_id: shed_load_center_other_watts
+
+    house_main_load_center_watts:
+      value_template: >-
+        {% set house1  = states('sensor.lc_house1_ct1_watts') | int(0) %}
+        {{ house1 | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: House Main LC
+      unique_id: house_main_load_center_watts
+
+    house_aux_load_center_watts:
+      value_template: >-
+        {% set house2  = states('sensor.lc_house2_ct1_watts') | int(0) %}
+        {{ house2 | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: House Aux LC
+      unique_id: house_aux_load_center_watts
+
+    hvac_power_watts:
+      value_template: >-
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set aux_heater  = states('sensor.aux_heat_power_watts') | int(0) %}
+        {% set x  = hp_in + aux_heater | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: HVAC Power
+      unique_id: hvac_power_watts
+
+    50clark_total_power_consumption_watts:
+      value_template: >-
+        {% set main  = states('sensor.house_main_load_center_watts') | int(0) %}
+        {% set aux  = states('sensor.house_aux_load_center_watts') | int(0) %}
+        {% set shed  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set x  = main + aux + shed | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Total Power Consumption
+      unique_id: 50clark_total_power_consumption_watts
+
+    50clark_daily_power_consumption:
+      value_template: >-
+        {% set x = states('sensor.daily_power_consumption_mwh') | float(0) %}
+        {% set x = x * 1000.0 %}
+        {{ x | float }}
+      unit_of_measurement: "kWh"
+      unique_id: 50clark_daily_power_consumption
+      # Note: state_class removed - not supported in old template format
+      # To use state_class, convert this sensor to new template format
+
+    solar_power_production_watts:
+      value_template: >-
+        {% set enphase = states('sensor.envoy_202425002148_current_power_production') | float %}
+        {% set enphase_watts = enphase * 1000 | float %}
+        {{ enphase_watts | float }}
+      unit_of_measurement: "W"
+      friendly_name: Solar Power Production
+      unique_id: solar_power_production_watts
+
+    net_power_consumption_watts:
+      value_template: >-
+        {% set consumption  = states('sensor.50clark_total_power_consumption_watts') | int(0) %}
+        {% set production  = states('sensor.solar_power_production_watts') | int(0) %}
+        {% set x  = consumption - production | int(0) %}
+        {{ x | int(0) }}
+      unit_of_measurement: "W"
+      friendly_name: Net Power Consumption
+      unique_id: net_power_consumption_watts
+
+    battery_rated_capacity:
+      value_template: "26880"
+      unit_of_measurement: "Wh"
+      unique_id: battery_rated_capacity
+
+- platform: integration
+  source: sensor.heat_pump_electrical_power_input
+  name: "CX Input Power kWh"
+  unique_id: cx_input_power_kwh
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# Filter Sensor (Stabilize Shed/LC2 Power Reading)
+# Filters out the dips that cause "Ignoring decreasing value" warnings.
+# Source: sensor.lc_shed_lc_watts
+# ------------------------------------------------------------------------
+- platform: filter
+  name: "Shed LC2 Consumption Power (Stable)"
+  unique_id: "shed_lc2_consumption_power_stable"
+  
+  entity_id: sensor.lc_shed_lc_watts 
+  
+  filters:
+    - filter: outlier
+      window_size: 3
+      radius: 3.0
+    - filter: time_simple_moving_average
+      window_size: "00:00:03"
+
+# ============================================================================
+# HEAT PUMP OPTIMIZATION SENSORS
+# ============================================================================
+
+# Track if heat pump is running (binary)
+- platform: template
+  sensors:
+    heat_pump_running:
+      friendly_name: "Heat Pump Running"
+      value_template: >-
+        {{ states('sensor.heat_pump_electrical_power_input') | float(0) > 500 }}
+
+# Track supply temperature
+- platform: template
+  sensors:
+    heat_pump_supply_temp:
+      friendly_name: "Heat Pump Supply Temperature"
+      unit_of_measurement: "°F"
+      value_template: >-
+        {{ states('sensor.heat_pump_outlet_temperature') | float(0) }}
+
+# Calculate current efficiency (COP)
+- platform: template
+  sensors:
+    heat_pump_current_cop:
+      friendly_name: "Heat Pump Current COP"
+      value_template: >-
+        {% set thermal_w = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {% set elec_w = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+        {% if elec_w > 500 %}
+          {{ (thermal_w / elec_w) | round(2) }}
+        {% else %}
+          unavailable
+        {% endif %}
+
+
+
+# ============================================================================
+# ENERGY-BASED HLC SUPPORT
+# ============================================================================
+- platform: statistics
+  name: "House Delta T (C) - 24 Hour Mean"
+  unique_id: "house_delta_t_c_24_hour_mean"
+  entity_id: sensor.house_delta_t_c_raw
+  state_characteristic: mean
+  max_age:
+    hours: 24
+  sampling_size: 1000  # High sampling size for accuracy
+  precision: 1
