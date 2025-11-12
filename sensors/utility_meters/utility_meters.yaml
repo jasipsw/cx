@@ -97,21 +97,21 @@ cx_monthly_energy_output:
   cycle: monthly
 
 cx_hourly_energy_input:
-  source: sensor.cx_input_power_kWh
+  source: sensor.cx_input_power_kwh
   name: CX Hourly Energy Input
   unique_id: cx_hourly_energy_input
   cycle: hourly
   delta_values: true
 
 cx_daily_energy_input:
-  source: sensor.cx_input_power_kWh
+  source: sensor.cx_input_power_kwh
   name: CX Daily Energy Input
   unique_id: cx_daily_energy_input
   cycle: daily
   delta_values: true
 
 cx_monthly_energy_input:
-  source: sensor.cx_input_power_kWh
+  source: sensor.cx_input_power_kwh
   name: CX Monthly Energy Input
   unique_id: cx_monthly_energy_input
   cycle: monthly
@@ -156,7 +156,7 @@ heat_loss_hourly_projected:
   cycle: hourly
   
 heat_pump_output_hourly:
-  source: sensor.heat_pump_output_power_kw
+  source: sensor.heat_pump_thermal_power_kw
   name: Heat Pump Output Hourly (kWh)
   cycle: hourly
 

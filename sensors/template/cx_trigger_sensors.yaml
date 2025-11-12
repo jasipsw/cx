@@ -26,14 +26,14 @@
 
   - trigger:
     - platform: state
-      entity_id: sensor.cx_cop
+      entity_id: sensor.heat_pump_cop
   - sensor:
     - name: "CX Last Known COP"
       unique_id: cx_last_known_cop
       state: >
         {% set current_cop = trigger.to_state.state %}
         {% set old_value = this.state if this is not none else 'unknown' %}
-        
+
         {% if current_cop not in ['unknown', 'unavailable', 'none'] %}
           {% set cop_num = current_cop | float(-1) %}
           {% if cop_num > 0 and cop_num < 10 %}

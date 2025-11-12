@@ -170,7 +170,7 @@
       state_class: measurement
       icon: mdi:lightning-bolt-circle
       state: >
-        {% set thermal_power = states('sensor.cx_thermal_power_output') | float(0) / 1000 %}
+        {% set thermal_power = states('sensor.heat_pump_thermal_power_output') | float(0) / 1000 %}
         {{ thermal_power | round(2) }}
 
     # ------------------------------------------------------------------------
@@ -204,7 +204,7 @@
       icon: mdi:fire
       state: >
         {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.cx_cop') %}
+        {% set cop = states('sensor.heat_pump_cop') %}
         {% if operating_state == 2 and cop not in ['unavailable', 'unknown'] %}
           {{ cop }}
         {% else %}
@@ -217,7 +217,7 @@
       icon: mdi:snowflake
       state: >
         {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.cx_cop') %}
+        {% set cop = states('sensor.heat_pump_cop') %}
         {% if operating_state == 1 and cop not in ['unavailable', 'unknown'] %}
           {{ cop }}
         {% else %}
@@ -230,7 +230,7 @@
       icon: mdi:water-boiler
       state: >
         {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.cx_cop') %}
+        {% set cop = states('sensor.heat_pump_cop') %}
         {% if operating_state == 4 and cop not in ['unavailable', 'unknown'] %}
           {{ cop }}
         {% else %}
@@ -244,7 +244,7 @@
     - name: "Heat Pump Efficiency Rating"
       unique_id: heat_pump_efficiency_rating
       state: >
-        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% set cop = states('sensor.heat_pump_cop') | float(0) %}
         {% if cop >= 4.5 %}
           Excellent
         {% elif cop >= 3.5 %}
@@ -259,7 +259,7 @@
           Unknown
         {% endif %}
       icon: >
-        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% set cop = states('sensor.heat_pump_cop') | float(0) %}
         {% if cop >= 4.5 %}
           mdi:star-circle
         {% elif cop >= 3.5 %}

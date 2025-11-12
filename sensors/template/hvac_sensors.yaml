@@ -198,19 +198,20 @@
     #   {{ flow_ok and t_sup_ok and t_ret_ok and cp_ok and rho_ok }}
       
     state: >-
-      {% set flow_gpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
       {% set t_sup_f = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
       {% set t_ret_f = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
-      
+
       {% set cp_fluid = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
       {% set rho_fluid = states('input_number.cx_fluid_density') | float(970) %}
-      
-      {% set flow_factor = 0.00006309 %}
+
+      {# Convert L/min to kg/s: flow[L/min] * density[kg/m³] / 60000 #}
+      {% set flow_factor = 0.00001667 %}
       {% set delta_t_c = (t_sup_f - t_ret_f) / 1.8 %}
-      
-      {% set mass_flow_rate_kg_s = flow_gpm * flow_factor * rho_fluid %}
+
+      {% set mass_flow_rate_kg_s = flow_lpm * flow_factor * rho_fluid %}
       {% set result_kw = mass_flow_rate_kg_s * cp_fluid * delta_t_c %}
-      
+
       {{ result_kw | round(2) }}
 
   - name: "House Projected Max Heat Loss (kW)"
