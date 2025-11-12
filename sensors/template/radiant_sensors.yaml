@@ -1,12 +1,10 @@
+- sensor:
   - name: "Master Suite Radiant Flow Temp"
     unique_id: "flow_temp_master_suite_radiant"
     unit_of_measurement: "°F"
     state_class: measurement
     icon: mdi:thermometer
-
     availability: >-
       {{ is_state('binary_sensor.master_suite_radiant', 'on') }}
-
     state: >-
-  
-
+      {{ states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) }}
