@@ -60,6 +60,58 @@
           Off
         {% endif %}
 
+    - name: "CX C30 Electrical Valve 1"
+      unique_id: cx_c30_electrical_valve_1
+      state: >
+        {% set x = states('sensor.cx50_c30') | int %}
+        {% if x |int(0) == 1 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "CX C31 Electrical Valve 2"
+      unique_id: cx_c31_electrical_valve_2
+      state: >
+        {% set x = states('sensor.cx50_c31') | int %}
+        {% if x |int(0) == 1 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "CX C31 Electrical Valve 3"
+      unique_id: cx_c32_electrical_valve_3
+      state: >
+        {% set x = states('sensor.cx50_c32') | int %}
+        {% if x |int(0) == 1 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "CX C33 Electrical Valve 4"
+      unique_id: cx_c33_electrical_valve_4
+      state: >
+        {% set x = states('sensor.cx50_c33') | int %}
+        {% if x |int(0) == 1 %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
+    - name: "CX Outlet Temp Over Heat Target"
+      unique_id: cx_outlet_temp_over_heat_target
+      state: >
+        {% set outlet = states('sensor.cx50_c05_outlet_water_temp_c') | int %}
+        {% set target = states('sensor.cx50_heating_target_temp_c') | int %}
+        {% set diff = outlet - target%}
+        {% if diff > 2 |int(0) %}
+          On
+        {% else %}
+          Off
+        {% endif %}
+
     - name: "CX Running"
       unique_id: cx_running
       state: >

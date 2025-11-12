@@ -51,8 +51,6 @@
     - name: "cx50_cooling_target_temp_c"
       unique_id: "cx50_cooling_target_temp_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       input_type: holding
       address: 142
       slave: 1
@@ -62,8 +60,6 @@
     - name: "cx50_heating_target_temp_c"
       unique_id: "cx50_heating_target_temp_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       input_type: holding
       address: 143
       slave: 1
@@ -74,16 +70,14 @@
       # was: "Din7 AC Cooling Mode Switch",
       unique_id: "cx50_dhw_target_temp_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       input_type: holding
       address: 144
       slave: 1
       precision: 1
       scan_interval: 60
 
-    - name: "cx50_copressor_max_percent"
-      unique_id: "cx50_copressor_max_percent"
+    - name: "cx50_p27_compressor_max_percent"
+      unique_id: "cx50_p27_compressor_max_percent"
       state_class: measurement
       input_type: holding
       address: 127
@@ -95,60 +89,70 @@
     - name: "cx50_c00_c"
       unique_id: "cx50_c00_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 200
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 30
 
 
     - name: "cx50_c01_c"
       unique_id: "cx50_c01_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 201
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 30
 
     - name: "cx50_c02_c"
       unique_id: "cx50_c02_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 202
       slave: 1
       precision: 1
-      scan_interval: 15    
+      scan_interval: 30    
 
     - name: "cx50_c03_c"
-      unique_id: "cx54_c03_c"
+      unique_id: "cx50_c03_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 203
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 30
 
     - name: "cx50_c04_c"
-      unique_id: "cx54_c04_c"
+      unique_id: "cx50_c04_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
-      address: 203
+      address: 204
+      slave: 1
+      precision: 1
+      scan_interval: 30
+
+    - name: "cx50_c05_c"
+      unique_id: "cx50_c05_c"
+      state_class: measurement
+      scale: 0.1
+      input_type: holding
+      address: 204
+      slave: 1
+      precision: 1
+      scan_interval: 30
+
+    - name: "cx50_c05_outlet_water_temp_c"
+      unique_id: "cx50_c05_outlet_water_temp_c"
+      state_class: measurement
+      scale: 0.1
+      input_type: holding
+      address: 205
       slave: 1
       precision: 1
       scan_interval: 15
@@ -156,8 +160,6 @@
     - name: "cx50_outlet_water_temp_c"
       unique_id: "cx50_outlet_water_temp_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 205
@@ -168,8 +170,6 @@
     - name: "cx50_owt_c"
       unique_id: "cx50_owt_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 205
@@ -180,14 +180,30 @@
     - name: "cx50_c06_c"
       unique_id: "cx50_c06_c"
       state_class: measurement
-#      device_class: temperature
-#      unit_of_measurement: "°C"
       scale: 0.1
       input_type: holding
       address: 206
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
+
+    - name: "cx50_c07"
+      unique_id: "cx50_c07"
+      state_class: measurement
+      input_type: holding
+      address: 207
+      slave: 1
+      precision: 1
+      scan_interval: 60
+
+    - name: "cx50_c08"
+      unique_id: "cx50_c08"
+      state_class: measurement
+      input_type: holding
+      address: 208
+      slave: 1
+      precision: 1
+      scan_interval: 60
 
     - name: "cx50_c09"
       unique_id: "cx50_c09"
@@ -196,7 +212,7 @@
       address: 209
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c13"
       unique_id: "cx50_c13"
@@ -205,7 +221,7 @@
       address: 213
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c14"
       unique_id: "cx50_c14"
@@ -213,7 +229,7 @@
       input_type: holding
       address: 214
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c15"
@@ -222,7 +238,7 @@
       input_type: holding
       address: 215
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c16"
@@ -232,7 +248,7 @@
       address: 216
       slave: 1
       data_type: uint16
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c17"
       unique_id: "cx50_c17"
@@ -240,7 +256,7 @@
       input_type: holding
       address: 217
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c18"
@@ -249,7 +265,7 @@
       input_type: holding
       address: 218
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c19"
@@ -258,7 +274,7 @@
       input_type: holding
       address: 219
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c20"
@@ -267,7 +283,7 @@
       input_type: holding
       address: 220
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c21"
@@ -276,7 +292,7 @@
       input_type: holding
       address: 221
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c22"
@@ -285,7 +301,7 @@
       input_type: holding
       address: 222
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c23"
@@ -294,7 +310,7 @@
       input_type: holding
       address: 223
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c24"
@@ -304,7 +320,7 @@
       address: 224
       slave: 1
       data_type: uint16
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c25"
       unique_id: "cx50_c25"
@@ -313,7 +329,7 @@
       address: 225
       slave: 1
       data_type: uint16
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c26"
       unique_id: "cx50_c26"
@@ -322,7 +338,7 @@
       address: 226
       slave: 1
       data_type: uint16
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c27"
       unique_id: "cx50_c27"
@@ -331,7 +347,7 @@
       address: 227
       slave: 1
       data_type: uint16
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c28"
       unique_id: "cx50_c28"
@@ -339,7 +355,7 @@
       input_type: holding
       address: 228
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c29"
@@ -348,7 +364,7 @@
       input_type: holding
       address: 229
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c30"
@@ -357,7 +373,7 @@
       input_type: holding
       address: 230
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c31"
@@ -366,7 +382,7 @@
       input_type: holding
       address: 231
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c32"
@@ -375,7 +391,7 @@
       input_type: holding
       address: 232
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c33"
@@ -384,7 +400,7 @@
       input_type: holding
       address: 233
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c34"
@@ -393,7 +409,7 @@
       input_type: holding
       address: 234
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c35"
@@ -402,7 +418,7 @@
       input_type: holding
       address: 235
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c36"
@@ -411,7 +427,7 @@
       input_type: holding
       address: 236
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c37"
@@ -420,7 +436,7 @@
       input_type: holding
       address: 237
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c38"
@@ -429,7 +445,7 @@
       input_type: holding
       address: 238
       slave: 1
-      scan_interval: 15
+      scan_interval: 60
       data_type: uint16
 
     - name: "cx50_c39"
@@ -439,7 +455,7 @@
       address: 239
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c40"
       unique_id: "cx50_c40"
@@ -448,7 +464,7 @@
       address: 240
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
 
     - name: "cx50_c41_c"
@@ -460,7 +476,7 @@
       address: 241
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c42_c"
       unique_id: "cx50_c42_c"
@@ -471,7 +487,7 @@
       address: 242
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c43"
       unique_id: "cx50_c43"
@@ -480,7 +496,7 @@
       address: 243
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
     - name: "cx50_c44_fan_type"
       unique_id: "cx50_c44_fan_type"
@@ -489,7 +505,7 @@
       address: 244
       slave: 1
       precision: 1
-      scan_interval: 15
+      scan_interval: 60
 
 
     - name: "cx50_c45_ec_fan_motor_1_speed"
@@ -660,7 +676,7 @@
       input_type: holding
       address: 259
       slave: 1
-      scan_interval: 10
+      scan_interval: 60
 
 
     - name: "cx50_c60_ipm_temp"
@@ -669,7 +685,7 @@
       input_type: holding
       address: 260
       slave: 1
-      scan_interval: 10
+      scan_interval: 60
 
 
     - name: "cx50_c61_compressor_total_running_time"
@@ -678,7 +694,7 @@
       input_type: holding
       address: 261
       slave: 1
-      scan_interval: 10
+      scan_interval: 60
 
 
     - name: "cx50_c62_e_heater_compensation_power"
@@ -698,8 +714,8 @@
       slave: 1
       scan_interval: 30
 
-    - name: "cx50_c64_din7_ac_heating_mode_switch"
-      unique_id: "cx50_c64_din7_ac_heating_mode_switch"
+    - name: "cx50_c64_din7_ac_cooling_mode_switch"
+      unique_id: "cx50_c64_din7_ac_cooling_mode_switch"
       state_class: measurement
       input_type: holding
       address: 264
@@ -712,12 +728,7 @@
       input_type: holding
       address: 265
       slave: 1
-      scan_interval: 30
-#      data_type: uint16
-#      scale: 0.1
-#      precision: 1
-#      unit_of_measurement: "°C"
-#      device_class: temperature
+      scan_interval: 60
 
     - name: "cx50_c66"
       unique_id: "cx50_c66"
@@ -725,13 +736,7 @@
       input_type: holding
       address: 266
       slave: 1
-      scan_interval: 30
-#     data_type: uint16
-#     scale: 0.1
-#     precision: 1
-#      unit_of_measurement: "°C"
-#      device_class: temperature
-#      state_class: measurement
+      scan_interval: 60
 
     - name: "cx50_c67"
       unique_id: "cx50_c67"
@@ -739,317 +744,206 @@
       input_type: holding
       address: 267
       slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c68"
+      unique_id: "cx50_c68"
+      state_class: measurement
+      input_type: holding
+      address: 268
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c69"
+      unique_id: "cx50_c69"
+      state_class: measurement
+      input_type: holding
+      address: 269
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c70"
+      unique_id: "cx50_c70"
+      state_class: measurement
+      input_type: holding
+      address: 270
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c71"
+      unique_id: "cx50_c71"
+      state_class: measurement
+      input_type: holding
+      address: 271
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c72"
+      unique_id: "cx50_c72"
+      state_class: measurement
+      input_type: holding
+      address: 272
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c73"
+      unique_id: "cx50_c73"
+      state_class: measurement
+      input_type: holding
+      address: 273
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c74"
+      unique_id: "cx50_c74"
+      state_class: measurement
+      input_type: holding
+      address: 274
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c75"
+      unique_id: "cx50_c75"
+      state_class: measurement
+      input_type: holding
+      address: 275
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c76"
+      unique_id: "cx50_c76"
+      state_class: measurement
+      input_type: holding
+      address: 276
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c77"
+      unique_id: "cx50_c67"
+      state_class: measurement
+      input_type: holding
+      address: 277
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c78"
+      unique_id: "cx50_c78"
+      state_class: measurement
+      input_type: holding
+      address: 278
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c79"
+      unique_id: "cx50_c79"
+      state_class: measurement
+      input_type: holding
+      address: 279
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c80"
+      unique_id: "cx50_c80"
+      state_class: measurement
+      input_type: holding
+      address: 280
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c81"
+      unique_id: "cx50_c81"
+      state_class: measurement
+      input_type: holding
+      address: 281
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c82"
+      unique_id: "cx50_c82"
+      state_class: measurement
+      input_type: holding
+      address: 282
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c83"
+      unique_id: "cx50_c83"
+      state_class: measurement
+      input_type: holding
+      address: 283
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c84"
+      unique_id: "cx50_c84"
+      state_class: measurement
+      input_type: holding
+      address: 284
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c85"
+      unique_id: "cx50_c85"
+      state_class: measurement
+      input_type: holding
+      address: 285
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c86"
+      unique_id: "cx50_c86"
+      state_class: measurement
+      input_type: holding
+      address: 286
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c87"
+      unique_id: "cx50_c87"
+      state_class: measurement
+      input_type: holding
+      address: 287
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c88"
+      unique_id: "cx50_c88"
+      state_class: measurement
+      input_type: holding
+      address: 288
+      slave: 1
+      scan_interval: 60
+
+    - name: "cx50_c89"
+      unique_id: "cx50_c89"
+      state_class: measurement
+      input_type: holding
+      address: 289
+      slave: 1
+      scan_interval: 60
+
+
+    - name: "cx50_c84_fault_code"
+      unique_id: "cx50_c84_fault_code"
+      state_class: measurement
+      input_type: holding
+      address: 284
+      slave: 1
       scan_interval: 30
-#      data_type: uint16
-#      scale: 0.1
-#      precision: 1
-#      unit_of_measurement: "°C"
-#      device_class: temperature
-#      state_class: measurement
 
 
-
-
-#  binary_sensors:
-#    - name: "CX50 Switch"
-#      unique_id: "cx50_switch_on_off"
-#      address: 140
-#      slave: 1
-#      input_type: coil
-#      device_class: switch
-#    - name: "CX50 AC Heating AU Mode"
-#      unique_id: "cx50_au_heating_mode"
-#      input_type: coil
-#      address: 145
-#      slave: 1
-#      device_class: switch
-#    - name: "CX50 Hot Water Au Mode"
-#      unique_id: "cx50_hot_water_au_mode"
-#      address: 146
-#      slave: 1
-#      input_type: coil
-#      device_class: switch
-
-
-
-
-  # # ============================================================================
-  # # TEMPERATURE SENSORS
-  # # ============================================================================
-  # #sensors:
-  #   # Water Temperatures
-  #   - name: "CX Water Inlet Temperature"
-  #     unique_id: cx_water_inlet_temp
-  #     address: 202  # 0xCA
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Water Outlet Temperature"
-  #     unique_id: cx_water_outlet_temp
-  #     address: 203  # 0xCB
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   # Ambient and System Temperatures
-  #   - name: "CX Ambient Temperature"
-  #     unique_id: cx_ambient_temp
-  #     address: 204  # 0xCC
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Coil Temperature"
-  #     unique_id: cx_coil_temp
-  #     address: 205  # 0xCD
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Discharge Temperature"
-  #     unique_id: cx_discharge_temp
-  #     address: 206  # 0xCE
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "cx_suction_temp_c"
-  #     unique_id: cx_suction_temp_c
-  #     address: 207  # 0xCF
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   # Setpoint Temperatures
-  #   - name: "CX Setpoint Temperature"
-  #     unique_id: cx_setpoint_temp
-  #     address: 209  # 0xD1
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Antifreeze Temperature"
-  #     unique_id: cx_antifreeze_temp
-  #     address: 214  # 0xD6
-  #     slave: 1
-  #     data_type: int16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "°C"
-  #     device_class: temperature
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   # ============================================================================
-  #   # STATUS AND OPERATING STATE SENSORS
-  #   # ============================================================================
-    
-  #   - name: "CX Operating State"
-  #     unique_id: cx_operating_state
-  #     address: 243  # 0xF3
-  #     slave: 1
-  #     data_type: uint16
-  #     scan_interval: 10
-  #     # 0=Off, 1=Heating, 0=Cooling, 3=Auto, 4=DHW, 5=Defrost, 6=Error
-    
-  #   - name: "CX Error Code"
-  #     unique_id: cx_error_code
-  #     address: 244  # 0xF4
-  #     slave: 1
-  #     data_type: uint16
-  #     scan_interval: 10
-    
-  #   # ============================================================================
-  #   # PERFORMANCE SENSORS
-  #   # ============================================================================
-    
-  #   - name: "CX Current Power"
-  #     unique_id: cx_current_power
-  #     address: 256  # 0x100
-  #     slave: 1
-  #     data_type: uint16
-  #     scale: 1
-  #     unit_of_measurement: "W"
-  #     device_class: power
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Flow Rate"
-  #     unique_id: cx_flow_rate
-  #     address: 257  # 0x101
-  #     slave: 1
-  #     data_type: uint16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "L/min"
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Compressor Speed"
-  #     unique_id: cx_compressor_speed
-  #     address: 258  # 0x102
-  #     slave: 1
-  #     data_type: uint16
-  #     unit_of_measurement: "%"
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Fan Speed"
-  #     unique_id: cx_fan_speed
-  #     address: 259  # 0x103
-  #     slave: 1
-  #     data_type: uint16
-  #     unit_of_measurement: "%"
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX Pump Speed"
-  #     unique_id: cx_pump_speed
-  #     address: 260  # 0x104
-  #     slave: 1
-  #     data_type: uint16
-  #     unit_of_measurement: "%"
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   - name: "CX System Pressure"
-  #     unique_id: cx_system_pressure
-  #     address: 261  # 0x105
-  #     slave: 1
-  #     data_type: uint16
-  #     scale: 0.1
-  #     precision: 1
-  #     unit_of_measurement: "bar"
-  #     device_class: pressure
-  #     state_class: measurement
-  #     scan_interval: 30
-    
-  #   # ============================================================================
-  #   # DIAGNOSTIC SENSORS
-  #   # ============================================================================
-    
-  #   - name: "CX Total Run Hours"
-  #     unique_id: cx_run_hours
-  #     address: 264  # 0x108
-  #     slave: 1
-  #     data_type: uint32
-  #     swap: word
-  #     unit_of_measurement: "h"
-  #     device_class: duration
-  #     state_class: total_increasing
-  #     scan_interval: 300  # Update every 5 minutes
-    
-  #   - name: "CX Compressor Starts"
-  #     unique_id: cx_compressor_starts
-  #     address: 281  # 0x119
-  #     slave: 1
-  #     data_type: uint32
-  #     swap: word
-  #     state_class: total_increasing
-  #     scan_interval: 300
-    
-  #   - name: "CX Defrost Count"
-  #     unique_id: cx_defrost_count
-  #     address: 285  # 0x11D (estimate)
-  #     slave: 1
-  #     data_type: uint16
-  #     state_class: total_increasing
-  #     scan_interval: 300
-  
-  # ============================================================================
-  # BINARY SENSORS (Status Flags)
-  # ============================================================================
-  binary_sensors:
-    # - name: "CX Power Status"
-    #   unique_id: cx_power_status
-    #   address: 0  # 0x00
-    #   slave: 1
-    #   scan_interval: 10
-    
-    # - name: "CX Heating Mode"
-    #   unique_id: cx_heating_mode
-    #   address: 1  # 0x01
-    #   slave: 1
-    #   scan_interval: 10
-    
-    # - name: "CX Cooling Mode"
-    #   unique_id: cx_cooling_mode
-    #   address: 2  # 0x02
-    #   slave: 1
-    #   scan_interval: 10
-    
-    # - name: "CX DHW Mode Active"
-    #   unique_id: cx_dhw_mode
-    #   address: 4  # 0x04
-    #   slave: 1
-    #   scan_interval: 10
-    
-    # - name: "CX Silent Mode"
-    #   unique_id: cx_silent_mode
-    #   address: 262  # 0x106
-    #   slave: 1
-    #   scan_interval: 10
-    
-    # - name: "CX DHW Priority"
-    #   unique_id: cx_dhw_priority
-    #   address: 263  # 0x107
-    #   slave: 1
-    #   scan_interval: 10
-    
-    - name: "CX Defrost Active"
-      unique_id: cx_defrost_active
-      address: 5  # 0x05 (estimate)
-      slave: 1
-      scan_interval: 10
-    
-    - name: "CX Pump Enabled"
-      unique_id: cx_pump_enabled
-      address: 6  # 0x06 (estimate)
-      slave: 1
-      scan_interval: 10
-    
-    - name: "CX50 Error Status"
-      unique_id: cx50_error_status
-      address: 244  # 0xF4 - non-zero value means error
-      slave: 1
-      scan_interval: 10
-  
   # ============================================================================
   # CONTROL SWITCHES (Coils)
   # ============================================================================
@@ -1073,7 +967,7 @@
       scan_interval: 30
 
     - name: "CX50 Cooling Setpoint"
-      unique_id: cx50_cooling_setpoint_c
+      unique_id: cx50_heating_setpoint_c
       address: 142  # P02 - AC cooling target temp
       slave: 1
       data_type: uint16
@@ -1115,23 +1009,23 @@
       scan_interval: 30
 
   switches:
-    - name: "CX Power"
-      unique_id: cx_power_switch
-      address: 0  # 0x00
-      slave: 1
-      write_type: coil
-      command_on: 1
-      command_off: 0
-      scan_interval: 10
+    # - name: "CX Power"
+    #   unique_id: cx_power_switch
+    #   address: 0  # 0x00
+    #   slave: 1
+    #   write_type: coil
+    #   command_on: 1
+    #   command_off: 0
+    #   scan_interval: 10
 
-    - name: "CX Silent Mode Control"
-      unique_id: cx_silent_mode_control
-      address: 262  # 0x106
-      slave: 1
-      write_type: holding
-      command_on: 1
-      command_off: 0
-      scan_interval: 10
+    # - name: "CX Silent Mode Control"
+    #   unique_id: cx_silent_mode_control
+    #   address: 262  # 0x106
+    #   slave: 1
+    #   write_type: holding
+    #   command_on: 1
+    #   command_off: 0
+    #   scan_interval: 60
 
     - name: "CX DHW Priority Control"
       unique_id: cx_dhw_priority_control
@@ -1140,23 +1034,23 @@
       write_type: holding
       command_on: 1
       command_off: 0
-      scan_interval: 10
+      scan_interval: 60
   
   # ============================================================================
   # CLIMATE CONTROL (Operation Mode)
   # ============================================================================
-  climates:
-    - name: "CX Climate Control"
-      unique_id: cx_climate
-      address: 1  # 0x01 - Operation mode register
-      slave: 1
-      data_type: uint16
-      target_temp_register: 209  # 0xD1 - Setpoint temperature
-      max_temp: 60
-      min_temp: 15
-      temp_step: 0.5
-      temperature_unit: C
-      scan_interval: 30
+  # climates:
+  #   - name: "CX Climate Control"
+  #     unique_id: cx_climate
+  #     address: 1  # 0x01 - Operation mode register
+  #     slave: 1
+  #     data_type: uint16
+  #     target_temp_register: 209  # 0xD1 - Setpoint temperature
+  #     max_temp: 60
+  #     min_temp: 15
+  #     temp_step: 0.5
+  #     temperature_unit: C
+  #     scan_interval: 30
 
 #Block Extract MODBUS Register Values
     # - name: "REG000"

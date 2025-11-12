@@ -162,3 +162,43 @@
       {% else %}
         {{ 'unavailable' }}
       {% endif %}
+
+      # In sensors/cx_optimization_sensors.yaml
+
+  # ------------------------------------------------------------------------
+  # 1. GENERAL Heating Electrical Power (Includes DHW)
+  # This is the source for your main "HP Heating Electrical Energy" accumulator
+  # ------------------------------------------------------------------------
+  - name: "HP Heating Electrical Power (kW)"
+    unique_id: hp_heating_electrical_power_kw
+    unit_of_measurement: "kW"
+    device_class: power
+    state_class: measurement
+    icon: mdi:lightning-bolt
+    state: >-
+      {# FIX: Check for both 'Heat' AND 'HEAT + DHW' #}
+      {% if states('sensor.heat_pump_operating_mode') in ['Heat', 'HEAT + DHW'] %}
+        {% set watts = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+        {{ (watts / 1000) | round(3) }}
+      {% else %}
+        {{ 0.0 }}
+      {% endif %}
+
+  # ------------------------------------------------------------------------
+  # 2. GENERAL Heating Thermal Power (Includes DHW)
+  # This is the source for your main "HP Heating Thermal Energy" accumulator
+  # ------------------------------------------------------------------------
+  - name: "HP Heating Thermal Power (kW)"
+    unique_id: hp_heating_thermal_power_kw
+    unit_of_measurement: "kW"
+    device_class: power
+    state_class: measurement
+    icon: mdi:fire
+    state: >-
+      {# FIX: Check for both 'Heat' AND 'HEAT + DHW' #}
+      {% if states('sensor.heat_pump_operating_mode') in ['Heat', 'HEAT + DHW'] %}
+        {% set watts = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {{ (watts / 1000) | round(3) }}
+      {% else %}
+        {{ 0.0 }}
+      {% endif %}
