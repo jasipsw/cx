@@ -127,3 +127,56 @@
       {% else %}
         0
       {% endif %}
+
+# ------------------------------------------------------------------------
+# Heat Pump Standby Power
+# Shows the electrical power consumed when heat pump is in standby (off)
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Heat Pump Standby Power"
+    unique_id: heat_pump_standby_power
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:power-plug-off
+    state: >
+      {% set is_running = is_state('binary_sensor.heat_pump_running', 'on') %}
+      {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+
+      {% if not is_running and power < 500 %}
+        {# Heat pump is off, show current standby power #}
+        {{ power | round(1) }}
+      {% elif not is_running %}
+        {# Heat pump is off but power reading seems high #}
+        {{ power | round(1) }}
+      {% else %}
+        {# Heat pump is running, preserve last standby value #}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}
+
+# ------------------------------------------------------------------------
+# Heat Pump Last Standby Power
+# Captures standby power consumption right before heat pump starts
+# ------------------------------------------------------------------------
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: "off"
+    to: "on"
+  sensor:
+  - name: "Heat Pump Last Standby Power"
+    unique_id: heat_pump_last_standby_power
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:power-standby
+    state: >
+      {% set standby_power = states('sensor.heat_pump_standby_power') | float(0) %}
+
+      {# Capture the standby power from just before startup #}
+      {% if standby_power > 0 and standby_power < 500 %}
+        {{ standby_power | round(1) }}
+      {% else %}
+        {# If we can't get valid standby power, preserve previous value #}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}

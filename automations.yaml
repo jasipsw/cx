@@ -475,6 +475,23 @@
 # CYCLE EVENTS
 # ============================================================================
 
+- id: log_heat_pump_standby_power_loss
+  alias: "Log: Heat Pump Standby Power Loss"
+  description: Log standby power consumption before heat pump starts
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      from: "off"
+      to: "on"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Standby
+        message: >
+          ⚡ Standby power loss: {{ states('sensor.heat_pump_last_standby_power') | float(0) }}W
+          (consumed while heat pump was idle)
+        entity_id: binary_sensor.heat_pump_running
+
 - id: log_heat_pump_cycle_started
   alias: "Log: Heat Pump Cycle Started"
   description: Log when heat pump starts a new cycle
@@ -710,3 +727,80 @@
           (HP Output: {{ (states('sensor.heat_pump_thermal_power_output') | float / 1000) | round(1) }}kW,
           HVAC Load: {{ (states('sensor.hvac_thermal_power_used') | float / 1000) | round(1) }}kW)
         entity_id: sensor.system_distribution_efficiency
+
+# ============================================================================
+# DHW MODE TRACKING
+# ============================================================================
+
+- id: log_heat_pump_dhw_mode_entered
+  alias: "Log: Heat Pump Entered DHW Mode"
+  description: Log when heat pump enters any DHW mode with context about COP impact
+  trigger:
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+      to: "DHW"
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+      to: "Heat + DHW"
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+      to: "HEAT + DHW"
+  condition:
+    - condition: template
+      value_template: >
+        {{ trigger.from_state.state not in ['DHW', 'Heat + DHW', 'HEAT + DHW', 'unknown', 'unavailable'] }}
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump DHW
+        message: >
+          🚿 Entered {{ trigger.to_state.state }} mode
+          (Note: Distribution efficiency will be low - energy goes to hot water tank)
+        entity_id: sensor.heat_pump_operating_mode
+
+- id: log_heat_pump_dhw_mode_exited
+  alias: "Log: Heat Pump Exited DHW Mode"
+  description: Log when heat pump exits DHW mode back to pure heating
+  trigger:
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+      from: "DHW"
+      to: "Heat"
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+      from: "Heat + DHW"
+      to: "Heat"
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+      from: "HEAT + DHW"
+      to: "Heat"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump DHW
+        message: >
+          🏠 Exited DHW mode → {{ trigger.to_state.state }}
+          (Space heating only - distribution efficiency should improve)
+        entity_id: sensor.heat_pump_operating_mode
+
+- id: log_heat_pump_dhw_cycle_completed
+  alias: "Log: Heat Pump DHW Cycle Completed"
+  description: Log DHW cycle completion with specific DHW COP
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      from: "on"
+      to: "off"
+  condition:
+    - condition: template
+      value_template: >
+        {{ states('sensor.heat_pump_operating_mode') in ['DHW', 'Heat + DHW', 'HEAT + DHW'] }}
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump DHW Cycle
+        message: >
+          🚿 DHW cycle completed: {{ (states('sensor.heat_pump_last_cycle_duration') | float / 60) | round(1) }} min,
+          COP {{ states('sensor.heat_pump_last_cycle_cop') }}
+          ({{ states('sensor.heat_pump_operating_mode') }} mode)
+        entity_id: binary_sensor.heat_pump_running

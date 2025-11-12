@@ -143,6 +143,12 @@ views:
           | Last Cycle Duration | {{ states('sensor.heat_pump_last_cycle_duration') }} | seconds | {{ '✅ Has data' if states('sensor.heat_pump_last_cycle_duration') | float(0) > 0 else '⚠️ Waiting for cycle' }} |
           | Last Cycle COP | {{ states('sensor.heat_pump_last_cycle_cop') }} | - | {{ '✅ Captured' if states('sensor.heat_pump_last_cycle_cop') not in ['unknown', 'unavailable'] else '⚠️ Waiting' }} |
 
+          ## Standby Power Sensors (NEW 2025-11-12)
+          | Sensor | Value | Unit | Status |
+          |--------|-------|------|--------|
+          | Current Standby Power | {{ states('sensor.heat_pump_standby_power') }} | W | {{ '✅ Tracking' if is_state('binary_sensor.heat_pump_running', 'off') else '✅ Preserved' }} |
+          | Last Standby Power | {{ states('sensor.heat_pump_last_standby_power') }} | W | {{ '✅ Captured' if states('sensor.heat_pump_last_standby_power') | float(0) > 0 else '⚠️ Waiting' }} |
+
           ## Cycle Phases (Calculated from Duration)
           | Sensor | Value | Formula | Expected When |
           |--------|-------|---------|---------------|
