@@ -83,6 +83,34 @@
       {% endif %}
 
 # ------------------------------------------------------------------------
+# Heat Pump Last Cycle COP
+# Captures the COP value when the cycle completes (ON → OFF)
+# ------------------------------------------------------------------------
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: "on"
+    to: "off"
+  sensor:
+  - name: "Heat Pump Last Cycle COP"
+    unique_id: heat_pump_last_cycle_cop
+    state_class: measurement
+    icon: mdi:gauge
+    state: >
+      {% set current_cop = states('sensor.heat_pump_cop') | float(0) %}
+      {% set last_known_cop = states('sensor.cx_last_known_cop') | float(0) %}
+
+      {# Use current COP if valid, otherwise use last known COP #}
+      {% if current_cop > 0 and current_cop < 10 %}
+        {{ current_cop | round(2) }}
+      {% elif last_known_cop > 0 and last_known_cop < 10 %}
+        {{ last_known_cop | round(2) }}
+      {% else %}
+        {# Preserve previous value if both are invalid #}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 'unknown' }}
+      {% endif %}
+
+# ------------------------------------------------------------------------
 # Heat Pump Current Cycle Remaining (Placeholder)
 # This would require knowing the target cycle duration
 # For now, return unavailable as we don't have that information
