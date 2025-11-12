@@ -37,6 +37,32 @@ views:
 
           **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
 
+      # EVENT TIMELINE CARD
+      - type: logbook
+        title: 🔔 Heat Pump Event Timeline
+        hours_to_show: 24
+        entities:
+          # Core state changes
+          - binary_sensor.heat_pump_running
+          - sensor.heat_pump_operating_mode
+
+          # Cycle tracking
+          - sensor.heat_pump_last_cycle_duration
+          - sensor.heat_pump_last_cycle_cop
+
+          # Phase transitions
+          - binary_sensor.heat_pump_in_startup_phase
+          - binary_sensor.heat_pump_steady_state
+          - binary_sensor.heat_pump_last_cycle_was_short
+
+          # Performance alerts
+          - sensor.heat_pump_cop
+          - sensor.heat_pump_efficiency_rating
+
+          # Integration sensors (to see when they initialize)
+          - sensor.cx_output_power_interval
+          - sensor.cx_input_power_kwh
+
       # CARD 1: RAW HEAT PUMP SENSORS
       - type: markdown
         title: 🔌 Raw Heat Pump Sensors (cx_sensors.yaml)

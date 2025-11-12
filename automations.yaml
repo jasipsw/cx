@@ -467,3 +467,246 @@
       message: "Excellent! Heat pump COP reached {{ states('sensor.heat_pump_cop') }} - at or above manufacturer's 4.55 rating!"
       title: CX50 Target COP Achieved!
   mode: single
+# Heat Pump Event Logging Automations
+# These automations create custom logbook entries for important heat pump events
+# to aid in debugging and performance tracking
+
+# ============================================================================
+# CYCLE EVENTS
+# ============================================================================
+
+- id: log_heat_pump_cycle_started
+  alias: "Log: Heat Pump Cycle Started"
+  description: Log when heat pump starts a new cycle
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      from: "off"
+      to: "on"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump
+        message: >
+          🟢 Cycle started in {{ states('sensor.heat_pump_operating_mode') }} mode
+          (Power: {{ states('sensor.heat_pump_electrical_power_input') }}W)
+        entity_id: binary_sensor.heat_pump_running
+
+- id: log_heat_pump_cycle_completed
+  alias: "Log: Heat Pump Cycle Completed"
+  description: Log cycle completion with performance stats
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      from: "on"
+      to: "off"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump
+        message: >
+          ⚫ Cycle completed: {{ (states('sensor.heat_pump_last_cycle_duration') | float / 60) | round(1) }} min,
+          COP {{ states('sensor.heat_pump_last_cycle_cop') }},
+          Mode: {{ states('sensor.heat_pump_operating_mode') }}
+        entity_id: binary_sensor.heat_pump_running
+
+# ============================================================================
+# SHORT CYCLE WARNING
+# ============================================================================
+
+- id: log_heat_pump_short_cycle
+  alias: "Log: Heat Pump Short Cycle Warning"
+  description: Log warning when a short cycle is detected
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_last_cycle_was_short
+      to: "on"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Short Cycle
+        message: >
+          ⚠️ Short cycle detected: {{ (states('sensor.heat_pump_last_cycle_duration') | float / 60) | round(1) }} minutes
+          (Target: {{ states('input_number.minimum_runtime_target') }} min)
+        entity_id: binary_sensor.heat_pump_last_cycle_was_short
+
+# ============================================================================
+# MODE CHANGES
+# ============================================================================
+
+- id: log_heat_pump_mode_change
+  alias: "Log: Heat Pump Mode Change"
+  description: Log when operating mode changes
+  trigger:
+    - platform: state
+      entity_id: sensor.heat_pump_operating_mode
+  condition:
+    - condition: template
+      value_template: "{{ trigger.from_state.state != trigger.to_state.state }}"
+    - condition: template
+      value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable'] }}"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Mode
+        message: "🔄 Changed from {{ trigger.from_state.state }} to {{ trigger.to_state.state }}"
+        entity_id: sensor.heat_pump_operating_mode
+
+# ============================================================================
+# PHASE TRANSITIONS
+# ============================================================================
+
+- id: log_heat_pump_entered_steady_state
+  alias: "Log: Heat Pump Entered Steady State"
+  description: Log when heat pump enters steady state operation
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_steady_state
+      to: "on"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Phase
+        message: >
+          ✅ Entered steady state
+          ({{ states('sensor.heat_pump_current_cycle_duration_minutes') | round(1) }} min runtime,
+          COP {{ states('sensor.heat_pump_cop') }})
+        entity_id: binary_sensor.heat_pump_steady_state
+
+- id: log_heat_pump_exited_steady_state
+  alias: "Log: Heat Pump Exited Steady State"
+  description: Log when heat pump exits steady state
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_steady_state
+      from: "on"
+      to: "off"
+  condition:
+    - condition: state
+      entity_id: binary_sensor.heat_pump_running
+      state: "on"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Phase
+        message: "⏸️ Exited steady state (cycle ending soon)"
+        entity_id: binary_sensor.heat_pump_steady_state
+
+# ============================================================================
+# PERFORMANCE EVENTS
+# ============================================================================
+
+- id: log_heat_pump_cop_excellent
+  alias: "Log: Heat Pump Excellent COP"
+  description: Log when COP exceeds 4.0 (excellent performance)
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.heat_pump_cop
+      above: 4.0
+  condition:
+    - condition: state
+      entity_id: binary_sensor.heat_pump_running
+      state: "on"
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Performance
+        message: >
+          ⭐ Excellent COP: {{ states('sensor.heat_pump_cop') }}
+          ({{ states('sensor.heat_pump_operating_mode') }} mode,
+          {{ states('sensor.heat_pump_current_cycle_duration_minutes') | round(1) }} min runtime)
+        entity_id: sensor.heat_pump_cop
+
+- id: log_heat_pump_cop_poor
+  alias: "Log: Heat Pump Poor COP"
+  description: Log when COP drops below 2.0 (poor performance)
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.heat_pump_cop
+      below: 2.0
+  condition:
+    - condition: state
+      entity_id: binary_sensor.heat_pump_running
+      state: "on"
+    - condition: numeric_state
+      entity_id: sensor.heat_pump_current_cycle_duration
+      above: 60  # Only log if running > 1 minute (avoid startup transients)
+  action:
+    - service: logbook.log
+      data:
+        name: Heat Pump Performance
+        message: >
+          ⚠️ Low COP: {{ states('sensor.heat_pump_cop') }}
+          ({{ states('sensor.heat_pump_operating_mode') }} mode,
+          Ambient: {{ states('sensor.heat_pump_ambient_temperature') }}°F)
+        entity_id: sensor.heat_pump_cop
+
+# ============================================================================
+# SENSOR INITIALIZATION TRACKING
+# ============================================================================
+
+- id: log_cx_output_power_initialized
+  alias: "Log: CX Output Power Interval Initialized"
+  description: Log when the thermal energy integration sensor initializes
+  trigger:
+    - platform: state
+      entity_id: sensor.cx_output_power_interval
+      from: "unknown"
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+  action:
+    - service: logbook.log
+      data:
+        name: Sensor Initialization
+        message: >
+          ✅ CX Output Power Interval initialized at {{ trigger.to_state.state }} kWh
+          (thermal energy tracking now active)
+        entity_id: sensor.cx_output_power_interval
+
+- id: log_cycle_duration_sensor_initialized
+  alias: "Log: Cycle Duration Sensor Initialized"
+  description: Log when cycle duration sensor starts working
+  trigger:
+    - platform: state
+      entity_id: sensor.heat_pump_current_cycle_duration
+      from: "unavailable"
+  condition:
+    - condition: template
+      value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+  action:
+    - service: logbook.log
+      data:
+        name: Sensor Initialization
+        message: "✅ Cycle duration sensor initialized (value: {{ trigger.to_state.state }}s)"
+        entity_id: sensor.heat_pump_current_cycle_duration
+
+# ============================================================================
+# DISTRIBUTION EFFICIENCY ALERTS
+# ============================================================================
+
+- id: log_distribution_efficiency_critical
+  alias: "Log: Distribution Efficiency Critical"
+  description: Log when distribution efficiency is critically low (not in DHW mode)
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.system_distribution_efficiency
+      below: 50
+  condition:
+    - condition: state
+      entity_id: binary_sensor.heat_pump_running
+      state: "on"
+    - condition: template
+      value_template: "{{ states('sensor.heat_pump_operating_mode') not in ['Heat + DHW', 'HEAT + DHW', 'DHW'] }}"
+    - condition: numeric_state
+      entity_id: sensor.heat_pump_thermal_power_output
+      above: 1000  # Only if producing > 1kW
+  action:
+    - service: logbook.log
+      data:
+        name: Distribution Efficiency
+        message: >
+          🚨 Critical efficiency: {{ states('sensor.system_distribution_efficiency') }}%
+          (HP Output: {{ (states('sensor.heat_pump_thermal_power_output') | float / 1000) | round(1) }}kW,
+          HVAC Load: {{ (states('sensor.hvac_thermal_power_used') | float / 1000) | round(1) }}kW)
+        entity_id: sensor.system_distribution_efficiency
