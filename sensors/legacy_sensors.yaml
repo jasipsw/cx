@@ -221,6 +221,147 @@
   round: 3
 
 # ------------------------------------------------------------------------
+# Thermal Power Output Integration (Total - All Modes)
+# Converts instantaneous thermal power (W) to accumulated energy (kWh)
+# Source: sensor.heat_pump_thermal_power_output (includes Heat, Cool, DHW)
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.heat_pump_thermal_power_output
+  name: "CX Output Power Interval"
+  unique_id: cx_output_power_interval
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# Space Heating Electrical Energy Integration
+# Converts heating electrical power (kW) to energy (kWh)
+# Source: sensor.hp_heating_electrical_power_kw (only when mode is Heat or HEAT + DHW)
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.hp_heating_electrical_power_kw
+  name: "HP Heating Electrical Energy (kWh)"
+  unique_id: hp_heating_electrical_energy_kwh
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# Space Heating Thermal Energy Integration
+# Converts heating thermal power (kW) to energy (kWh)
+# Source: sensor.hp_heating_thermal_power_kw (only when mode is Heat or HEAT + DHW)
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.hp_heating_thermal_power_kw
+  name: "HP Heating Thermal Energy (kWh)"
+  unique_id: hp_heating_thermal_energy_kwh
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# HVAC Load Thermal Energy Integration
+# Accumulates thermal energy consumed by the HVAC system
+# Source: sensor.hvac_thermal_power_used
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.hvac_thermal_power_used
+  name: "HVAC Thermal Energy Used"
+  unique_id: hvac_thermal_energy_used
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# Heat Pump Standby Thermal Loss Accumulation
+# Accumulates energy lost when circulator runs but HP is off
+# In heating mode: hot water cooled by outdoor coil
+# In cooling mode: cool water warmed by outdoor coil
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.hp_standby_thermal_loss_rate
+  name: "HP Standby Thermal Loss Accumulated"
+  unique_id: hp_standby_thermal_loss_accumulated
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# Heat Pump Cycle Tracking (History Stats)
+# Tracks runtime duration for current cycle and daily totals
+# ------------------------------------------------------------------------
+- platform: history_stats
+  name: "Heat Pump Current Cycle Duration"
+  unique_id: heat_pump_current_cycle_duration
+  entity_id: binary_sensor.heat_pump_running
+  state: "on"
+  type: time
+  start: >
+    {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
+       if is_state('binary_sensor.heat_pump_running', 'on')
+       else as_timestamp(now()) }}
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: "Heat Pump Current Cycle Duration Minutes"
+  unique_id: heat_pump_current_cycle_duration_minutes
+  entity_id: binary_sensor.heat_pump_running
+  state: "on"
+  type: time
+  start: >
+    {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
+       if is_state('binary_sensor.heat_pump_running', 'on')
+       else as_timestamp(now()) }}
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: "Heat Pump Off Time Duration"
+  unique_id: heat_pump_off_time_duration
+  entity_id: binary_sensor.heat_pump_running
+  state: "off"
+  type: time
+  start: >
+    {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
+       if is_state('binary_sensor.heat_pump_running', 'off')
+       else as_timestamp(now()) }}
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: "Heat Pump Daily Runtime Hours"
+  unique_id: heat_pump_daily_runtime_hours
+  entity_id: binary_sensor.heat_pump_running
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+  end: "{{ now() }}"
+
+- platform: history_stats
+  name: "Heat Pump Daily Cycle Count"
+  unique_id: heat_pump_daily_cycle_count
+  entity_id: binary_sensor.heat_pump_running
+  state: "on"
+  type: count
+  start: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+  end: "{{ now() }}"
+
+# ------------------------------------------------------------------------
+# Circulator Pump Running (Without Heat Pump)
+# Detects when the circulator is running but compressor is off
+# This condition causes energy loss through the heat pump coil
+# ------------------------------------------------------------------------
+- platform: history_stats
+  name: "Circulator Pump Idle Loss Duration Daily"
+  unique_id: circulator_pump_idle_loss_duration_daily
+  entity_id: binary_sensor.circulator_running_hp_off
+  state: "on"
+  type: time
+  start: "{{ now().replace(hour=0, minute=0, second=0, microsecond=0) }}"
+  end: "{{ now() }}"
+
+# ------------------------------------------------------------------------
 # Filter Sensor (Stabilize Shed/LC2 Power Reading)
 # Filters out the dips that cause "Ignoring decreasing value" warnings.
 # Source: sensor.lc_shed_lc_watts
@@ -228,9 +369,9 @@
 - platform: filter
   name: "Shed LC2 Consumption Power (Stable)"
   unique_id: "shed_lc2_consumption_power_stable"
-  
-  entity_id: sensor.lc_shed_lc_watts 
-  
+
+  entity_id: sensor.lc_shed_lc_watts
+
   filters:
     - filter: outlier
       window_size: 3
