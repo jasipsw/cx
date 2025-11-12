@@ -4,17 +4,29 @@
   # Goal: Improve COP from 2.0-2.5 to manufacturer's 4.55 rating
 
   # ------------------------------------------------------------------------
-  # Heat Pump Running Detection
+  # Heat Pump Running Detection (Improved Logic)
+  # More precise than just checking power > 500W
+  # Requires: Water pump ON AND (Compressor running OR Active heat transfer)
   # ------------------------------------------------------------------------
   - name: "Heat Pump Running"
     unique_id: heat_pump_running
     state: >-
-      {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-      {{ power > 500 }}
+      {% set pump_on = is_state('binary_sensor.cx_c34_water_pump', 'on') %}
+      {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+      {% set thermal_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+
+      {# Heat pump is running if pump is on AND (compressor running OR producing heat) #}
+      {% if pump_on %}
+        {{ compressor_freq > 0 or thermal_output > 1000 }}
+      {% else %}
+        {{ false }}
+      {% endif %}
     device_class: running # Valid for binary_sensor
     icon: mdi:heat-pump
     availability: >-
-      {{ states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable'] }}
+      {{ states('binary_sensor.cx_c34_water_pump') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable']
+          and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] }}
 
   # ------------------------------------------------------------------------
   # Heat Pump Startup Phase Detection

@@ -130,10 +130,16 @@ views:
       - type: markdown
         title: 🔄 Cycle Tracking Sensors (heat_pump_cycle_sensors.yaml)
         content: |
-          ## Binary Sensor Source
+          ## Binary Sensor Source (Improved Logic - 2025-11-12)
           | Sensor | Value | Based On |
           |--------|-------|----------|
-          | Heat Pump Running | {{ states('binary_sensor.heat_pump_running') }} | Power > 500W |
+          | Heat Pump Running | {{ states('binary_sensor.heat_pump_running') }} | **Pump ON** AND (**Compressor Running** OR **Heat Transfer**) |
+
+          **Detection Logic:**
+          - Water Pump: {{ states('binary_sensor.cx_c34_water_pump') }}
+          - Compressor Freq: {{ states('sensor.cx50_compressor_frequency') }}Hz
+          - Thermal Output: {{ (states('sensor.heat_pump_thermal_power_output') | float(0) / 1000) | round(1) }}kW
+          - **Result:** Running = Pump ON AND (Freq>0 OR Thermal>1kW)
 
           ## Trigger-Based Cycle Sensors (NEW 2025-11-12)
           | Sensor | Value | Unit | Status |
