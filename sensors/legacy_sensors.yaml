@@ -221,6 +221,19 @@
   round: 3
 
 # ------------------------------------------------------------------------
+# CX Output Power Interval (Thermal Energy Integration)
+# Integrates thermal power output to get energy over time
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.heat_pump_thermal_power_output
+  name: "CX Output Power Interval"
+  unique_id: cx_output_power_interval
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
 # Filter Sensor (Stabilize Shed/LC2 Power Reading)
 # Filters out the dips that cause "Ignoring decreasing value" warnings.
 # Source: sensor.lc_shed_lc_watts

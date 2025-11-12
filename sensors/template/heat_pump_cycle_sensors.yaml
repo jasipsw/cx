@@ -1,0 +1,111 @@
+# Heat Pump Cycle Tracking Sensors
+# These sensors track the current cycle duration and provide cycle statistics
+
+# ------------------------------------------------------------------------
+# Heat Pump Current Cycle Duration (Seconds)
+# Tracks how long the current ON cycle has been running
+# Resets when the heat pump turns OFF
+# ------------------------------------------------------------------------
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    to: "on"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    to: "off"
+  - platform: time_pattern
+    seconds: "/1"  # Update every second while running
+  sensor:
+  - name: "Heat Pump Current Cycle Duration"
+    unique_id: heat_pump_current_cycle_duration
+    unit_of_measurement: "s"
+    device_class: duration
+    state_class: measurement
+    icon: mdi:timer
+    state: >
+      {% set is_running = is_state('binary_sensor.heat_pump_running', 'on') %}
+
+      {% if not is_running %}
+        {# Heat pump is OFF, so current cycle duration is 0 #}
+        0
+      {% else %}
+        {# Heat pump is ON, calculate duration since it turned on #}
+        {% set last_changed = states.binary_sensor.heat_pump_running.last_changed %}
+        {% if last_changed %}
+          {% set duration_seconds = (now() - last_changed).total_seconds() %}
+          {{ duration_seconds | round(0) }}
+        {% else %}
+          0
+        {% endif %}
+      {% endif %}
+
+# ------------------------------------------------------------------------
+# Heat Pump Current Cycle Duration (Minutes)
+# Same as above but in minutes for easier reading
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Heat Pump Current Cycle Duration Minutes"
+    unique_id: heat_pump_current_cycle_duration_minutes
+    unit_of_measurement: "min"
+    device_class: duration
+    state_class: measurement
+    icon: mdi:chart-line
+    state: >
+      {% set duration_s = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+      {{ (duration_s / 60) | round(2) }}
+
+# ------------------------------------------------------------------------
+# Heat Pump Last Cycle Duration (Seconds)
+# Stores the duration of the last completed cycle
+# ------------------------------------------------------------------------
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: "on"
+    to: "off"
+  sensor:
+  - name: "Heat Pump Last Cycle Duration"
+    unique_id: heat_pump_last_cycle_duration
+    unit_of_measurement: "s"
+    device_class: duration
+    state_class: measurement
+    icon: mdi:history
+    state: >
+      {% set cycle_duration = trigger.to_state.state %}
+      {% set duration_seconds = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+
+      {# Store the duration from just before the heat pump turned off #}
+      {% if duration_seconds > 0 %}
+        {{ duration_seconds | round(0) }}
+      {% else %}
+        {# If we can't get the duration, preserve the previous value #}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}
+
+# ------------------------------------------------------------------------
+# Heat Pump Current Cycle Remaining (Placeholder)
+# This would require knowing the target cycle duration
+# For now, return unavailable as we don't have that information
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Heat Pump Current Cycle Remaining"
+    unique_id: heat_pump_current_cycle_remaining
+    unit_of_measurement: "s"
+    device_class: duration
+    state_class: measurement
+    icon: mdi:timer-sand
+    state: >
+      {# This would require knowing target cycle duration #}
+      {# For now, return a sensible default based on minimum runtime target #}
+      {% set is_running = is_state('binary_sensor.heat_pump_running', 'on') %}
+      {% set current_duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+      {% set min_runtime_minutes = states('input_number.minimum_runtime_target') | float(10) %}
+      {% set min_runtime_seconds = min_runtime_minutes * 60 %}
+
+      {% if not is_running %}
+        0
+      {% elif current_duration < min_runtime_seconds %}
+        {{ (min_runtime_seconds - current_duration) | round(0) }}
+      {% else %}
+        0
+      {% endif %}
