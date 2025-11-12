@@ -322,7 +322,6 @@
       unique_id: "heat_pump_thermal_power_btu_h"
       unit_of_measurement: "BTU/h"
       state_class: "measurement"
-      device_class: "power"
       icon: mdi:sun-thermometer-outline
       
       # Only available if the source kW sensor is available
