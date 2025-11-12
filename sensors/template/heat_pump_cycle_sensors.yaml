@@ -3,19 +3,9 @@
 
 # ------------------------------------------------------------------------
 # Heat Pump Current Cycle Duration (Seconds)
-# Tracks how long the current ON cycle has been running
-# Resets when the heat pump turns OFF
+# Regular template sensor - auto-updates, no triggers needed
 # ------------------------------------------------------------------------
-- trigger:
-  - platform: state
-    entity_id: binary_sensor.heat_pump_running
-    to: "on"
-  - platform: state
-    entity_id: binary_sensor.heat_pump_running
-    to: "off"
-  - platform: time_pattern
-    seconds: "/1"  # Update every second while running
-  sensor:
+- sensor:
   - name: "Heat Pump Current Cycle Duration"
     unique_id: heat_pump_current_cycle_duration
     unit_of_measurement: "s"
