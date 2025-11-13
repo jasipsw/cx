@@ -46,6 +46,170 @@ views:
 
               **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
 
+          # CRITICAL SENSOR AVAILABILITY CHECK
+          - type: markdown
+            title: 🔍 Critical Sensor Availability (Debug)
+            grid_options:
+              columns: full
+            content: |
+              ## Source Sensors (Direct Dependencies)
+              | Sensor | State | Attributes | Status |
+              |--------|-------|------------|--------|
+              | `sensor.cx50_c34` | {{ states('sensor.cx50_c34') }} | unit: {{ state_attr('sensor.cx50_c34', 'unit_of_measurement') }} | {{ '✅' if states('sensor.cx50_c34') not in ['unknown', 'unavailable'] else '❌' }} |
+              | `sensor.cx50_pump_flow_lpm` | {{ states('sensor.cx50_pump_flow_lpm') }} | unit: {{ state_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement') }} | {{ '✅' if states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] else '❌' }} |
+              | `sensor.cx50_compressor_frequency` | {{ states('sensor.cx50_compressor_frequency') }} | unit: {{ state_attr('sensor.cx50_compressor_frequency', 'unit_of_measurement') }} | {{ '✅' if states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable'] else '❌' }} |
+              | `sensor.heat_pump_thermal_power_output` | {{ states('sensor.heat_pump_thermal_power_output') }} | unit: {{ state_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement') }} | {{ '✅' if states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] else '❌' }} |
+              | `sensor.cx50_outlet_temp` | {{ states('sensor.cx50_outlet_temp') }} | unit: {{ state_attr('sensor.cx50_outlet_temp', 'unit_of_measurement') }} | {{ '✅' if states('sensor.cx50_outlet_temp') not in ['unknown', 'unavailable'] else '❌ MISSING' }} |
+
+              ## Calculated Binary Sensors
+              | Sensor | State | Type | Expected |
+              |--------|-------|------|----------|
+              | `binary_sensor.cx_c34_water_pump` | {{ states('binary_sensor.cx_c34_water_pump') }} | binary_sensor | {{ 'ON (C34=1, Flow=19)' if states('sensor.cx50_c34') == '1' and states('sensor.cx50_pump_flow_lpm') | float(0) > 1 else 'Check logic' }} |
+              | `binary_sensor.heat_pump_running` | {{ states('binary_sensor.heat_pump_running') }} | binary_sensor | {{ 'ON (Pump+Compressor+Thermal)' if states('sensor.cx50_compressor_frequency') | float(0) > 0 else 'Check dependencies' }} |
+
+              ## Logic Evaluation (Real-time)
+              {% set c34_value = states('sensor.cx50_c34') | int(0) %}
+              {% set flow_rate = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+              {% set pump_should_be_on = c34_value == 1 or flow_rate > 1.0 %}
+
+              | Variable | Value | Logic |
+              |----------|-------|-------|
+              | `c34_value` | {{ c34_value }} | Modbus status |
+              | `flow_rate` | {{ flow_rate }} | Actual flow |
+              | `c34_value == 1` | {{ c34_value == 1 }} | Boolean check |
+              | `flow_rate > 1.0` | {{ flow_rate > 1.0 }} | Flow threshold |
+              | **Water Pump Should Be** | **{{ 'ON' if pump_should_be_on else 'OFF' }}** | `c34==1 OR flow>1.0` |
+              | **Actual Water Pump State** | **{{ states('binary_sensor.cx_c34_water_pump') }}** | ❌ MISMATCH if different |
+
+          # BINARY SENSOR LOGIC DEBUG
+          - type: markdown
+            title: 🐛 Binary Sensor Logic Debug
+            grid_options:
+              columns: full
+            content: |
+              ## Water Pump Binary Sensor Logic
+              **File:** `sensors/template/cx_sensors.yaml:338`
+
+              ```yaml
+              state: >
+                {% raw %}{% set c34_value = states('sensor.cx50_c34') | int(0) %}
+                {% set flow_rate = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+                {{ c34_value == 1 or flow_rate > 1.0 }}{% endraw %}
+              ```
+
+              **Current Evaluation:**
+              {% set c34 = states('sensor.cx50_c34') | int(0) %}
+              {% set flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+              - C34 Raw State: `{{ states('sensor.cx50_c34') }}`
+              - C34 Parsed: `{{ c34 }}` (type: int)
+              - Flow Raw State: `{{ states('sensor.cx50_pump_flow_lpm') }}`
+              - Flow Parsed: `{{ flow }}` (type: float)
+              - **Expression Result: `{{ c34 == 1 or flow > 1.0 }}`**
+              - **Actual Sensor State: `{{ states('binary_sensor.cx_c34_water_pump') }}`**
+
+              **Availability Template:**
+              ```yaml
+              {% raw %}{{ states('sensor.cx50_c34') not in ['unknown', 'unavailable']
+                  and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}{% endraw %}
+              ```
+              - C34 available: {{ states('sensor.cx50_c34') not in ['unknown', 'unavailable'] }}
+              - Flow available: {{ states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
+              - **Availability Result: {{ states('sensor.cx50_c34') not in ['unknown', 'unavailable'] and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}**
+
+              ---
+
+              ## Heat Pump Running Binary Sensor Logic
+              **File:** `sensors/template/cx_optimization_sensors.yaml:11`
+
+              {% set pump_state = states('binary_sensor.cx_c34_water_pump') %}
+              {% set pump_on = is_state('binary_sensor.cx_c34_water_pump', 'on') %}
+              {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+              {% set thermal_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+
+              | Dependency | Raw State | Parsed Value | Check Result |
+              |------------|-----------|--------------|--------------|
+              | Water Pump State | `{{ pump_state }}` | - | `is_state('...', 'on')` = {{ pump_on }} |
+              | Compressor Freq | `{{ states('sensor.cx50_compressor_frequency') }}` | {{ compressor_freq }} Hz | `> 0` = {{ compressor_freq > 0 }} |
+              | Thermal Output | `{{ states('sensor.heat_pump_thermal_power_output') }}` | {{ thermal_output }} W | `> 1000` = {{ thermal_output > 1000 }} |
+
+              **Logic Flow:**
+              1. IF pump_on = {{ pump_on }}
+              2. THEN check: (compressor > 0 OR thermal > 1000)
+              3. Compressor check: {{ compressor_freq > 0 }}
+              4. Thermal check: {{ thermal_output > 1000 }}
+              5. **Expected Result: {{ pump_on and (compressor_freq > 0 or thermal_output > 1000) }}**
+              6. **Actual State: `{{ states('binary_sensor.heat_pump_running') }}`**
+
+              **Issue:** {% if pump_state in ['unknown', 'unavailable'] %}❌ Water pump sensor is {{ pump_state }} - this blocks heat_pump_running{% elif not pump_on %}⚠️ Water pump is OFF or not 'on' state{% else %}✅ Should be working{% endif %}
+
+          # MODE FILTERING DEBUG
+          - type: markdown
+            title: 🔀 Mode Filtering Debug (Why Thermal kW = 0?)
+            grid_options:
+              columns: full
+            content: |
+              ## Raw vs Mode-Filtered Thermal Power
+              | Sensor | Value | File | Status |
+              |--------|-------|------|--------|
+              | `sensor.heat_pump_thermal_power_output` | {{ states('sensor.heat_pump_thermal_power_output') }}W | cx_sensors.yaml | ✅ Raw calculation |
+              | `sensor.heat_pump_thermal_power_kw` | {{ states('sensor.heat_pump_thermal_power_kw') }}kW | cx_sensors.yaml:275 | {{ '✅' if states('sensor.heat_pump_operating_mode') == 'Heat' else '⚠️ Filtered to 0 (mode != Heat)' }} |
+
+              **Current Operating Mode:** `{{ states('sensor.heat_pump_operating_mode') }}`
+
+              ## Mode Filtering Logic (cx_sensors.yaml:295-318)
+              ```yaml
+              {% raw %}{% if mode == 'Heat' %}
+                {# Calculate thermal power #}
+                {{ result_kw | round(2) }}
+              {% else %}
+                {# If mode is anything else (Off, DHW, Cool, etc.), HVAC power is 0 #}
+                {{ 0.0 }}
+              {% endif %}{% endraw %}
+              ```
+
+              **Analysis:**
+              - Current mode: `{{ states('sensor.heat_pump_operating_mode') }}`
+              - Mode check: `mode == 'Heat'` → {{ states('sensor.heat_pump_operating_mode') == 'Heat' }}
+              - **Result:** {% if states('sensor.heat_pump_operating_mode') == 'Heat' %}✅ Calculating thermal power{% else %}❌ Mode is "{{ states('sensor.heat_pump_operating_mode') }}", not "Heat" - returns 0.0kW{% endif %}
+
+              **Issue:** This sensor intentionally returns 0 for "Heat + DHW", "DHW", "Cool", etc. modes. It only calculates for pure "Heat" mode. This is likely incorrect - should calculate for both "Heat" and "Heat + DHW".
+
+              **Impact:**
+              - Integration sensor `cx_output_power_interval` may be using this filtered sensor (hence "unknown")
+              - Energy meters downstream also affected
+              - **Fix needed:** Either use raw `thermal_power_output` or add "Heat + DHW" to the mode check
+
+          # INTEGRATION SENSOR DEEP DIVE
+          - type: markdown
+            title: ⚡ Integration Sensor Debug (Why CX Output = unknown?)
+            grid_options:
+              columns: full
+            content: |
+              ## Integration Sensor Status
+              | Sensor | State | Source | Source State | Source Value |
+              |--------|-------|--------|--------------|--------------|
+              | `sensor.cx_input_power_kwh` | {{ states('sensor.cx_input_power_kwh') }} kWh | `sensor.heat_pump_electrical_power_input` | {{ states('sensor.heat_pump_electrical_power_input') }} | {{ states('sensor.heat_pump_electrical_power_input') }}W |
+              | `sensor.cx_output_power_interval` | {{ states('sensor.cx_output_power_interval') }} kWh | `sensor.heat_pump_thermal_power_output` | {{ states('sensor.heat_pump_thermal_power_output') }} | {{ states('sensor.heat_pump_thermal_power_output') }}W |
+
+              ## Integration Sensor Attributes
+              **CX Output Power Interval:**
+              - State: `{{ states('sensor.cx_output_power_interval') }}`
+              - Last Reset: {{ state_attr('sensor.cx_output_power_interval', 'last_reset') }}
+              - Source: {{ state_attr('sensor.cx_output_power_interval', 'source') }}
+              - Unit: {{ state_attr('sensor.cx_output_power_interval', 'unit_of_measurement') }}
+              - Device Class: {{ state_attr('sensor.cx_output_power_interval', 'device_class') }}
+              - State Class: {{ state_attr('sensor.cx_output_power_interval', 'state_class') }}
+
+              **Issue Analysis:**
+              {% if states('sensor.cx_output_power_interval') in ['unknown', 'unavailable'] %}
+              ❌ **Integration sensor not initialized**
+              - Check: Is `sensor.heat_pump_thermal_power_output` available? {{ '✅ Yes' if states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] else '❌ No' }}
+              - Check: Has enough time passed for integration? (needs source sensor history)
+              - Check: Integration platform configuration in `legacy_sensors.yaml`
+              {% else %}
+              ✅ Integration sensor working
+              {% endif %}
+
           # SHELLY INTEGRATION DIAGNOSTIC
           - type: markdown
             title: 🔍 Shelly Integration Temperature Sensors (Diagnostic)
