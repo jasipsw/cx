@@ -1,0 +1,58 @@
+# Temperature Conversion Helper Template
+# This is a reference template for converting temperatures with auto-detection
+# Copy and paste this pattern into your sensors, replacing the sensor name
+#
+# Usage Example:
+# --------------
+# state: >-
+#   {% set source_sensor = 'sensor.your_sensor_name_here' %}
+#   {% set desired_unit = '°F' %}  {# or '°C' #}
+#   {% set assume_unit_if_none = '°F' %}  {# fallback if sensor has no unit #}
+#
+#   {# Get sensor value and unit #}
+#   {% set value = states(source_sensor) | float(0) %}
+#   {% set actual_unit = state_attr(source_sensor, 'unit_of_measurement') %}
+#   {% set source_unit = actual_unit if actual_unit else assume_unit_if_none %}
+#
+#   {# Convert if needed #}
+#   {% if source_unit == desired_unit %}
+#     {{ value | round(2) }}
+#   {% elif source_unit == '°C' and desired_unit == '°F' %}
+#     {{ (value * 1.8 + 32.0) | round(2) }}
+#   {% elif source_unit == '°F' and desired_unit == '°C' %}
+#     {{ ((value - 32.0) / 1.8) | round(2) }}
+#   {% else %}
+#     {{ value | round(2) }}
+#   {% endif %}
+#
+# This pattern:
+# - Auto-detects the source sensor's unit
+# - Falls back to assume_unit_if_none if sensor has no unit attribute
+# - Converts C→F or F→C as needed
+# - Returns value unchanged if no conversion needed
+
+# Example Sensor Using the Pattern:
+- sensor:
+  - name: "Example Temperature Sensor with Auto-Conversion"
+    unique_id: example_temp_auto_convert
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    state: >-
+      {% set source_sensor = 'sensor.shellyplus1_c4d8d5543fc0_temperature' %}
+      {% set desired_unit = '°F' %}
+      {% set assume_unit_if_none = '°F' %}
+
+      {% set value = states(source_sensor) | float(0) %}
+      {% set actual_unit = state_attr(source_sensor, 'unit_of_measurement') %}
+      {% set source_unit = actual_unit if actual_unit else assume_unit_if_none %}
+
+      {% if source_unit == desired_unit %}
+        {{ value | round(2) }}
+      {% elif source_unit == '°C' and desired_unit == '°F' %}
+        {{ (value * 1.8 + 32.0) | round(2) }}
+      {% elif source_unit == '°F' and desired_unit == '°C' %}
+        {{ ((value - 32.0) / 1.8) | round(2) }}
+      {% else %}
+        {{ value | round(2) }}
+      {% endif %}
