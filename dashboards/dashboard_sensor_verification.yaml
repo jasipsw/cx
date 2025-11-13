@@ -217,13 +217,24 @@ views:
             grid_options:
               columns: full
             content: |
-              ## All Shelly Temperature Sensors Detected
+              ## Shelly Temperature Sensors (By Entity ID Pattern)
 
               | Friendly Name | Entity ID | Current Value | Unit | Status |
               |---------------|-----------|---------------|------|--------|
               {%- for entity in states.sensor %}
                 {%- if 'shelly' in entity.entity_id | lower and 'temperature' in entity.entity_id | lower %}
               | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                {%- endif %}
+              {%- endfor %}
+
+              ## All Temperature Sensors (Any Source)
+              **This shows ALL temperature sensors in the system, including renamed or wrapped Shelly sensors:**
+
+              | Friendly Name | Entity ID | Current Value | Unit | Device Class | Status |
+              |---------------|-----------|---------------|------|--------------|--------|
+              {%- for entity in states.sensor %}
+                {%- if state_attr(entity.entity_id, 'device_class') == 'temperature' %}
+              | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ state_attr(entity.entity_id, 'device_class') }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
                 {%- endif %}
               {%- endfor %}
 
