@@ -1,0 +1,89 @@
+# G2 Diverter Valve Position Detection
+# Detects whether G2 valve is directing flow to buffer tank or DHW tank
+# Based on temperature rise patterns when heat pump is running
+
+- binary_sensor:
+  # ------------------------------------------------------------------------
+  # G2 Valve Directing to DHW Tank
+  # Logic: If compressor running but buffer tank supply NOT rising significantly,
+  #        flow must be going to DHW tank instead
+  # ------------------------------------------------------------------------
+  - name: "G2 Valve DHW Mode"
+    unique_id: g2_valve_dhw_mode
+    device_class: heat
+    icon: mdi:water-boiler
+    state: >-
+      {% set compressor_running = states('sensor.cx50_compressor_frequency') | float(0) > 0 %}
+      {% set pump_on = is_state('binary_sensor.cx_c34_water_pump', 'on') %}
+
+      {% if not compressor_running or not pump_on %}
+        {# Heat pump not actively running - maintain previous state #}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else false }}
+      {% else %}
+        {# Heat pump is running - check where heat is going #}
+        {% set buffer_supply = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
+        {% set buffer_return = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
+        {% set buffer_delta = buffer_supply - buffer_return %}
+
+        {% set hp_outlet = states('sensor.cx50_outlet_temp') | float(0) %}
+        {% set supply_vs_hp = hp_outlet - buffer_supply %}
+
+        {# If buffer tank getting significant heat from HP → heating mode (G2 to buffer)
+           If buffer tank NOT getting heat despite HP running → DHW mode (G2 to DHW) #}
+
+        {% if buffer_delta > 1.0 and supply_vs_hp < 5.0 %}
+          {# Buffer tank receiving hot water from HP → Heating mode #}
+          false
+        {% elif buffer_delta < 0.5 and compressor_running %}
+          {# Compressor running but buffer tank not heating → DHW mode #}
+          true
+        {% else %}
+          {# Uncertain - maintain previous state #}
+          {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else false }}
+        {% endif %}
+      {% endif %}
+    availability: >-
+      {{ states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable']
+          and states('binary_sensor.cx_c34_water_pump') not in ['unknown', 'unavailable']
+          and states('sensor.hvac_buffer_tank_supply_temperature') not in ['unknown', 'unavailable']
+          and states('sensor.hvac_buffer_tank_return_temperature') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_outlet_temp') not in ['unknown', 'unavailable'] }}
+
+- sensor:
+  # ------------------------------------------------------------------------
+  # G2 Valve Position (Text Display)
+  # ------------------------------------------------------------------------
+  - name: "G2 Valve Position"
+    unique_id: g2_valve_position
+    icon: mdi:valve
+    state: >-
+      {% if is_state('binary_sensor.g2_valve_dhw_mode', 'on') %}
+        DHW Tank
+      {% elif is_state('binary_sensor.g2_valve_dhw_mode', 'off') %}
+        Buffer Tank (Heating)
+      {% else %}
+        Unknown
+      {% endif %}
+
+  # ------------------------------------------------------------------------
+  # Buffer Tank Temperature Rise Rate
+  # Helps detect when buffer tank is actively being heated
+  # ------------------------------------------------------------------------
+  - name: "Buffer Tank Supply Temp Rise Rate"
+    unique_id: buffer_tank_temp_rise_rate
+    unit_of_measurement: "°F/min"
+    state_class: measurement
+    icon: mdi:thermometer-chevron-up
+    state: >-
+      {% set current = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
+      {% set previous = state_attr('sensor.hvac_buffer_tank_supply_temperature', 'last_updated') %}
+
+      {# This is a simplified version - for more accuracy, use derivative helper #}
+      {% if is_state('binary_sensor.heat_pump_running', 'on') %}
+        {% set supply = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
+        {% set return_temp = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
+        {% set delta = supply - return_temp %}
+        {{ delta | round(2) }}
+      {% else %}
+        0.0
+      {% endif %}

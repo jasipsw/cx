@@ -17,10 +17,14 @@ views:
           - ✅ Created cycle tracking sensors (current/last duration, cycle remaining)
           - ✅ Created `sensor.heat_pump_last_cycle_cop` (COP at cycle completion)
           - ✅ Fixed `radiant_sensors.yaml` template syntax errors
+          - ✅ Improved heat pump running detection (pump + compressor + heat transfer)
+          - ✅ Fixed water pump binary sensor (proper boolean values)
+          - ✅ Added standby power tracking sensors
+          - ✅ **NEW: G2 valve position detection** (temperature-based, shows actual heat routing)
 
           ## Known Issues
           - ⚠️ Input energy utility meters have corrupted historical state (need reset)
-          - ⚠️ Distribution efficiency shows low when in "Heat + DHW" mode (expected - energy goes to hot water)
+          - ⚠️ Modbus operating mode may not match actual G2 valve position (now detected by temperature analysis)
 
           ## Data Flow
           ```
@@ -210,6 +214,39 @@ views:
           | Efficiency | {{ states('sensor.system_distribution_efficiency') }}% | {{ '✅ >80%' if states('sensor.system_distribution_efficiency') | float(0) > 80 else ('⚠️ Expected in Heat+DHW' if states('sensor.heat_pump_operating_mode') in ['Heat + DHW', 'HEAT + DHW'] else '❌') }} |
 
           **Data Flow:** Buffer Tank Sensors → HVAC Load → Distribution Efficiency
+
+      # CARD 5.5: G2 VALVE POSITION DETECTION (NEW)
+      - type: markdown
+        title: 🔀 G2 Valve Position Detection (g2_valve_sensors.yaml)
+        content: |
+          ## G2 Diverter Valve (Heat Routing)
+          **Purpose:** Detects whether G2 valve is directing heat pump output to buffer tank (heating) or DHW tank
+
+          | Sensor | Value | Detection Method |
+          |--------|-------|------------------|
+          | G2 Valve Position | {{ states('sensor.g2_valve_position') }} | Temperature rise analysis |
+          | G2 DHW Mode Active | {{ states('binary_sensor.g2_valve_dhw_mode') }} | Binary state |
+
+          ## Detection Logic (When HP Running)
+          | Condition | Value | Indicates |
+          |-----------|-------|-----------|
+          | Compressor Running | {{ states('sensor.cx50_compressor_frequency') }}Hz | HP active |
+          | Buffer Supply Temp | {{ states('sensor.hvac_buffer_tank_supply_temperature') }}°F | - |
+          | Buffer Return Temp | {{ states('sensor.hvac_buffer_tank_return_temperature') }}°F | - |
+          | Buffer Delta T | {{ (states('sensor.hvac_buffer_tank_supply_temperature') | float(0) - states('sensor.hvac_buffer_tank_return_temperature') | float(0)) | round(2) }}°F | {{ '✅ Heating Buffer' if (states('sensor.hvac_buffer_tank_supply_temperature') | float(0) - states('sensor.hvac_buffer_tank_return_temperature') | float(0)) > 1.0 else '⚠️ Not heating buffer' }} |
+          | HP Outlet Temp | {{ states('sensor.cx50_outlet_temp') }}°F | Heat pump output |
+
+          **Logic:**
+          - Buffer ΔT > 1.0°F + HP running → **G2 to Buffer Tank (Heating)**
+          - Buffer ΔT < 0.5°F + HP running → **G2 to DHW Tank (DHW Mode)**
+
+          **Why This Matters:**
+          - Modbus operating mode may not reflect actual G2 valve position
+          - Temperature-based detection shows where heat is ACTUALLY going
+          - Helps explain low distribution efficiency during DHW cycles
+          - Improves accuracy of heating vs DHW COP calculations
+
+          **Data Flow:** HP Running + Buffer Temps → G2 Position → Mode Classification
 
       # CARD 6: OPTIMIZATION SENSORS
       - type: markdown
