@@ -7,6 +7,7 @@ views:
     icon: mdi:check-decagram
     sections:
       - type: grid
+        column_span: 1
         cards:
           # OVERVIEW CARD
           - type: markdown
