@@ -1,13 +1,13 @@
 title: Sensor Verification
 views:
   - type: sections
-    max_columns: 1
+    max_columns: 3
     title: Sensor Verification
     path: sensor-verification
     icon: mdi:check-decagram
     sections:
       - type: grid
-        column_span: 1
+        column_span: 3
         cards:
           # OVERVIEW CARD
           - type: markdown
