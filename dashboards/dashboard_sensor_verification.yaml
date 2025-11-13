@@ -42,6 +42,28 @@ views:
 
           **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
 
+      # SHELLY INTEGRATION DIAGNOSTIC
+      - type: markdown
+        title: 🔍 Shelly Integration Temperature Sensors (Diagnostic)
+        content: |
+          ## All Shelly Temperature Sensors Detected
+
+          | Friendly Name | Entity ID | Current Value | Unit | Status |
+          |---------------|-----------|---------------|------|--------|
+          {%- for entity in states.sensor %}
+            {%- if 'shelly' in entity.entity_id | lower and 'temperature' in entity.entity_id | lower %}
+          | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+            {%- endif %}
+          {%- endfor %}
+
+          ## Buffer Tank Wrapper Sensors (Expected)
+          | Wrapper Sensor | Source | Status |
+          |----------------|--------|--------|
+          | `sensor.buffer_supply_from_heat_pump` | `sensor.shellyplus1_c4d8d5543fc0_temperature` | {{ '✅' if states('sensor.buffer_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '❌ Not found' }} |
+          | `sensor.buffer_return_to_heat_pump` | `sensor.shellyplus1_c4d8d5543fc0_temperature_3` | {{ '✅' if states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable'] else '❌ Not found' }} |
+
+          **Purpose:** Verify Shelly integration sensor names match our configuration
+
       # EVENT TIMELINE CARD
       - type: logbook
         title: 🔔 Heat Pump Event Timeline
