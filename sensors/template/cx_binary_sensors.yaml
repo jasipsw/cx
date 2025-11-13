@@ -34,7 +34,8 @@
     - name: "A/H Condensation Threshold"
       unique_id: a_h_condensation_threshold
       state: >
-        {% if states( 'sensor.kitchen_comfort_dew_point' ) | int(0) > states( 'sensor.shellyplus1_c4d8d5543fc0_temperature_3')  | int(0) %}
+        {# Check if dew point > buffer return temp (condensation risk) #}
+        {% if states( 'sensor.kitchen_comfort_dew_point' ) | int(0) > states( 'sensor.buffer_return_to_heat_pump')  | int(0) %}
           On
         {% else %}
           Off
