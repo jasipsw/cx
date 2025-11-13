@@ -1,0 +1,46 @@
+# Buffer Tank Temperature Sensor Wrappers
+# Maps Shelly device ID sensors to semantic friendly names matching flow card
+#
+# Physical Mapping:
+#   Shelly AddOn Temperature Probe 1 (shellyplus1_c4d8d5543fc0_temperature)
+#     → Buffer Supply from Heat Pump (hot water from HP to buffer)
+#
+#   Shelly AddOn Temperature Probe 2 (shellyplus1_c4d8d5543fc0_temperature_3)
+#     → Buffer Return to Heat Pump (cool water from buffer to HP)
+
+- sensor:
+  - name: "Buffer Supply from Heat Pump"
+    unique_id: buffer_supply_from_heat_pump
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer-chevron-up
+    state: >-
+      {% set temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set unit = state_attr('sensor.shellyplus1_c4d8d5543fc0_temperature', 'unit_of_measurement') %}
+
+      {% if unit == '°C' %}
+        {{ (temp * 1.8 + 32.0) | round(2) }}
+      {% else %}
+        {{ temp | round(2) }}
+      {% endif %}
+    availability: >-
+      {{ states('sensor.shellyplus1_c4d8d5543fc0_temperature') not in ['unknown', 'unavailable'] }}
+
+  - name: "Buffer Return to Heat Pump"
+    unique_id: buffer_return_to_heat_pump
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer-chevron-down
+    state: >-
+      {% set temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set unit = state_attr('sensor.shellyplus1_c4d8d5543fc0_temperature_3', 'unit_of_measurement') %}
+
+      {% if unit == '°C' %}
+        {{ (temp * 1.8 + 32.0) | round(2) }}
+      {% else %}
+        {{ temp | round(2) }}
+      {% endif %}
+    availability: >-
+      {{ states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') not in ['unknown', 'unavailable'] }}
