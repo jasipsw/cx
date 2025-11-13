@@ -4,6 +4,7 @@ views:
     path: sensor-verification
     icon: mdi:check-decagram
     badges: []
+    max_columns: 1
     cards:
       # OVERVIEW CARD
       - type: markdown
