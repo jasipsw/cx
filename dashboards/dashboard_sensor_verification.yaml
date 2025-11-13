@@ -9,6 +9,8 @@ views:
       # OVERVIEW CARD
       - type: markdown
         title: 📋 Sensor Verification Overview
+        grid_options:
+          columns: full
         content: |
           ## Purpose
           This dashboard traces data flow through all sensor calculation layers to identify issues.
@@ -45,6 +47,8 @@ views:
       # SHELLY INTEGRATION DIAGNOSTIC
       - type: markdown
         title: 🔍 Shelly Integration Temperature Sensors (Diagnostic)
+        grid_options:
+          columns: full
         content: |
           ## All Shelly Temperature Sensors Detected
 
@@ -68,6 +72,8 @@ views:
       - type: logbook
         title: 🔔 Heat Pump Event Timeline
         hours_to_show: 24
+        grid_options:
+          columns: full
         entities:
           # Core state changes
           - binary_sensor.heat_pump_running
@@ -93,6 +99,8 @@ views:
       # CARD 1: RAW HEAT PUMP SENSORS
       - type: markdown
         title: 🔌 Raw Heat Pump Sensors (cx_sensors.yaml)
+        grid_options:
+          columns: full
         content: |
           ## Primary Inputs (Direct from Modbus)
           | Sensor | Value | Status |
@@ -129,6 +137,8 @@ views:
       # CARD 2: INTEGRATION SENSORS
       - type: markdown
         title: ⚡ Integration Sensors (legacy_sensors.yaml)
+        grid_options:
+          columns: full
         content: |
           ## Integration Platform (Power → Energy over time)
           | Sensor | Source | Value | Method | Status |
@@ -156,6 +166,8 @@ views:
       # CARD 3: CYCLE TRACKING SENSORS
       - type: markdown
         title: 🔄 Cycle Tracking Sensors (heat_pump_cycle_sensors.yaml)
+        grid_options:
+          columns: full
         content: |
           ## Binary Sensor Source (Improved Logic - 2025-11-12)
           | Sensor | Value | Based On |
@@ -196,6 +208,8 @@ views:
       # CARD 4: UTILITY METERS
       - type: markdown
         title: 📊 Utility Meters (utility_meters.yaml)
+        grid_options:
+          columns: full
         content: |
           ## Energy Output Meters (Source: cx_output_power_interval)
           | Meter | Value | Source Status | Meter Status |
@@ -216,6 +230,8 @@ views:
       # CARD 5: HVAC DISTRIBUTION
       - type: markdown
         title: 🏠 HVAC Distribution (hvac_sensors.yaml)
+        grid_options:
+          columns: full
         content: |
           ## Buffer Tank Sensors
           | Sensor | Value | Source | Status |
@@ -243,6 +259,8 @@ views:
       # CARD 5.5: G2 VALVE POSITION DETECTION (NEW)
       - type: markdown
         title: 🔀 G2 Valve Position Detection (g2_valve_sensors.yaml)
+        grid_options:
+          columns: full
         content: |
           ## G2 Diverter Valve (Heat Routing)
           **Purpose:** Detects whether G2 valve is directing heat pump output to buffer tank (heating) or DHW tank
@@ -276,6 +294,8 @@ views:
       # CARD 6: OPTIMIZATION SENSORS
       - type: markdown
         title: 🎯 Optimization Sensors (cx_optimization_sensors.yaml)
+        grid_options:
+          columns: full
         content: |
           ## Performance Metrics
           | Sensor | Value | Status |
