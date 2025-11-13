@@ -11,8 +11,17 @@
     device_class: temperature
     icon: mdi:thermometer
     state: >-
-      {% set return = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-      {{ return | round(2) }}
+      {% set temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set unit = state_attr('sensor.shellyplus1_c4d8d5543fc0_temperature_3', 'unit_of_measurement') %}
+
+      {# Auto-detect and convert if needed #}
+      {% if unit == '°C' %}
+        {# Convert C to F #}
+        {{ (temp * 1.8 + 32.0) | round(2) }}
+      {% else %}
+        {# Already in F or unknown, pass through #}
+        {{ temp | round(2) }}
+      {% endif %}
 
   - name: "HVAC Buffer Tank Supply Temperature"
     unique_id: hvac_buffer_tank_supply_temperature
@@ -21,8 +30,17 @@
     device_class: temperature
     icon: mdi:thermometer
     state: >-
-      {% set supply = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
-      {{ supply | round(2) }}
+      {% set temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set unit = state_attr('sensor.shellyplus1_c4d8d5543fc0_temperature', 'unit_of_measurement') %}
+
+      {# Auto-detect and convert if needed #}
+      {% if unit == '°C' %}
+        {# Convert C to F #}
+        {{ (temp * 1.8 + 32.0) | round(2) }}
+      {% else %}
+        {# Already in F or unknown, pass through #}
+        {{ temp | round(2) }}
+      {% endif %}
 
   - name: "HVAC Buffer Tank Flow Rate"
     unique_id: hvac_buffer_tank_flow_rate
@@ -94,11 +112,19 @@
     state_class: measurement
     icon: mdi:delta
     state: >-
-      {# Shelly sensors are in Fahrenheit, convert to Celsius first #}
-      {% set return_f = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-      {% set supply_f = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
-      {% set return_c = (return_f - 32) / 1.8 %}
-      {% set supply_c = (supply_f - 32) / 1.8 %}
+      {# Auto-detect temperature units and convert to Celsius if needed #}
+      {% set return_temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set supply_temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set unit = state_attr('sensor.shellyplus1_c4d8d5543fc0_temperature', 'unit_of_measurement') %}
+
+      {% if unit == '°F' %}
+        {% set return_c = (return_temp - 32) / 1.8 %}
+        {% set supply_c = (supply_temp - 32) / 1.8 %}
+      {% else %}
+        {% set return_c = return_temp %}
+        {% set supply_c = supply_temp %}
+      {% endif %}
+
       {% set delta_t_c = supply_c - return_c %}
       {{ delta_t_c | round(2) }}
 
@@ -170,11 +196,20 @@
           and states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
-      {# Shelly sensors are in Fahrenheit, convert to Celsius for calculation #}
-      {% set return_f = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-      {% set supply_f = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
-      {% set return_c = (return_f - 32) / 1.8 %}
-      {% set supply_c = (supply_f - 32) / 1.8 %}
+      {# Auto-detect temperature units and convert to Celsius for calculation #}
+      {% set return_temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set supply_temp = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set unit = state_attr('sensor.shellyplus1_c4d8d5543fc0_temperature', 'unit_of_measurement') %}
+
+      {# Convert to Celsius if needed (thermal calc requires Celsius) #}
+      {% if unit == '°F' %}
+        {% set return_c = (return_temp - 32) / 1.8 %}
+        {% set supply_c = (supply_temp - 32) / 1.8 %}
+      {% else %}
+        {% set return_c = return_temp %}
+        {% set supply_c = supply_temp %}
+      {% endif %}
+
       {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
       {% set density = states('input_number.cx_fluid_density') | float(970) %}
       {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
