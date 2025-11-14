@@ -4,102 +4,84 @@
    that can be used throughout your sensor templates.
 
    Usage in sensor templates:
-   {% from 'init.jinja' import to_celsius, to_fahrenheit %}
+   {% from 'init.jinja' import celsius, fahrenheit %}
 
-   {{ to_celsius('sensor.some_temp_sensor') }}
-   {{ to_fahrenheit('sensor.some_temp_sensor') }}
+   {{ celsius('sensor.some_temp_sensor') }}
+   {{ fahrenheit('sensor.some_temp_sensor') }}
+
+   Key features:
+   - Returns 'none' for unavailable/unknown sensors (safer than returning 0)
+   - Auto-detects unit from sensor's unit_of_measurement attribute
+   - Supports normalized unit strings (C/CELSIUS, F/FAHRENHEIT)
+   - Handles missing units gracefully with default_unit_if_missing parameter
 #}
 
-{# Convert any temperature sensor to Celsius
+{# Convert temperature sensor value to Celsius
 
    Args:
-     sensor_entity: Entity ID of the temperature sensor (string)
+     entity_id: Entity ID of the temperature sensor (string)
+     default_unit_if_missing: Unit to assume if sensor has no unit attribute (default: 'C')
 
    Returns:
-     Temperature value in Celsius (float)
-
-   Example:
-     {% from 'init.jinja' import to_celsius %}
-     {{ to_celsius('sensor.outdoor_temperature') }}
-#}
-{% macro to_celsius(sensor_entity) -%}
-  {% set temp = states(sensor_entity) | float(0) %}
-  {% set unit = state_attr(sensor_entity, 'unit_of_measurement') %}
-
-  {% if unit == '°F' %}
-    {{ ((temp - 32.0) / 1.8) | round(2) }}
-  {% elif unit == '°C' %}
-    {{ temp | round(2) }}
-  {% else %}
-    {# Unknown unit, assume Fahrenheit and convert #}
-    {{ ((temp - 32.0) / 1.8) | round(2) }}
-  {% endif %}
-{%- endmacro %}
-
-{# Convert any temperature sensor to Fahrenheit
-
-   Args:
-     sensor_entity: Entity ID of the temperature sensor (string)
-
-   Returns:
-     Temperature value in Fahrenheit (float)
-
-   Example:
-     {% from 'init.jinja' import to_fahrenheit %}
-     {{ to_fahrenheit('sensor.outdoor_temperature') }}
-#}
-{% macro to_fahrenheit(sensor_entity) -%}
-  {% set temp = states(sensor_entity) | float(0) %}
-  {% set unit = state_attr(sensor_entity, 'unit_of_measurement') %}
-
-  {% if unit == '°C' %}
-    {{ (temp * 1.8 + 32.0) | round(2) }}
-  {% elif unit == '°F' %}
-    {{ temp | round(2) }}
-  {% else %}
-    {# Unknown unit, assume Celsius and convert #}
-    {{ (temp * 1.8 + 32.0) | round(2) }}
-  {% endif %}
-{%- endmacro %}
-
-{# Convert a raw temperature value to Celsius
-
-   Args:
-     temp: Temperature value (number)
-     from_unit: Source unit ('F' or 'C')
-
-   Returns:
-     Temperature value in Celsius (float)
+     Temperature value in Celsius (float), or none if sensor unavailable
 
    Example:
      {% from 'init.jinja' import celsius %}
-     {{ celsius(75, 'F') }}  {# Returns 23.89 #}
+     {{ celsius('sensor.outdoor_temperature') }}
+     {{ celsius('sensor.some_sensor', 'F') }}  {# Assume F if unit missing #}
 #}
-{% macro celsius(temp, from_unit='F') -%}
-  {% if from_unit == 'F' or from_unit == '°F' %}
-    {{ ((temp - 32.0) / 1.8) | round(2) }}
+{% macro celsius(entity_id, default_unit_if_missing='C') %}
+  {% set state = states(entity_id) %}
+  {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
+    {{ none }}
   {% else %}
-    {{ temp | round(2) }}
+    {% set value = state | float(default=none) %}
+    {% if value is none %}
+      {{ none }}
+    {% else %}
+      {% set from_unit = (state_attr(entity_id, 'unit_of_measurement') or default_unit_if_missing) | replace('°','') | upper | trim %}
+      {% if from_unit in ['C', 'CELSIUS'] %}
+        {{ value }}
+      {% elif from_unit in ['F', 'FAHRENHEIT'] %}
+        {{ (value - 32) * 5 / 9 }}
+      {% else %}
+        {{ value }}
+      {% endif %}
+    {% endif %}
   {% endif %}
-{%- endmacro %}
+{% endmacro %}
 
-{# Convert a raw temperature value to Fahrenheit
+{# Convert temperature sensor value to Fahrenheit
 
    Args:
-     temp: Temperature value (number)
-     from_unit: Source unit ('C' or 'F')
+     entity_id: Entity ID of the temperature sensor (string)
+     default_unit_if_missing: Unit to assume if sensor has no unit attribute (default: 'C')
 
    Returns:
-     Temperature value in Fahrenheit (float)
+     Temperature value in Fahrenheit (float), or none if sensor unavailable
 
    Example:
      {% from 'init.jinja' import fahrenheit %}
-     {{ fahrenheit(25, 'C') }}  {# Returns 77.0 #}
+     {{ fahrenheit('sensor.outdoor_temperature') }}
+     {{ fahrenheit('sensor.some_sensor', 'F') }}  {# Assume F if unit missing #}
 #}
-{% macro fahrenheit(temp, from_unit='C') -%}
-  {% if from_unit == 'C' or from_unit == '°C' %}
-    {{ (temp * 1.8 + 32.0) | round(2) }}
+{% macro fahrenheit(entity_id, default_unit_if_missing='C') %}
+  {% set state = states(entity_id) %}
+  {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
+    {{ none }}
   {% else %}
-    {{ temp | round(2) }}
+    {% set value = state | float(default=none) %}
+    {% if value is none %}
+      {{ none }}
+    {% else %}
+      {% set from_unit = (state_attr(entity_id, 'unit_of_measurement') or default_unit_if_missing) | replace('°','') | upper | trim %}
+      {% if from_unit in ['F', 'FAHRENHEIT'] %}
+        {{ value }}
+      {% elif from_unit in ['C', 'CELSIUS'] %}
+        {{ value * 9 / 5 + 32 }}
+      {% else %}
+        {{ value }}
+      {% endif %}
+    {% endif %}
   {% endif %}
-{%- endmacro %}
+{% endmacro %}

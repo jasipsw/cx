@@ -15,8 +15,8 @@
 #     device_class: temperature
 #     state_class: measurement
 #     state: >-
-#       {% from 'init.jinja' import to_celsius %}
-#       {{ to_celsius('sensor.outdoor_temperature') }}
+#       {% from 'init.jinja' import celsius %}
+#       {{ celsius('sensor.outdoor_temperature') }}
 
 # Example 2: Convert sensor to Fahrenheit
 # - sensor:
@@ -26,20 +26,20 @@
 #     device_class: temperature
 #     state_class: measurement
 #     state: >-
-#       {% from 'init.jinja' import to_fahrenheit %}
-#       {{ to_fahrenheit('sensor.shellyplus1_c4d8d5543fc0_temperature') }}
+#       {% from 'init.jinja' import fahrenheit %}
+#       {{ fahrenheit('sensor.shellyplus1_c4d8d5543fc0_temperature') }}
 
-# Example 3: Convert raw value
+# Example 3: Specify default unit if sensor has no unit attribute
 # - sensor:
-#   - name: "Example Converted Temperature"
-#     unique_id: example_converted_temp
+#   - name: "Example With Default Unit"
+#     unique_id: example_default_unit
 #     unit_of_measurement: "°C"
 #     device_class: temperature
 #     state_class: measurement
 #     state: >-
 #       {% from 'init.jinja' import celsius %}
-#       {% set fahrenheit_value = 75 %}
-#       {{ celsius(fahrenheit_value, 'F') }}
+#       {# Assume sensor is in Fahrenheit if no unit attribute #}
+#       {{ celsius('sensor.some_sensor', 'F') }}
 
 # Example 4: Use in thermal calculations (need Celsius)
 # - sensor:
