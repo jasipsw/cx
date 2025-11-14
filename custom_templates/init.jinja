@@ -1,0 +1,105 @@
+{# Temperature Conversion Macros for Home Assistant
+
+   These macros provide reusable temperature conversion functions
+   that can be used throughout your sensor templates.
+
+   Usage in sensor templates:
+   {% from 'init.jinja' import to_celsius, to_fahrenheit %}
+
+   {{ to_celsius('sensor.some_temp_sensor') }}
+   {{ to_fahrenheit('sensor.some_temp_sensor') }}
+#}
+
+{# Convert any temperature sensor to Celsius
+
+   Args:
+     sensor_entity: Entity ID of the temperature sensor (string)
+
+   Returns:
+     Temperature value in Celsius (float)
+
+   Example:
+     {% from 'init.jinja' import to_celsius %}
+     {{ to_celsius('sensor.outdoor_temperature') }}
+#}
+{% macro to_celsius(sensor_entity) -%}
+  {% set temp = states(sensor_entity) | float(0) %}
+  {% set unit = state_attr(sensor_entity, 'unit_of_measurement') %}
+
+  {% if unit == '°F' %}
+    {{ ((temp - 32.0) / 1.8) | round(2) }}
+  {% elif unit == '°C' %}
+    {{ temp | round(2) }}
+  {% else %}
+    {# Unknown unit, assume Fahrenheit and convert #}
+    {{ ((temp - 32.0) / 1.8) | round(2) }}
+  {% endif %}
+{%- endmacro %}
+
+{# Convert any temperature sensor to Fahrenheit
+
+   Args:
+     sensor_entity: Entity ID of the temperature sensor (string)
+
+   Returns:
+     Temperature value in Fahrenheit (float)
+
+   Example:
+     {% from 'init.jinja' import to_fahrenheit %}
+     {{ to_fahrenheit('sensor.outdoor_temperature') }}
+#}
+{% macro to_fahrenheit(sensor_entity) -%}
+  {% set temp = states(sensor_entity) | float(0) %}
+  {% set unit = state_attr(sensor_entity, 'unit_of_measurement') %}
+
+  {% if unit == '°C' %}
+    {{ (temp * 1.8 + 32.0) | round(2) }}
+  {% elif unit == '°F' %}
+    {{ temp | round(2) }}
+  {% else %}
+    {# Unknown unit, assume Celsius and convert #}
+    {{ (temp * 1.8 + 32.0) | round(2) }}
+  {% endif %}
+{%- endmacro %}
+
+{# Convert a raw temperature value to Celsius
+
+   Args:
+     temp: Temperature value (number)
+     from_unit: Source unit ('F' or 'C')
+
+   Returns:
+     Temperature value in Celsius (float)
+
+   Example:
+     {% from 'init.jinja' import celsius %}
+     {{ celsius(75, 'F') }}  {# Returns 23.89 #}
+#}
+{% macro celsius(temp, from_unit='F') -%}
+  {% if from_unit == 'F' or from_unit == '°F' %}
+    {{ ((temp - 32.0) / 1.8) | round(2) }}
+  {% else %}
+    {{ temp | round(2) }}
+  {% endif %}
+{%- endmacro %}
+
+{# Convert a raw temperature value to Fahrenheit
+
+   Args:
+     temp: Temperature value (number)
+     from_unit: Source unit ('C' or 'F')
+
+   Returns:
+     Temperature value in Fahrenheit (float)
+
+   Example:
+     {% from 'init.jinja' import fahrenheit %}
+     {{ fahrenheit(25, 'C') }}  {# Returns 77.0 #}
+#}
+{% macro fahrenheit(temp, from_unit='C') -%}
+  {% if from_unit == 'C' or from_unit == '°C' %}
+    {{ (temp * 1.8 + 32.0) | round(2) }}
+  {% else %}
+    {{ temp | round(2) }}
+  {% endif %}
+{%- endmacro %}

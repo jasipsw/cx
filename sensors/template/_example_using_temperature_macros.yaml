@@ -1,0 +1,83 @@
+# Example: How to use temperature conversion macros
+#
+# The macros are defined in /config/custom_templates/init.jinja
+# To use them, import at the top of your template
+#
+# NOTE: This is an EXAMPLE file showing usage patterns.
+# These example sensors are disabled (they would create test sensors).
+# Copy the patterns to your actual sensor files.
+
+# Example 1: Convert sensor to Celsius
+# - sensor:
+#   - name: "Example Outdoor Temp in Celsius"
+#     unique_id: example_outdoor_celsius
+#     unit_of_measurement: "°C"
+#     device_class: temperature
+#     state_class: measurement
+#     state: >-
+#       {% from 'init.jinja' import to_celsius %}
+#       {{ to_celsius('sensor.outdoor_temperature') }}
+
+# Example 2: Convert sensor to Fahrenheit
+# - sensor:
+#   - name: "Example Buffer Supply in Fahrenheit"
+#     unique_id: example_buffer_supply_fahrenheit
+#     unit_of_measurement: "°F"
+#     device_class: temperature
+#     state_class: measurement
+#     state: >-
+#       {% from 'init.jinja' import to_fahrenheit %}
+#       {{ to_fahrenheit('sensor.shellyplus1_c4d8d5543fc0_temperature') }}
+
+# Example 3: Convert raw value
+# - sensor:
+#   - name: "Example Converted Temperature"
+#     unique_id: example_converted_temp
+#     unit_of_measurement: "°C"
+#     device_class: temperature
+#     state_class: measurement
+#     state: >-
+#       {% from 'init.jinja' import celsius %}
+#       {% set fahrenheit_value = 75 %}
+#       {{ celsius(fahrenheit_value, 'F') }}
+
+# Example 4: Use in thermal calculations (need Celsius)
+# - sensor:
+#   - name: "Example Thermal Power with Auto-Conversion"
+#     unique_id: example_thermal_power
+#     unit_of_measurement: "W"
+#     state_class: measurement
+#     state: >-
+#       {% from 'init.jinja' import to_celsius %}
+#
+#       {# Get temps and auto-convert to Celsius for thermal calc #}
+#       {% set supply_c = to_celsius('sensor.buffer_supply_from_heat_pump') %}
+#       {% set return_c = to_celsius('sensor.buffer_return_to_heat_pump') %}
+#       {% set delta_t = supply_c - return_c %}
+#
+#       {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+#       {% set density = 970 %}  {# kg/m³ #}
+#       {% set specific_heat = 3.95 %}  {# kJ/kg·K #}
+#
+#       {% set flow_lps = flow_lpm / 60 %}
+#       {% set flow_kgs = (flow_lps * density) / 1000 %}
+#       {% set specific_heat_j = specific_heat * 1000 %}
+#       {% set thermal_output = flow_kgs * specific_heat_j * delta_t %}
+#       {{ thermal_output | round(0) }}
+
+# Real-world usage: Update your existing sensors like this:
+#
+# OLD WAY (manual conversion):
+# state: >-
+#   {% set temp = states('sensor.some_sensor') | float(0) %}
+#   {% set unit = state_attr('sensor.some_sensor', 'unit_of_measurement') %}
+#   {% if unit == '°C' %}
+#     {{ (temp * 1.8 + 32.0) | round(2) }}
+#   {% else %}
+#     {{ temp | round(2) }}
+#   {% endif %}
+#
+# NEW WAY (using macro):
+# state: >-
+#   {% from 'init.jinja' import to_fahrenheit %}
+#   {{ to_fahrenheit('sensor.some_sensor') }}
