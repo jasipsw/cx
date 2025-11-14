@@ -1,0 +1,41 @@
+{% macro celsius(entity_id, default_unit_if_missing='C') %}
+  {% set state = states(entity_id) %}
+  {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
+    {{ none }}
+  {% else %}
+    {% set value = state | float(default=none) %}
+    {% if value is none %}
+      {{ none }}
+    {% else %}
+      {% set from_unit = (state_attr(entity_id, 'unit_of_measurement') or default_unit_if_missing) | replace('°','') | upper | trim %}
+      {% if from_unit in ['C', 'CELSIUS'] %}
+        {{ value }}
+      {% elif from_unit in ['F', 'FAHRENHEIT'] %}
+        {{ (value - 32) * 5 / 9 }}
+      {% else %}
+        {{ value }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{% macro fahrenheit(entity_id, default_unit_if_missing='C') %}
+  {% set state = states(entity_id) %}
+  {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
+    {{ none }}
+  {% else %}
+    {% set value = state | float(default=none) %}
+    {% if value is none %}
+      {{ none }}
+    {% else %}
+      {% set from_unit = (state_attr(entity_id, 'unit_of_measurement') or default_unit_if_missing) | replace('°','') | upper | trim %}
+      {% if from_unit in ['F', 'FAHRENHEIT'] %}
+        {{ value }}
+      {% elif from_unit in ['C', 'CELSIUS'] %}
+        {{ value * 9 / 5 + 32 }}
+      {% else %}
+        {{ value }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endmacro %}
