@@ -35,83 +35,51 @@
       unique_id: a_h_condensation_threshold
       state: >
         {# Check if dew point > buffer return temp (condensation risk) #}
-        {% if states( 'sensor.kitchen_comfort_dew_point' ) | int(0) > states( 'sensor.buffer_return_to_heat_pump')  | int(0) %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.kitchen_comfort_dew_point') | int(0) > states('sensor.buffer_return_to_heat_pump') | int(0)) | lower }}
 
     - name: "cx_heating_mode"
       unique_id: cx_heating_mode
       state: >
         {% set x = states('sensor.cx50_c30') | int(0) %}
-        {% if x |int (0) == 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (x == 0) | lower }}
 
     - name: "cx_dhw_mode"
       unique_id: cx_dhw_mode
       state: >
-        {% set x = states('sensor.cx50_c31') | int %}
-        {% if x |int(0) == 0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {% set x = states('sensor.cx50_c31') | int(0) %}
+        {{ (x == 0) | lower }}
 
     - name: "CX C30 Electrical Valve 1"
       unique_id: cx_c30_electrical_valve_1
       state: >
-        {% set x = states('sensor.cx50_c30') | int %}
-        {% if x |int(0) == 1 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {% set x = states('sensor.cx50_c30') | int(0) %}
+        {{ (x == 1) | lower }}
 
     - name: "CX C31 Electrical Valve 2"
       unique_id: cx_c31_electrical_valve_2
       state: >
-        {% set x = states('sensor.cx50_c31') | int %}
-        {% if x |int(0) == 1 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {% set x = states('sensor.cx50_c31') | int(0) %}
+        {{ (x == 1) | lower }}
 
     - name: "CX C31 Electrical Valve 3"
       unique_id: cx_c32_electrical_valve_3
       state: >
-        {% set x = states('sensor.cx50_c32') | int %}
-        {% if x |int(0) == 1 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {% set x = states('sensor.cx50_c32') | int(0) %}
+        {{ (x == 1) | lower }}
 
     - name: "CX C33 Electrical Valve 4"
       unique_id: cx_c33_electrical_valve_4
       state: >
-        {% set x = states('sensor.cx50_c33') | int %}
-        {% if x |int(0) == 1 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {% set x = states('sensor.cx50_c33') | int(0) %}
+        {{ (x == 1) | lower }}
 
     - name: "CX Outlet Temp Over Heat Target"
       unique_id: cx_outlet_temp_over_heat_target
       state: >
-        {% set outlet = states('sensor.cx50_c05_outlet_water_temp_c') | int %}
-        {% set target = states('sensor.cx50_heating_target_temp_c') | int %}
-        {% set diff = outlet - target%}
-        {% if diff > 2 |int(0) %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {% set outlet = states('sensor.cx50_c05_outlet_water_temp_c') | int(0) %}
+        {% set target = states('sensor.cx50_heating_target_temp_c') | int(0) %}
+        {% set diff = outlet - target %}
+        {{ (diff > 2) | lower }}
 
     - name: "CX Running"
       unique_id: cx_running
@@ -122,11 +90,7 @@
           {% set cx_freq = 0 | int(0) %}
         {% endif %}
 
-        {% if cx_freq == 0 %}
-          Off
-        {% else %}
-          On
-        {% endif %}
+        {{ (cx_freq > 0) | lower }}
 
     - name: "CX Auxiliary Electric Heater"
       unique_id: cx_aux_electric_heater
@@ -136,30 +100,17 @@
         {% else %}
           {% set x = 0 | int(0) %}
         {% endif %}
-
-        {% if x == 0 %}
-          Off
-        {% else %}
-          On
-        {% endif %}
+        {{ (x > 0) | lower }}
         
     - name: "Grid Power Status"
       unique_id: "grid_power_status"
       state: >
-        {% if is_state('binary_sensor.enpower_202413002436_grid_status', 'on') %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ is_state('binary_sensor.enpower_202413002436_grid_status', 'on') | lower }}
 
     - name: "Grid Power Outage"
       unique_id: "grid_power_outage"
       state: >
-        {% if is_state('binary_sensor.enpower_202413002436_grid_status', 'on') %}
-          Off
-        {% else %}
-          On
-        {% endif %}
+        {{ (not is_state('binary_sensor.enpower_202413002436_grid_status', 'on')) | lower }}
 
     - name: "Test G2 Valve"
       unique_id: test_g2_valve
@@ -169,58 +120,34 @@
     - name: "Main Floor Radiant"
       unique_id: "radiant_main_floor"
       state: >
-        {% if states('sensor.main_floor_demand_1' ) | float(0) > 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.main_floor_demand_1') | float(0) > 0.0) | lower }}
 
     - name: "Bedroom Radiant"
       unique_id: "radiant_bedroom"
       state: >
-        {% if states('sensor.bedroom_demand_1' ) | float(0) > 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.bedroom_demand_1') | float(0) > 0.0) | lower }}
 
 
     - name: "Family Room Radiant"
       unique_id: "radiant_family_room"
       state: >
-        {% if states('sensor.family_room_demand_1' ) | float(0) > 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.family_room_demand_1') | float(0) > 0.0) | lower }}
 
 
 
     - name: "Front Bedroom Radiant"
       unique_id: "radiant_front_bedroom"
       state: >
-        {% if states('sensor.front_bedroom_demand_1' ) | float(0) > 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.front_bedroom_demand_1') | float(0) > 0.0) | lower }}
 
 
     - name: "Master Suite Radiant"
       unique_id: "radiant_master_suite"
       state: >
-        {% if states('sensor.master_suite_demand_1' ) | float(0) > 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.master_suite_demand_1') | float(0) > 0.0) | lower }}
 
     - name: "Office Radiant"
       unique_id: "radiant_office"
       state: >
-        {% if states('sensor.office_3_demand_1' ) | float(0) > 0.0 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+        {{ (states('sensor.office_3_demand_1') | float(0) > 0.0) | lower }}
 
