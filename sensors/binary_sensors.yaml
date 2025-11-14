@@ -4,28 +4,28 @@
 # ============================================================================
 # TREND SENSORS - Detect Temperature Rise for G2 Valve Detection
 # ============================================================================
-# These detect when a tank temperature is actively RISING (being heated)
-# More reliable than static delta-T measurements
+# These monitor supply temperatures FROM heat pump to detect where G2 valve
+# is directing heat flow. More direct and accurate than monitoring tank temps.
 
-# DHW Tank Heating Trend
-# Detects when DHW tank temperature is rising
+# DHW Supply Heating Trend
+# Detects when DHW supply line from HP is rising (G2 to DHW)
 - platform: trend
   sensors:
     dhw_tank_heating_trend:
       friendly_name: "DHW Tank Heating Trend"
-      entity_id: sensor.dhw_tank_temperature
+      entity_id: sensor.dhw_supply_from_heat_pump
       device_class: heat
       sample_duration: 180  # Look at last 3 minutes of data (shorter window)
       min_gradient: 0.0033  # Minimum rise rate: 0.2°F/min (0.2/60 seconds)
       max_samples: 6  # Use 6 samples over the 3-minute window
 
-# Buffer Tank Heating Trend
-# Detects when buffer tank temperature is rising
+# Buffer Supply Heating Trend
+# Detects when buffer supply line from HP is rising (G2 to buffer)
 - platform: trend
   sensors:
     buffer_tank_heating_trend:
       friendly_name: "Buffer Tank Heating Trend"
-      entity_id: sensor.shelly_plus_buffer_tank_temperature
+      entity_id: sensor.buffer_supply_from_heat_pump
       device_class: heat
       sample_duration: 180  # Look at last 3 minutes of data (shorter window)
       min_gradient: 0.0033  # Minimum rise rate: 0.2°F/min (0.2/60 seconds)

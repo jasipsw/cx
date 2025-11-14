@@ -319,31 +319,31 @@ views:
               - **Buffer Tank** (space heating via radiant floors/AHUs)
               - **DHW Tank** (domestic hot water)
 
-              **NEW APPROACH:** We use **trend sensors** to detect which tank is actively heating (temperature rising).
-              This is more reliable than static delta-T measurements.
+              **NEW APPROACH:** We use **trend sensors** to monitor supply temperatures from the heat pump.
+              This directly detects which line is receiving heat flow from the G2 valve.
 
               ## Step 1: Trend Sensor Configuration
               | Trend Sensor | Monitors | Sample Window | Min Rise Rate | Purpose |
               |--------------|----------|---------------|---------------|---------|
-              | `dhw_tank_heating_trend` | `sensor.dhw_tank_temperature` | 3 minutes | 0.2°F/min | Detect DHW heating |
-              | `buffer_tank_heating_trend` | `sensor.shelly_plus_buffer_tank_temperature` | 3 minutes | 0.2°F/min | Detect buffer heating |
+              | `dhw_tank_heating_trend` | `sensor.dhw_supply_from_heat_pump` | 3 minutes | 0.2°F/min | Detect G2 to DHW |
+              | `buffer_tank_heating_trend` | `sensor.buffer_supply_from_heat_pump` | 3 minutes | 0.2°F/min | Detect G2 to buffer |
 
-              **Trend sensor turns ON when:** Temperature rising at ≥ 0.2°F/min over 3-minute window
-              **Shorter window & higher threshold = faster response, less noise**
+              **Trend sensor turns ON when:** Supply temperature rising at ≥ 0.2°F/min over 3-minute window
+              **Monitors supply lines = direct detection of where heat is flowing**
 
               ## Step 2: Current Trend Status
               {% set dhw_trend = states('binary_sensor.dhw_tank_heating_trend') %}
               {% set buf_trend = states('binary_sensor.buffer_tank_heating_trend') %}
-              {% set dhw_temp = states('sensor.dhw_tank_temperature') | float(0) %}
-              {% set buf_temp = states('sensor.shelly_plus_buffer_tank_temperature') | float(0) %}
+              {% set dhw_supply = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
+              {% set buf_supply = states('sensor.buffer_supply_from_heat_pump') | float(0) %}
               {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
 
-              | Tank | Temp | Trend State | Heating? | Valid? |
-              |------|------|-------------|----------|--------|
-              | DHW Tank | {{ dhw_temp }}°F | {{ dhw_trend }} | {{ '✅ YES' if dhw_trend == 'on' else '❌ NO' }} | {{ '✅' if hp_running else '⚠️ HP Off' }} |
-              | Buffer Tank | {{ buf_temp }}°F | {{ buf_trend }} | {{ '✅ YES' if buf_trend == 'on' else '❌ NO' }} | {{ '✅' if hp_running else '⚠️ HP Off' }} |
+              | Supply Line | Temp | Trend State | Heating? | Valid? |
+              |-------------|------|-------------|----------|--------|
+              | DHW Supply from HP | {{ dhw_supply }}°F | {{ dhw_trend }} | {{ '✅ YES' if dhw_trend == 'on' else '❌ NO' }} | {{ '✅' if hp_running else '⚠️ HP Off' }} |
+              | Buffer Supply from HP | {{ buf_supply }}°F | {{ buf_trend }} | {{ '✅ YES' if buf_trend == 'on' else '❌ NO' }} | {{ '✅' if hp_running else '⚠️ HP Off' }} |
 
-              **Note:** Trend sensors look at historical data, so they may stay ON briefly after HP stops. Valve position logic handles this.
+              **Note:** Monitoring supply lines provides faster, more accurate G2 valve detection than monitoring tank temperatures.
 
               ## Step 3: G2 Valve Position (Trigger-Based with HP State Check)
               **How the valve position sensor works:**
