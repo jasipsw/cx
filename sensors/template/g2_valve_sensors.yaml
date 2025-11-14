@@ -14,40 +14,32 @@
     icon: mdi:water-boiler
     state: >-
       {% set compressor_running = states('sensor.cx50_compressor_frequency') | float(0) > 0 %}
-      {% set pump_on = is_state('binary_sensor.cx_c34_water_pump', 'on') %}
+      {% set pump_on = is_state('binary_sensor.cx_c34_c4_water_pump', 'on') %}
+
+      {# Default assumption: G2 valve directing to buffer tank (DHW mode = false) #}
+      {# Only set to true if we can positively confirm DHW heating #}
 
       {% if not compressor_running or not pump_on %}
-        {# Heat pump not actively running - maintain previous state #}
-        {{ (this.state if this.state not in ['unknown', 'unavailable', 'none'] else false) | lower }}
+        {# Heat pump not running - default to buffer mode #}
+        {{ false | lower }}
       {% else %}
         {# Heat pump is running - check where heat is going #}
         {% set buffer_supply = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
         {% set buffer_return = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
         {% set buffer_delta = buffer_supply - buffer_return %}
 
-        {% set hp_outlet = states('sensor.heat_pump_outlet_temperature') | float(0) %}
-        {% set supply_vs_hp = hp_outlet - buffer_supply %}
-
-        {# If buffer tank getting significant heat from HP → heating mode (G2 to buffer)
-           If buffer tank NOT getting heat despite HP running → DHW mode (G2 to DHW) #}
-
-        {% if buffer_delta > 1.0 and supply_vs_hp < 5.0 %}
-          {# Buffer tank receiving hot water from HP → Heating mode #}
+        {# Check if buffer tank is receiving heat from heat pump #}
+        {% if buffer_delta > 1.0 %}
+          {# Buffer tank showing temperature rise → G2 to buffer (heating mode) #}
           {{ false | lower }}
-        {% elif buffer_delta < 0.5 and compressor_running %}
-          {# Compressor running but buffer tank not heating → DHW mode #}
+        {% elif buffer_delta < 0.5 %}
+          {# Compressor running but buffer NOT heating → G2 must be to DHW #}
           {{ true | lower }}
         {% else %}
-          {# Uncertain - maintain previous state #}
-          {{ (this.state if this.state not in ['unknown', 'unavailable', 'none'] else false) | lower }}
+          {# Uncertain (0.5-1.0°F delta) - default to buffer mode #}
+          {{ false | lower }}
         {% endif %}
       {% endif %}
-    availability: >-
-      {{ states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable']
-          and states('binary_sensor.cx_c34_water_pump') not in ['unknown', 'unavailable']
-          and states('sensor.hvac_buffer_tank_supply_temperature') not in ['unknown', 'unavailable']
-          and states('sensor.hvac_buffer_tank_return_temperature') not in ['unknown', 'unavailable']
-          and states('sensor.heat_pump_outlet_temperature') not in ['unknown', 'unavailable'] }}
 
 - sensor:
   # ------------------------------------------------------------------------
