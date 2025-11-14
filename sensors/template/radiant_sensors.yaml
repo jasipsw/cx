@@ -1,11 +1,88 @@
 - sensor:
   - name: "Master Suite Radiant Flow Temp"
-    unique_id: "flow_temp_master_suite_radiant"
+    unique_id: "radiant_flow_temp_master_suite"
     unit_of_measurement: "°F"
     state_class: measurement
     icon: mdi:thermometer
     availability: >-
       {{ is_state('binary_sensor.master_suite_radiant', 'on') }}
     state: >-
-      {# Using buffer supply temp (hot water from HP to radiant floor) #}
-      {{ states('sensor.buffer_supply_from_heat_pump') | float(0) }}
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+
+  - name: "Office Radiant Flow Temp"
+    unique_id: "radiant_flow_temp_office"
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    availability: >-
+      {{ is_state('binary_sensor.office_radiant', 'on') }}
+
+    state: >-
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+
+
+  - name: "Main Floor Radiant Flow Temp"
+    unique_id: "radiant_flow_temp_main_floor"
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    availability: >-
+      {{ is_state('binary_sensor.main_floor_radiant', 'on') }}
+
+    state: >-
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+
+
+  - name: "Bedroom Radiant Flow Temp"
+    unique_id: "radiant_flow_temp_bedroom"
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    availability: >-
+      {{ is_state('binary_sensor.bedroom_floor_radiant', 'on') }}
+
+    state: >-
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+
+
+  - name: "Family Room Radiant Flow Temp"
+    unique_id: "radiant_flow_temp_family_room"
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    availability: >-
+      {{ is_state('binary_sensor.family_room_radiant', 'on') }}
+
+    state: >-
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+
+
+  - name: "Front Bedroom Radiant Flow Temp"
+    unique_id: "radiant_flow_temp_front_bedroom"
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    availability: >-
+      {{ is_state('binary_sensor.front_bedroom_radiant', 'on') }}
+
+    state: >-
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+
+
+  - name: "Radiant Flow Temp"
+    unique_id: "radiant_flow_temp"
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer
+    availability: >-
+      {% set value = states('sensor.hvac_buffer_tank_flow_rate') | float('unavailable') %}
+      {% if value == 'unavailable' %}
+        false
+      {% elif value > 0 %}
+        true
+      {% else %}
+        false
+      {% endif %}
+
+    state: >-
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}

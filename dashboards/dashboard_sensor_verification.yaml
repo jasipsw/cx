@@ -293,9 +293,9 @@ views:
               ## DHW Tank Sensors (if available)
               | Sensor | Value | Status |
               |--------|-------|--------|
-              | DHW Tank Temp Top | {{ states('sensor.dhw_tank_temperature_top') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature_top') not in ['unknown', 'unavailable'] else '⚠️ Not configured' }} |
-              | DHW Tank Temp Bottom | {{ states('sensor.dhw_tank_temperature_bottom') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature_bottom') not in ['unknown', 'unavailable'] else '⚠️ Not configured' }} |
-              | DHW Circulation Pump | {{ states('binary_sensor.dhw_circulation_pump') }} | {{ '✅' if states('binary_sensor.dhw_circulation_pump') not in ['unknown', 'unavailable'] else '⚠️ Not configured' }} |
+              | DHW Tank Temp Top | {{ states('sensor.dhw_supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature_top') not in ['unknown', 'unavailable'] else '⚠️ Not configured' }} |
+              | DHW Tank Temp Bottom | {{ states('sensor.dhw_return_to_heat_pump') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature_bottom') not in ['unknown', 'unavailable'] else '⚠️ Not configured' }} |
+              | DHW Circulation Pump | {{ states('binary_sensor.cx_c34_c4_water_pump') }} | {{ '✅' if states('binary_sensor.dhw_circulation_pump') not in ['unknown', 'unavailable'] else '⚠️ Not configured' }} |
 
               **Note:** DHW sensors may not exist yet. G2 valve detection uses buffer tank temperature rise.
 
