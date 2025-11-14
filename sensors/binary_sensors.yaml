@@ -15,9 +15,9 @@
       friendly_name: "DHW Tank Heating Trend"
       entity_id: sensor.dhw_tank_temperature
       device_class: heat
-      sample_duration: 300  # Look at last 5 minutes of data
-      min_gradient: 0.0017  # Minimum rise rate: 0.1°F/min (0.1/60 seconds)
-      max_samples: 10  # Use 10 samples over the 5-minute window
+      sample_duration: 180  # Look at last 3 minutes of data (shorter window)
+      min_gradient: 0.0033  # Minimum rise rate: 0.2°F/min (0.2/60 seconds)
+      max_samples: 6  # Use 6 samples over the 3-minute window
 
 # Buffer Tank Heating Trend
 # Detects when buffer tank temperature is rising
@@ -27,6 +27,7 @@
       friendly_name: "Buffer Tank Heating Trend"
       entity_id: sensor.shelly_plus_buffer_tank_temperature
       device_class: heat
-      sample_duration: 300  # Look at last 5 minutes of data
-      min_gradient: 0.0017  # Minimum rise rate: 0.1°F/min (0.1/60 seconds)
-      max_samples: 10  # Use 10 samples over the 5-minute window
+      sample_duration: 180  # Look at last 3 minutes of data (shorter window)
+      min_gradient: 0.0033  # Minimum rise rate: 0.2°F/min (0.2/60 seconds)
+      max_samples: 6  # Use 6 samples over the 3-minute window
+
