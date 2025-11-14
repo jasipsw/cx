@@ -292,12 +292,12 @@
         {{ flow_ok and t_out_ok and t_in_ok and cp_ok and rho_ok and mode_ok }}
         
       # State: Calculates thermal power (Q) in kW
-      # NOW ONLY CALCULATES IF THE MODE IS 'Heat'
+      # Calculates for 'Heat' and 'Heat + DHW' modes (any mode producing space heating)
       state: >-
         {% set mode = states('sensor.heat_pump_operating_mode') %}
 
-        {# Only calculate if mode is 'Heat'. Exclude 'DHW', 'Cool', 'Cool + DHW', 'Heat + DHW' #}
-        {% if mode == 'Heat' %}
+        {# Calculate if mode includes heating (Heat or Heat + DHW) #}
+        {% if mode in ['Heat', 'Heat + DHW'] %}
           {% set flow_gpm = states('sensor.cx50_pump_flow_gpm') | float(0) %}
           {% set t_out_f = states('sensor.heat_pump_outlet_temperature') | float(0) %}
           {% set t_in_f = states('sensor.heat_pump_inlet_temperature') | float(0) %}
@@ -338,14 +338,11 @@
     - name: "CX C34 C4 Water pump"
       unique_id: cx_c34_water_pump
       device_class: running
-      state: >
+      state: >-
         {% set c34_value = states('sensor.cx50_c34') | int(0) %}
         {% set flow_rate = states('sensor.cx50_pump_flow_lpm') | float(0) %}
-
-        {# Pump is running if EITHER Modbus reports ON OR actual flow detected #}
-        {# Flow > 1 LPM indicates pump is circulating water #}
-        {{ c34_value == 1 or flow_rate > 1.0 }}
-      availability: >
+        {{ (c34_value == 1 or flow_rate > 1.0) | lower }}
+      availability: >-
         {{ states('sensor.cx50_c34') not in ['unknown', 'unavailable']
             and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
 
