@@ -4,20 +4,6 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
-template:
-  - name: temp_macros
-    unique_id: temp_macros_global
-    state: >
-      {% from 'init.jinja' import celsius, fahrenheit %}
-      {{ "" }}   {# dummy state – we don’t care about it #}
-    attributes:
-      celsius: >
-        {% from 'init.jinja' import celsius %}
-        {{ celsius }}
-      fahrenheit: >
-        {% from 'init.jinja' import fahrenheit %}
-        {{ fahrenheit }}
-         
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes

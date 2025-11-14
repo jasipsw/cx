@@ -826,7 +826,7 @@
       scan_interval: 60
 
     - name: "cx50_c77"
-      unique_id: "cx50_c67"
+      unique_id: "cx50_c77"
       state_class: measurement
       input_type: holding
       address: 277
@@ -894,6 +894,14 @@
       slave: 1
       scan_interval: 60
 
+    - name: "cx50_c84_fault_code"
+      unique_id: "cx50_c84_fault_code"
+      state_class: measurement
+      input_type: holding
+      address: 284
+      slave: 1
+      scan_interval: 30
+
     - name: "cx50_c85"
       unique_id: "cx50_c85"
       state_class: measurement
@@ -933,15 +941,6 @@
       address: 289
       slave: 1
       scan_interval: 60
-
-
-    - name: "cx50_c84_fault_code"
-      unique_id: "cx50_c84_fault_code"
-      state_class: measurement
-      input_type: holding
-      address: 284
-      slave: 1
-      scan_interval: 30
 
 
   # ============================================================================
