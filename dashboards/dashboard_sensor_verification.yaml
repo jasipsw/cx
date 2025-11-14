@@ -270,11 +270,11 @@ views:
 
               **How it works:** Trend sensors detect when tank temperature is **actively rising** (≥0.1°F/min over 5min window)
 
-              ## Temperature Rise Rates (Diagnostic)
-              | Tank | Current Temp | Rise Rate | Status |
-              |------|--------------|-----------|--------|
-              | DHW Tank | {{ states('sensor.dhw_tank_temperature') }}°F | {{ states('sensor.dhw_tank_temp_rise_rate') }}°F/min | {{ '📈' if (states('sensor.dhw_tank_temp_rise_rate') | float(0)) > 0.05 else '📊' }} |
-              | Buffer Tank | {{ states('sensor.shelly_plus_buffer_tank_temperature') }}°F | {{ states('sensor.buffer_tank_temp_rise_rate') }}°F/min | {{ '📈' if (states('sensor.buffer_tank_temp_rise_rate') | float(0)) > 0.05 else '📊' }} |
+              ## Current Tank Temperatures
+              | Tank | Current Temp | Status |
+              |------|--------------|--------|
+              | DHW Tank | {{ states('sensor.dhw_tank_temperature') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature') not in ['unknown', 'unavailable'] else '❌' }} |
+              | Buffer Tank | {{ states('sensor.shelly_plus_buffer_tank_temperature') }}°F | {{ '✅' if states('sensor.shelly_plus_buffer_tank_temperature') not in ['unknown', 'unavailable'] else '❌' }} |
 
               ## G2 Valve Logic (Simplified)
               {% set dhw_trend = is_state('binary_sensor.dhw_tank_heating_trend', 'on') %}
@@ -330,13 +330,11 @@ views:
               {% set buf_trend = states('binary_sensor.buffer_tank_heating_trend') %}
               {% set dhw_temp = states('sensor.dhw_tank_temperature') | float(0) %}
               {% set buf_temp = states('sensor.shelly_plus_buffer_tank_temperature') | float(0) %}
-              {% set dhw_rate = states('sensor.dhw_tank_temp_rise_rate') | float(0) %}
-              {% set buf_rate = states('sensor.buffer_tank_temp_rise_rate') | float(0) %}
 
-              | Tank | Temp | Trend State | Rise Rate | Heating? |
-              |------|------|-------------|-----------|----------|
-              | DHW Tank | {{ dhw_temp }}°F | {{ dhw_trend }} | {{ dhw_rate }}°F/min | {{ '✅ YES' if dhw_trend == 'on' else '❌ NO' }} |
-              | Buffer Tank | {{ buf_temp }}°F | {{ buf_trend }} | {{ buf_rate }}°F/min | {{ '✅ YES' if buf_trend == 'on' else '❌ NO' }} |
+              | Tank | Temp | Trend State | Heating? |
+              |------|------|-------------|----------|
+              | DHW Tank | {{ dhw_temp }}°F | {{ dhw_trend }} | {{ '✅ YES' if dhw_trend == 'on' else '❌ NO' }} |
+              | Buffer Tank | {{ buf_temp }}°F | {{ buf_trend }} | {{ '✅ YES' if buf_trend == 'on' else '❌ NO' }} |
 
               ## Step 3: G2 Valve Position (Trigger-Based)
               **How the valve position sensor works:**
@@ -369,8 +367,8 @@ views:
               | Heat Pump Running | {{ '✅' if hp_running else '⏸️ Off' }} | {{ states('binary_sensor.heat_pump_running') }} |
               | Operating Mode | {{ operating_mode }} | Modbus reported mode |
               | Valve Position | {{ valve_pos }} | Trend-detected position |
-              | DHW Trend Active | {{ '🔥 YES' if dhw_trend == 'on' else '❌ NO' }} | {{ dhw_rate }}°F/min |
-              | Buffer Trend Active | {{ '🔥 YES' if buf_trend == 'on' else '❌ NO' }} | {{ buf_rate }}°F/min |
+              | DHW Trend Active | {{ '🔥 YES' if dhw_trend == 'on' else '❌ NO' }} | Temperature rising |
+              | Buffer Trend Active | {{ '🔥 YES' if buf_trend == 'on' else '❌ NO' }} | Temperature rising |
 
               **Expected vs Actual:**
               {% if hp_running %}

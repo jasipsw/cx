@@ -1,39 +1,10 @@
 # G2 Diverter Valve Position Detection
 # Detects whether G2 valve is directing flow to buffer tank or DHW tank
 # Uses TREND sensors to detect which tank is actively heating
-
-# ============================================================================
-# TREND SENSORS - Detect Temperature Rise
-# ============================================================================
-# These detect when a tank temperature is actively RISING (being heated)
-# More reliable than static delta-T measurements
-
-- binary_sensor:
-  # ------------------------------------------------------------------------
-  # DHW Tank Heating Trend
-  # Detects when DHW tank temperature is rising
-  # ------------------------------------------------------------------------
-  - platform: trend
-    name: "DHW Tank Heating Trend"
-    unique_id: dhw_tank_heating_trend
-    entity_id: sensor.dhw_tank_temperature
-    device_class: heat
-    sample_duration: 300  # Look at last 5 minutes of data
-    min_gradient: 0.0017  # Minimum rise rate: 0.1°F/min (0.1/60 seconds)
-    max_samples: 10  # Use 10 samples over the 5-minute window
-
-  # ------------------------------------------------------------------------
-  # Buffer Tank Heating Trend
-  # Detects when buffer tank temperature is rising
-  # ------------------------------------------------------------------------
-  - platform: trend
-    name: "Buffer Tank Heating Trend"
-    unique_id: buffer_tank_heating_trend
-    entity_id: sensor.shelly_plus_buffer_tank_temperature
-    device_class: heat
-    sample_duration: 300  # Look at last 5 minutes of data
-    min_gradient: 0.0017  # Minimum rise rate: 0.1°F/min (0.1/60 seconds)
-    max_samples: 10  # Use 10 samples over the 5-minute window
+#
+# TREND SENSORS are defined in sensors/binary_sensors.yaml:
+#   - binary_sensor.dhw_tank_heating_trend
+#   - binary_sensor.buffer_tank_heating_trend
 
 # ============================================================================
 # TRIGGER-BASED G2 VALVE POSITION SENSOR
@@ -92,6 +63,21 @@
           {{ this.state if this.state is defined else 'Buffer Tank' }}
         {% endif %}
 
+    # ------------------------------------------------------------------------
+    # G2 Valve Last Switch Time (with trigger context)
+    # ------------------------------------------------------------------------
+    - name: "G2 Valve Last Switch"
+      unique_id: g2_valve_last_switch
+      device_class: timestamp
+      icon: mdi:clock-outline
+      state: >-
+        {{ now().isoformat() }}
+      attributes:
+        trigger_id: >-
+          {{ trigger.id if trigger is defined else 'unknown' }}
+        previous_state: >-
+          {{ this.state if this.state is defined else 'never' }}
+
 # ============================================================================
 # BINARY SENSOR - G2 DHW Mode (for automations)
 # ============================================================================
@@ -102,72 +88,3 @@
     icon: mdi:water-boiler
     state: >-
       {{ is_state('sensor.g2_valve_position', 'DHW Tank') | lower }}
-
-# ============================================================================
-# DIAGNOSTIC SENSORS
-# ============================================================================
-- sensor:
-  # ------------------------------------------------------------------------
-  # DHW Tank Temperature Rise Rate (for diagnostics)
-  # ------------------------------------------------------------------------
-  - name: "DHW Tank Temp Rise Rate"
-    unique_id: dhw_tank_temp_rise_rate
-    unit_of_measurement: "°F/min"
-    state_class: measurement
-    icon: mdi:thermometer-chevron-up
-    state: >-
-      {% if has_value('sensor.dhw_tank_temperature') %}
-        {% set history = states.sensor.dhw_tank_temperature.attributes.get('history', []) %}
-        {% if history | length > 1 %}
-          {% set current = states('sensor.dhw_tank_temperature') | float(0) %}
-          {% set previous = history[-2] | float(0) %}
-          {% set rate = (current - previous) * 60 %}  {# Convert per-second to per-minute #}
-          {{ rate | round(3) }}
-        {% else %}
-          0.0
-        {% endif %}
-      {% else %}
-        unavailable
-      {% endif %}
-
-  # ------------------------------------------------------------------------
-  # Buffer Tank Temperature Rise Rate (for diagnostics)
-  # ------------------------------------------------------------------------
-  - name: "Buffer Tank Temp Rise Rate"
-    unique_id: buffer_tank_temp_rise_rate
-    unit_of_measurement: "°F/min"
-    state_class: measurement
-    icon: mdi:thermometer-chevron-up
-    state: >-
-      {% if has_value('sensor.shelly_plus_buffer_tank_temperature') %}
-        {% set history = states.sensor.shelly_plus_buffer_tank_temperature.attributes.get('history', []) %}
-        {% if history | length > 1 %}
-          {% set current = states('sensor.shelly_plus_buffer_tank_temperature') | float(0) %}
-          {% set previous = history[-2] | float(0) %}
-          {% set rate = (current - previous) * 60 %}  {# Convert per-second to per-minute #}
-          {{ rate | round(3) }}
-        {% else %}
-          0.0
-        {% endif %}
-      {% else %}
-        unavailable
-      {% endif %}
-
-  # ------------------------------------------------------------------------
-  # Last G2 Valve Switch Time
-  # ------------------------------------------------------------------------
-  - name: "G2 Valve Last Switch"
-    unique_id: g2_valve_last_switch
-    device_class: timestamp
-    icon: mdi:clock-outline
-    state: >-
-      {{ as_timestamp(now()) | timestamp_custom('%Y-%m-%d %H:%M:%S') }}
-    attributes:
-      from_position: >-
-        {{ trigger.from_state.state if trigger.from_state is defined else 'unknown' }}
-      to_position: >-
-        {{ trigger.to_state.state if trigger.to_state is defined else states('sensor.g2_valve_position') }}
-      heat_pump_running: >-
-        {{ states('binary_sensor.heat_pump_running') }}
-      operating_mode: >-
-        {{ states('sensor.heat_pump_operating_mode') }}
