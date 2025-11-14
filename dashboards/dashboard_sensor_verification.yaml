@@ -300,7 +300,7 @@ views:
               | Sensor | Value | Status |
               |--------|-------|--------|
               | DHW Tank Temp | {{ states('sensor.dhw_tank_temperature') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature') not in ['unknown', 'unavailable'] else '❌ Missing' }} |
-              | DHW Supply (to house) | {{ states('sensor.hot_water_out') }}°F | {{ '✅' if states('sensor.hot_water_out') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | DHW Supply (to house) | {{ states('sensor.dhw_hot_water_out') }}°F | {{ '✅' if states('sensor.dhw_hot_water_out') not in ['unknown', 'unavailable'] else '⚠️' }} |
               | DHW Cold Water In | {{ states('sensor.dhw_cold_water_in') }}°F | {{ '✅' if states('sensor.dhw_cold_water_in') not in ['unknown', 'unavailable'] else '⚠️' }} |
 
           # G2 VALVE DETAILED LOGIC
