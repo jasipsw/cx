@@ -62,17 +62,29 @@
         {% set dhw_trend = is_state('binary_sensor.dhw_tank_heating_trend', 'on') %}
         {% set buf_trend = is_state('binary_sensor.buffer_tank_heating_trend', 'on') %}
 
-        {# Only detect valve position when HP is RUNNING #}
+        {# G2 valve defaults to Buffer Tank position when HP is off #}
+        {# Only switches to DHW Tank when HP running AND actively heating DHW #}
+
         {% if not hp_running %}
-          Idle
+          {# HP off - valve in default rest position (buffer tank) #}
+          Buffer Tank (HP Off)
         {% elif trigger.id == 'dhw_heating' and hp_running %}
+          {# DHW trend detected while HP running #}
           DHW Tank
         {% elif trigger.id == 'buffer_heating' and hp_running %}
+          {# Buffer trend detected while HP running #}
           Buffer Tank
         {% elif trigger.id == 'hp_stopped' %}
-          Idle
-        {% elif trigger.id == 'both_trends_off' %}
-          Idle
+          {# HP just stopped - return to default position #}
+          Buffer Tank (HP Off)
+        {% elif trigger.id == 'both_trends_off' and hp_running %}
+          {# Both trends off but HP still running - check modbus mode #}
+          {% set mode = states('sensor.heat_pump_operating_mode') %}
+          {% if 'DHW' in mode %}
+            DHW Tank
+          {% else %}
+            Buffer Tank
+          {% endif %}
         {% elif trigger.id == 'startup' or trigger.id == 'hp_started' %}
           {# On startup/HP start, check which trend is currently active #}
           {% if hp_running and dhw_trend %}
@@ -88,14 +100,16 @@
               Buffer Tank
             {% endif %}
           {% else %}
-            Idle
+            {# HP not running - default position #}
+            Buffer Tank (HP Off)
           {% endif %}
         {% else %}
           {# Maintain current state only if HP still running #}
           {% if hp_running %}
             {{ this.state if this.state is defined else 'Buffer Tank' }}
           {% else %}
-            Idle
+            {# HP stopped running - return to default #}
+            Buffer Tank (HP Off)
           {% endif %}
         {% endif %}
 
