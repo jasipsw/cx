@@ -432,11 +432,24 @@
     from: "on"
     to: "off"
   conditions:
+  # Check cycle was actually short but not too short (filter out initialization)
   - condition: template
-    value_template: "{{ states('sensor.heat_pump_current_cycle_duration') | float(0) < 600 and states('sensor.heat_pump_current_cycle_duration') | float(0) > 0 }}"
+    value_template: "{{ states('sensor.heat_pump_current_cycle_duration') | float(0) < 600 and states('sensor.heat_pump_current_cycle_duration') | float(0) > 30 }}"
+
+  # Alerts must be enabled
   - condition: state
     entity_id: input_boolean.enable_short_cycle_alerts
     state: "on"
+
+  # Filter out sensor initialization: Previous state must have been valid (not unknown/unavailable)
+  - condition: template
+    value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable', 'none'] }}"
+
+  # Filter out restarts: Sensor must have been in previous state for at least 10 seconds
+  - condition: template
+    value_template: >
+      {{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) > 10 }}
+
   actions:
   - action: notify.notify
     metadata: {}
@@ -538,6 +551,19 @@
     - platform: state
       entity_id: binary_sensor.heat_pump_last_cycle_was_short
       to: "on"
+  condition:
+    # Filter out sensor initialization: Previous state must have been valid
+    - condition: template
+      value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable', 'none'] }}"
+
+    # Ensure cycle duration is meaningful (> 30 seconds, filters out initialization glitches)
+    - condition: template
+      value_template: "{{ states('sensor.heat_pump_last_cycle_duration') | float(0) > 30 }}"
+
+    # Filter out restarts: Sensor must have been in previous state for at least 10 seconds
+    - condition: template
+      value_template: >
+        {{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) > 10 }}
   action:
     - service: logbook.log
       data:
