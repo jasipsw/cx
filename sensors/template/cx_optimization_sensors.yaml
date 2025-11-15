@@ -60,6 +60,23 @@
       {{ (last_cycle > 0 and last_cycle < 300) | lower }}
     icon: mdi:alert-circle
 
+  # ------------------------------------------------------------------------
+  # Circulator Pump Running Without Heat Pump
+  # Detects when pump is circulating but compressor is off
+  # This causes energy loss through the heat pump coil
+  # ------------------------------------------------------------------------
+  - name: "Circulator Running HP Off"
+    unique_id: circulator_running_hp_off
+    state: >-
+      {% set flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+      {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
+      {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+
+      {# Circulator is running if flow > 4 L/min #}
+      {# Heat pump is off if power < 500W or compressor frequency = 0 #}
+      {{ flow > 4 and not hp_running and compressor_freq == 0 }}
+    icon: mdi:pump-off
+
 # ------------------------------------------------------------------------
 # Calculated Sensors
 # This block is correct and remains as-is
@@ -175,7 +192,72 @@
         {{ 'unavailable' }}
       {% endif %}
 
-      # In sensors/cx_optimization_sensors.yaml
+      # ------------------------------------------------------------------------
+  # Circulator Pump Running Without Heat Pump
+  # Detects standby energy loss condition
+  # ------------------------------------------------------------------------
+  - name: "Circulator Pump Flow Rate"
+    unique_id: circulator_pump_flow_rate
+    unit_of_measurement: "L/min"
+    state_class: measurement
+    icon: mdi:pump
+    state: >-
+      {{ states('sensor.cx50_pump_flow_lpm') | float(0) }}
+
+  # ------------------------------------------------------------------------
+  # Energy Loss Rate When Circulator Runs Without Heat Pump
+  # Calculates thermal loss through heat pump coil
+  # In heating mode: hot water is cooled by outdoor coil
+  # In cooling mode: cool water is warmed by outdoor coil
+  # ------------------------------------------------------------------------
+  - name: "HP Standby Thermal Loss Rate"
+    unique_id: hp_standby_thermal_loss_rate
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:snowflake-alert
+    state: >-
+      {% set circulator_running = states('binary_sensor.circulator_running_hp_off') %}
+      {% set operating_mode = states('sensor.heat_pump_operating_mode') %}
+
+      {% if circulator_running == 'on' %}
+        {# Use the thermal power calculation to determine loss #}
+        {# When HP is off but water circulating, delta T represents loss #}
+        {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
+        {% set outlet = states('sensor.cx50_outlet_water_temp_c') | float(0) %}
+        {% set flow_lpm = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {% set density = states('input_number.cx_fluid_density') | float(1025) %}
+        {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+
+        {# Calculate thermal transfer (negative = heat loss in heating mode) #}
+        {% set delta_t = outlet - inlet %}
+        {% set flow_lps = flow_lpm / 60 %}
+        {% set flow_kgs = (flow_lps * density) / 1000 %}
+        {% set specific_heat_j = specific_heat * 1000 %}
+        {% set thermal_loss = (flow_kgs * specific_heat_j * delta_t) | abs %}
+
+        {{ thermal_loss | round(0) }}
+      {% else %}
+        0
+      {% endif %}
+    availability: >-
+      {{ states('sensor.cx50_inlet_water_temp_c') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_outlet_water_temp_c') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
+
+  # ------------------------------------------------------------------------
+  # Accumulated Energy Loss (Daily)
+  # ------------------------------------------------------------------------
+  - name: "HP Standby Energy Loss Daily"
+    unique_id: hp_standby_energy_loss_daily
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: total_increasing
+    icon: mdi:alert-circle-outline
+    state: >-
+      {{ states('sensor.hp_standby_thermal_loss_accumulated') | float(0) }}
+
+  # In sensors/cx_optimization_sensors.yaml
 
   # ------------------------------------------------------------------------
   # 1. GENERAL Heating Electrical Power (Includes DHW)

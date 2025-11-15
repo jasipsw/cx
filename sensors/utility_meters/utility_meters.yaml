@@ -153,7 +153,7 @@ heat_loss_hourly_projected:
   cycle: hourly
   
 heat_pump_output_hourly:
-  source: sensor.heat_pump_output_power_kw
+  source: sensor.heat_pump_thermal_power_kw
   name: Heat Pump Output Hourly (kWh)
   cycle: hourly
 
@@ -181,4 +181,68 @@ hvac_hp_thermal_energy_produced_daily:
   unique_id: hvac_hp_thermal_energy_produced_daily
   cycle: daily
 
-  
+# ------------------------------------------------------------------------
+# Heat Pump Standby Loss Tracking (Daily/Monthly)
+# Tracks energy lost when circulator runs but HP is off
+# ------------------------------------------------------------------------
+hp_standby_loss_daily:
+  source: sensor.hp_standby_thermal_loss_accumulated
+  name: HP Standby Loss (Daily)
+  unique_id: hp_standby_loss_daily
+  cycle: daily
+
+hp_standby_loss_monthly:
+  source: sensor.hp_standby_thermal_loss_accumulated
+  name: HP Standby Loss (Monthly)
+  unique_id: hp_standby_loss_monthly
+  cycle: monthly
+
+# ------------------------------------------------------------------------
+# Heat Pump Electrical Energy Input (Hourly/Daily/Monthly)
+# Tracks total electrical energy consumed by heat pump
+# ------------------------------------------------------------------------
+hp_electrical_energy_hourly:
+  source: sensor.cx_input_power_kwh
+  name: HP Electrical Energy (Hourly)
+  unique_id: hp_electrical_energy_hourly
+  cycle: hourly
+  delta_values: true
+
+hp_electrical_energy_daily:
+  source: sensor.cx_input_power_kwh
+  name: HP Electrical Energy (Daily)
+  unique_id: hp_electrical_energy_daily
+  cycle: daily
+  delta_values: true
+
+hp_electrical_energy_monthly:
+  source: sensor.cx_input_power_kwh
+  name: HP Electrical Energy (Monthly)
+  unique_id: hp_electrical_energy_monthly
+  cycle: monthly
+  delta_values: true
+
+# ------------------------------------------------------------------------
+# Heat Pump Thermal Energy Output (Hourly/Daily/Monthly)
+# Tracks total thermal energy produced by heat pump
+# ------------------------------------------------------------------------
+hp_thermal_energy_output_hourly:
+  source: sensor.cx_output_power_interval
+  name: HP Thermal Output (Hourly)
+  unique_id: hp_thermal_energy_output_hourly
+  cycle: hourly
+  delta_values: true
+
+hp_thermal_energy_output_daily:
+  source: sensor.cx_output_power_interval
+  name: HP Thermal Output (Daily)
+  unique_id: hp_thermal_energy_output_daily
+  cycle: daily
+  delta_values: true
+
+hp_thermal_energy_output_monthly:
+  source: sensor.cx_output_power_interval
+  name: HP Thermal Output (Monthly)
+  unique_id: hp_thermal_energy_output_monthly
+  cycle: monthly
+  delta_values: true
