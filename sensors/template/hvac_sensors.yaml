@@ -198,25 +198,42 @@
     state_class: measurement
     icon: mdi:fire
     availability: >-
-      {{ states('sensor.buffer_supply_from_heat_pump') not in ['unknown', 'unavailable']
-          and states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable']
+      {{ states('sensor.buffer_supply_to_hvac_load') not in ['unknown', 'unavailable']
+          and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
-      {# Auto-detect temperature units and convert to Celsius for calculation #}
-      {% set return_temp = states('sensor.buffer_return_to_heat_pump') | float(0) %}
-      {% set supply_temp = states('sensor.buffer_supply_from_heat_pump') | float(0) %}
-      {% set unit = state_attr('sensor.buffer_supply_from_heat_pump', 'unit_of_measurement') %}
-
-      {# Convert to Celsius if needed (thermal calc requires Celsius) #}
-      {% if unit == '°F' %}
-        {% set return_c = (return_temp - 32) / 1.8 %}
-        {% set supply_c = (supply_temp - 32) / 1.8 %}
+      {# Get temperature values and check units #}
+      {% set return_val = states('sensor.buffer_return_from_hvac_load') | float(0) %}
+      {% set supply_val = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
+      {% set return_unit = state_attr('sensor.buffer_return_from_hvac_load', 'unit_of_measurement') %}
+      {% set supply_unit = state_attr('sensor.buffer_supply_to_hvac_load', 'unit_of_measurement') %}
+      
+      {# Convert temperatures to Celsius if needed #}
+      {% if return_unit == '°F' %}
+        {% set return_c = (return_val - 32) / 1.8 %}
       {% else %}
-        {% set return_c = return_temp %}
-        {% set supply_c = supply_temp %}
+        {% set return_c = return_val %}
       {% endif %}
-
-      {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      
+      {% if supply_unit == '°F' %}
+        {% set supply_c = (supply_val - 32) / 1.8 %}
+      {% else %}
+        {% set supply_c = supply_val %}
+      {% endif %}
+      
+      {# Get flow rate and check units #}
+      {% set flow_val = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      {% set flow_unit = state_attr('sensor.hvac_buffer_tank_flow_rate', 'unit_of_measurement') %}
+      
+      {# Convert flow rate to L/min if needed #}
+      {% if flow_unit == 'gal/min' or flow_unit == 'GPM' %}
+        {% set flow_lpm = flow_val * 3.78541 %}
+      {% elif flow_unit == 'gal/h' or flow_unit == 'GPH' %}
+        {% set flow_lpm = flow_val * 3.78541 / 60 %}
+      {% else %}
+        {% set flow_lpm = flow_val %}
+      {% endif %}
+      
       {% set density = states('input_number.cx_fluid_density') | float(970) %}
       {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
 
