@@ -25,7 +25,7 @@
   sensors:
     buffer_tank_heating_trend:
       friendly_name: "Buffer Tank Heating Trend"
-      entity_id: sensor.buffer_supply_from_heat_pump
+      entity_id: sensor.supply_from_heat_pump
       device_class: heat
       sample_duration: 180  # Look at last 3 minutes of data (shorter window)
       min_gradient: 0.0033  # Minimum rise rate: 0.2°F/min (0.2/60 seconds)
