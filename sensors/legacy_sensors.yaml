@@ -221,6 +221,19 @@
   round: 3
 
 # ------------------------------------------------------------------------
+# CX Output Power Interval (Thermal Energy Integration)
+# Integrates thermal power output to get energy over time
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.heat_pump_thermal_power_output
+  name: "CX Output Power Interval"
+  unique_id: cx_output_power_interval
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
 # Filter Sensor (Stabilize Shed/LC2 Power Reading)
 # Filters out the dips that cause "Ignoring decreasing value" warnings.
 # Source: sensor.lc_shed_lc_watts
@@ -242,13 +255,9 @@
 # HEAT PUMP OPTIMIZATION SENSORS
 # ============================================================================
 
-# Track if heat pump is running (binary)
-- platform: template
-  sensors:
-    heat_pump_running:
-      friendly_name: "Heat Pump Running"
-      value_template: >-
-        {{ states('sensor.heat_pump_electrical_power_input') | float(0) > 500 }}
+# MOVED: Heat pump running detection moved to cx_optimization_sensors.yaml
+# Now uses improved logic: Water pump ON AND (Compressor running OR Heat transfer)
+# Old simple logic was: power > 500W
 
 # Track supply temperature
 - platform: template

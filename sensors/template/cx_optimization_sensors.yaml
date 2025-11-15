@@ -4,17 +4,29 @@
   # Goal: Improve COP from 2.0-2.5 to manufacturer's 4.55 rating
 
   # ------------------------------------------------------------------------
-  # Heat Pump Running Detection
+  # Heat Pump Running Detection (Improved Logic)
+  # More precise than just checking power > 500W
+  # Requires: Water pump ON AND (Compressor running OR Active heat transfer)
   # ------------------------------------------------------------------------
   - name: "Heat Pump Running"
     unique_id: heat_pump_running
     state: >-
-      {% set power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-      {{ power > 500 }}
+      {% set pump_on = is_state('binary_sensor.cx_c34_c4_water_pump', 'on') %}
+      {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
+      {% set thermal_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+
+      {# Heat pump is running if pump is on AND (compressor running OR producing heat) #}
+      {% if pump_on %}
+        {{ (compressor_freq > 0 or thermal_output > 1000) | lower }}
+      {% else %}
+        {{ false | lower }}
+      {% endif %}
     device_class: running # Valid for binary_sensor
     icon: mdi:heat-pump
     availability: >-
-      {{ states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable'] }}
+      {{ states('binary_sensor.cx_c34_c4_water_pump') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable']
+          and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] }}
 
   # ------------------------------------------------------------------------
   # Heat Pump Startup Phase Detection
@@ -23,7 +35,7 @@
     unique_id: heat_pump_in_startup_phase
     state: >-
       {% set cycle_time = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-      {{ cycle_time > 0 and cycle_time < 180 }}
+      {{ (cycle_time > 0 and cycle_time < 180) | lower }}
     icon: mdi:rocket-launch
 
   # ------------------------------------------------------------------------
@@ -34,7 +46,7 @@
     state: >-
       {% set cycle_time = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
       {% set remaining_time = states('sensor.heat_pump_current_cycle_remaining') | float(0) %}
-      {{ cycle_time > 180 and remaining_time > 10 }} # Arbitrary 10s buffer before cycle end
+      {{ (cycle_time > 180 and remaining_time > 10) | lower }} # Arbitrary 10s buffer before cycle end
     icon: mdi:check-circle-outline
 
   # ------------------------------------------------------------------------
@@ -45,7 +57,7 @@
     unique_id: heat_pump_last_cycle_was_short
     state: >-
       {% set last_cycle = states('sensor.heat_pump_last_cycle_duration') | float(0) %}
-      {{ last_cycle > 0 and last_cycle < 300 }}
+      {{ (last_cycle > 0 and last_cycle < 300) | lower }}
     icon: mdi:alert-circle
 
 # ------------------------------------------------------------------------
