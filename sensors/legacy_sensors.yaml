@@ -383,13 +383,9 @@
 # HEAT PUMP OPTIMIZATION SENSORS
 # ============================================================================
 
-# Track if heat pump is running (binary)
-- platform: template
-  sensors:
-    heat_pump_running:
-      friendly_name: "Heat Pump Running"
-      value_template: >-
-        {{ states('sensor.heat_pump_electrical_power_input') | float(0) > 500 }}
+# MOVED: Heat pump running detection moved to cx_optimization_sensors.yaml
+# Now uses improved logic: Water pump ON AND (Compressor running OR Heat transfer)
+# Old simple logic was: power > 500W
 
 # Track supply temperature
 - platform: template
