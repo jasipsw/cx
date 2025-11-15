@@ -61,19 +61,19 @@
   #       {% else %}
   #         {{ states('sensor.cx_last_known_cop') }}
   #       {% endif %}
-  # ========================================================================
-  # HEAT PUMP LAST RUN TRACKING
-  # ========================================================================
-  # These sensors track the last complete heat pump run and calculate COP
-  # A "run" includes the time when water continues circulating after compressor stops
+# ========================================================================
+# HEAT PUMP LAST RUN TRACKING
+# ========================================================================
+# These sensors track the last complete heat pump run and calculate COP
+# A "run" includes the time when water continues circulating after compressor stops
 
-  - trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      to: "off"
-      for:
-        minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
-  - sensor:
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    to: "off"
+    for:
+      minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
+  sensor:
     # Capture the last cycle duration in seconds
     - name: "Heat Pump Last Cycle Duration"
       unique_id: heat_pump_last_cycle_duration
@@ -94,13 +94,13 @@
         {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
         {{ (duration * 60) | round(1) }}
 
-  # Track energy accumulated during the last run
-  - trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      from: "off"
-      to: "on"
-  - sensor:
+# Track energy accumulated during the last run
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: "off"
+    to: "on"
+  sensor:
     - name: "Heat Pump Run Start Energy Input"
       unique_id: heat_pump_run_start_energy_input
       unit_of_measurement: "kWh"
@@ -117,14 +117,14 @@
       state: >
         {{ states('sensor.cx_output_power_interval') | float(0) }}
 
-  # Calculate energy used during the last run and COP
-  - trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      to: "off"
-      for:
-        minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
-  - sensor:
+# Calculate energy used during the last run and COP
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    to: "off"
+    for:
+      minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
+  sensor:
     - name: "Heat Pump Last Run Energy Input"
       unique_id: heat_pump_last_run_energy_input
       unit_of_measurement: "kWh"

@@ -30,8 +30,9 @@
       {% set temp_raw = states('sensor.buffer_temp') | float(0) %}
       {% set temp_unit = (state_attr('sensor.buffer_temp','unit_of_measurement') or '') | lower() %}
       {% if temp_unit == '' %}
-        {% if (states('sensor.buffer_temperature') | float('nan')) is not 'nan' and states('sensor.buffer_temperature') not in ['unknown','unavailable','none'] %}
-          {% set temp_raw = states('sensor.buffer_temperature') | float(0) %}
+        {% set buffer_temp_val = states('sensor.buffer_temperature') | float(0) %}
+        {% if buffer_temp_val != 0 and states('sensor.buffer_temperature') not in ['unknown','unavailable','none'] %}
+          {% set temp_raw = buffer_temp_val %}
           {% set temp_unit = (state_attr('sensor.buffer_temperature','unit_of_measurement') or '') | lower() %}
         {% endif %}
       {% endif %}
