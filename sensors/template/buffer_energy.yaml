@@ -102,12 +102,12 @@
         {% set temp_c = temp_raw %}
       {% endif %}
 
-      {% set base_c = (states('input_number.buffer_base_temp_c') | float(0)) %}
+      {% set base_c = (states('input_number.buffer_base_temp_c') | float(21)) %}
       {% if base_c == 0 %}
-        {% set base_c = (states('sensor.buffer_base_temp') | float(0)) %}
+        {% set base_c = (states('sensor.buffer_base_temp') | float(21)) %}
       {% endif %}
       {% if base_c == 0 %}
-        {% set base_c = 40.0 %}
+        {% set base_c = 21.0 %}
       {% endif %}
 
       {% set max_c = (states('input_number.buffer_max_temp_c') | float(0)) %}

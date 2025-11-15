@@ -5,7 +5,7 @@
   #
   # NOTE: These sensors read from the buffer tank Shelly sensors
   # Using Shelly integration friendly names:
-  #   - sensor.buffer_supply_from_heat_pump = Supply (hot from HP to buffer)
+  #   - sensor.supply_from_heat_pump = Supply (hot from HP to buffer)
   #   - sensor.buffer_return_to_heat_pump = Return (cold from buffer to HP)
   # Same physical points serve HVAC distribution
   # ------------------------------------------------------------------------
@@ -36,8 +36,8 @@
     device_class: temperature
     icon: mdi:thermometer
     state: >-
-      {% set temp = states('sensor.buffer_supply_from_heat_pump') | float(0) %}
-      {% set unit = state_attr('sensor.buffer_supply_from_heat_pump', 'unit_of_measurement') %}
+      {% set temp = states('sensor.supply_from_heat_pump') | float(0) %}
+      {% set unit = state_attr('sensor.supply_from_heat_pump', 'unit_of_measurement') %}
 
       {# Auto-detect and convert if needed #}
       {% if unit == '°C' %}
@@ -120,8 +120,8 @@
     state: >-
       {# Auto-detect temperature units and convert to Celsius if needed #}
       {% set return_temp = states('sensor.buffer_return_to_heat_pump') | float(0) %}
-      {% set supply_temp = states('sensor.buffer_supply_from_heat_pump') | float(0) %}
-      {% set unit = state_attr('sensor.buffer_supply_from_heat_pump', 'unit_of_measurement') %}
+      {% set supply_temp = states('sensor.supply_from_heat_pump') | float(0) %}
+      {% set unit = state_attr('sensor.supply_from_heat_pump', 'unit_of_measurement') %}
 
       {% if unit == '°F' %}
         {% set return_c = (return_temp - 32) / 1.8 %}
