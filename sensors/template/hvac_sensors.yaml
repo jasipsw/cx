@@ -86,14 +86,34 @@
       {% set delta_t = supply - return %}
       {{ delta_t | round(2) }}
 
+  - name: "Buffer Return from HVAC Load"
+    unique_id: buffer_return_from_hvac_load
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {{ return_c | round(2) }}
+
+  - name: "Buffer Supply to HVAC Load"
+    unique_id: buffer_supply_to_hvac_load
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {{ supply_c | round(2) }}
+
   - name: "HVAC Buffer Tank Delta T Celsius"
     unique_id: hvac_buffer_tank_delta_t_celsius
     unit_of_measurement: "°C"
     state_class: measurement
     icon: mdi:delta
     state: >-
-      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set return_c = states('sensor.buffer_return_from_hvac_load') | float(0) %}
+      {% set supply_c = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
       {% set delta_t_c = supply_c - return_c %}
       {{ delta_t_c | round(2) }}
 
@@ -161,12 +181,12 @@
     state_class: measurement
     icon: mdi:fire
     availability: >-
-      {{ states('sensor.shellyplus1_c4d8d5543fc0_temperature') not in ['unknown', 'unavailable']
-          and states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') not in ['unknown', 'unavailable']
+      {{ states('sensor.buffer_supply_to_hvac_load') not in ['unknown', 'unavailable']
+          and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
-      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
+      {% set return_c = states('sensor.buffer_return_from_hvac_load') | float(0) %}
+      {% set supply_c = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
       {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
       {% set density = states('input_number.cx_fluid_density') | float(970) %}
       {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
