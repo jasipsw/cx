@@ -73,11 +73,7 @@
       {% set energy_j = mass_kg * cp * delta_c %}
       {{ (energy_j / 3600000) | round(2) }}
     availability: >
-<<<<<<< HEAD
-      {{ (states('sensor.sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] or states('sensor.buffer_temperature') not in ['unknown','unavailable','none']) and
-=======
       {{ states('sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] and
->>>>>>> 7d0aa60 (Fix buffer_energy.yaml sensor references and add debugging dashboard)
           (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) and
           (states('input_number.cx_fluid_specific_heat') not in ['unknown','unavailable','none'] and states('input_number.cx_fluid_density') not in ['unknown','unavailable','none']) }}
 
@@ -98,13 +94,8 @@
         {% set vol_l = vol_state * 3.785411784 %}
       {% endif %}
 
-<<<<<<< HEAD
-      {% set temp_raw = states('sensor.sensor.buffer_tank_temperature') | float(0) %}
-      {% set temp_unit = (state_attr('sensor.sensor.buffer_tank_temperature','unit_of_measurement') or '') | lower() %}
-=======
       {% set temp_raw = states('sensor.buffer_tank_temperature') | float(0) %}
       {% set temp_unit = (state_attr('sensor.buffer_tank_temperature','unit_of_measurement') or '') | lower() %}
->>>>>>> 7d0aa60 (Fix buffer_energy.yaml sensor references and add debugging dashboard)
       {% if 'f' in temp_unit %}
         {% set temp_c = (temp_raw - 32) * 5/9 %}
       {% else %}

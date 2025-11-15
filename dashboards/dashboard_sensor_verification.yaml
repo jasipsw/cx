@@ -788,8 +788,7 @@ views:
               | Input | Value | Status | Notes |
               |-------|-------|--------|-------|
               | Buffer Tank Temp | {{ states('sensor.buffer_tank_temperature') }}°F | {{ '✅' if states('sensor.buffer_tank_temperature') not in ['unknown', 'unavailable'] else '❌' }} | Primary temp sensor |
-              | Buffer Tank Volume | {{ states('sensor.buffer_tank_volume') }}{{ state_attr('sensor.buffer_tank_volume', 'unit_of_measurement') }} | {{ '✅' if states('sensor.buffer_tank_volume') not in ['unknown', 'unavailable'] else '⚠️ Using fallback' }} | Auto-detect units |
-              | Buffer Volume (Fallback) | {{ states('input_number.buffer_tank_volume_gal') }}gal | {{ '✅' if states('input_number.buffer_tank_volume_gal') not in ['unknown', 'unavailable'] else '❌' }} | If sensor missing |
+              | Buffer Volume | {{ states('input_number.buffer_tank_volume_gal') }}gal | {{ '✅' if states('input_number.buffer_tank_volume_gal') not in ['unknown', 'unavailable'] else '❌' }} | Number input helper |
               | Fluid Specific Heat | {{ states('input_number.cx_fluid_specific_heat') }} kJ/(kg·°C) | {{ '✅' if states('input_number.cx_fluid_specific_heat') not in ['unknown', 'unavailable'] else '❌' }} | Required |
               | Fluid Density | {{ states('input_number.cx_fluid_density') }} kg/m³ | {{ '✅' if states('input_number.cx_fluid_density') not in ['unknown', 'unavailable'] else '❌' }} | Required |
               | Base Temperature | {{ states('input_number.buffer_base_temp_c') }}°C | {{ '⚠️ Using default 40°C' if states('input_number.buffer_base_temp_c') in ['unknown', 'unavailable'] or states('input_number.buffer_base_temp_c') | float(0) == 0 else '✅' }} | Reference temp |
@@ -822,10 +821,10 @@ views:
               | Condition | Value | Indicates |
               |-----------|-------|-----------|
               | Compressor Running | {{ states('sensor.cx50_compressor_frequency') }}Hz | HP active |
-              | Buffer Supply Temp | {{ states('sensor.hvac_buffer_tank_supply_temperature') }}°F | - |
-              | Buffer Return Temp | {{ states('sensor.hvac_buffer_tank_return_temperature') }}°F | - |
-              | Buffer Delta T | {{ (states('sensor.hvac_buffer_tank_supply_temperature') | float(0) - states('sensor.hvac_buffer_tank_return_temperature') | float(0)) | round(2) }}°F | {{ '✅ Heating Buffer' if (states('sensor.hvac_buffer_tank_supply_temperature') | float(0) - states('sensor.hvac_buffer_tank_return_temperature') | float(0)) > 1.0 else '⚠️ Not heating buffer' }} |
-              | HP Outlet Temp | {{ states('sensor.cx50_outlet_temp') }}°F | Heat pump output |
+              | Buffer Supply Temp | {{ states('sensor.supply_from_heat_pump') }}°F | - |
+              | Buffer Return Temp | {{ states('sensor.buffer_return_to_heat_pump') }}°F | - |
+              | Buffer Delta T | {{ (states('sensor.supply_from_heat_pump') | float(0) - states('sensor.buffer_return_to_heat_pump') | float(0)) | round(2) }}°F | {{ '✅ Heating Buffer' if (states('sensor.supply_from_heat_pump') | float(0) - states('sensor.buffer_return_to_heat_pump') | float(0)) > 1.0 else '⚠️ Not heating buffer' }} |
+              | HP Outlet Temp | {{ states('sensor.heat_pump_outlet_temperature') }}°F | Heat pump output (sensor.heat_pump_outlet_temperature_) |
 
               **Logic:**
               - Buffer ΔT > 1.0°F + HP running → **G2 to Buffer Tank (Heating)**

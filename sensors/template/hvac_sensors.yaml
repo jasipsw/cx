@@ -334,3 +334,104 @@
       {% else %}
         {{ 'unavailable' }}
       {% endif %}
+
+  - name: "Heat Pump Designed Max Temp Delta "
+    unique_id: heat_pump_designed_max_temp_delta
+    unit_of_measurement: "°C"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = 5 %}
+      {{ temp | round(2) }}
+
+  - name: "Heat Pump Heating Target Temp"
+    unique_id: heat_pump_heating_target_temp
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_heating_target_temp_c') | float(0) %}
+      {# Convert C to F #}
+      {{ (temp * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump Cooling Target Temp"
+    unique_id: heat_pump_cooling_target_temp
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_cooling_target_temp_c') | float(0) %}
+      {# Convert C to F #}
+      {{ (temp * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump DHW Target Temp"
+    unique_id: heat_pump_dhw_target_temp
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_dhw_target_temp_c') | float(0) %}
+      {# Convert C to F #}
+      {{ (temp * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump Cooling Target Temp"
+    unique_id: heat_pump_cooling_target_temp
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_cooling_target_temp_c') | float(0) %}
+      {# Convert C to F #}
+      {{ (temp * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump DHW Target Temp"
+    unique_id: heat_pump_dhw_target_temp
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_dhw_target_temp_c') | float(0) %}
+      {# Convert C to F #}
+      {{ (temp * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump Heating Temp Max"
+    unique_id: heat_pump_heating_temp_max
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_heating_target_temp_c') | float(0) %}
+      {% set delta = states('sensor.heat_pump_designed_max_temp_delta') | float(5) %}
+      {# Convert C to F #}
+      {{ ((temp+delta) * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump DHW Temp Max"
+    unique_id: heat_pump_dhw_temp_max
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_dhw_target_temp_c') | float(0) %}
+      {% set delta = states('sensor.heat_pump_designed_max_temp_delta') | float(5) %}
+      {# Convert C to F #}
+      {{ ((temp+delta) * 1.8 + 32.0) | round(2) }}
+
+  - name: "Heat Pump Cooling Temp Min"
+    unique_id: heat_pump_cooling_temp_min
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    state: >-
+      {% set temp = states('sensor.cx50_cooling_target_temp_c') | float(0) %}
+      {% set delta = states('sensor.heat_pump_designed_max_temp_delta') | float(5) %}
+      {# Convert C to F #}
+      {{ ((temp-delta) * 1.8 + 32.0) | round(2) }}
