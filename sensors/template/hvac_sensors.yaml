@@ -161,14 +161,12 @@
     state_class: measurement
     icon: mdi:fire
     availability: >-
-      {{ states('sensor.buffer_supply_to_hvac_load') not in ['unknown', 'unavailable']
-          and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable']
+      {{ states('sensor.shellyplus1_c4d8d5543fc0_temperature') not in ['unknown', 'unavailable']
+          and states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
-      {% set supply_f = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
-      {% set return_f = states('sensor.buffer_return_from_hvac_load') | float(0) %}
-      {% set supply_c = (supply_f - 32) / 1.8 %}
-      {% set return_c = (return_f - 32) / 1.8 %}
+      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
       {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
       {% set density = states('input_number.cx_fluid_density') | float(970) %}
       {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
