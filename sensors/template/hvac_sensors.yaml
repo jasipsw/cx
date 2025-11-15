@@ -86,6 +86,7 @@
       {% set delta_t = supply - return %}
       {{ delta_t | round(2) }}
 
+  # Buffer return temperature from HVAC load (Celsius)
   - name: "Buffer Return from HVAC Load"
     unique_id: buffer_return_from_hvac_load
     unit_of_measurement: "°C"
@@ -96,6 +97,7 @@
       {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
       {{ return_c | round(2) }}
 
+  # Buffer supply temperature to HVAC load (Celsius)
   - name: "Buffer Supply to HVAC Load"
     unique_id: buffer_supply_to_hvac_load
     unit_of_measurement: "°C"
