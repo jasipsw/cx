@@ -707,6 +707,33 @@
           (thermal energy tracking now active)
         entity_id: sensor.cx_output_power_interval
 
+# Manual reset for CX Output Power Interval integration sensor
+# Run this from Settings → Automations → [This automation] → Run
+- id: reset_cx_output_power_interval
+  alias: "Reset CX Output Power Interval Sensor"
+  description: Manually reset the thermal energy integration sensor to zero
+  trigger: []  # Manual trigger only
+  condition: []
+  action:
+    - service: logbook.log
+      data:
+        name: Sensor Reset
+        message: >
+          ⚠️ Resetting CX Output Power Interval from {{ states('sensor.cx_output_power_interval') }} kWh to 0
+        entity_id: sensor.cx_output_power_interval
+    - service: integration.reset
+      target:
+        entity_id: sensor.cx_output_power_interval
+    - delay:
+        seconds: 2
+    - service: logbook.log
+      data:
+        name: Sensor Reset Complete
+        message: >
+          ✅ CX Output Power Interval reset complete. New value: {{ states('sensor.cx_output_power_interval') }} kWh
+        entity_id: sensor.cx_output_power_interval
+  mode: single
+
 - id: log_cycle_duration_sensor_initialized
   alias: "Log: Cycle Duration Sensor Initialized"
   description: Log when cycle duration sensor starts working
