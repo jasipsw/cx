@@ -29,8 +29,20 @@
     state_class: measurement
     icon: mdi:waves-arrow-left
     state: >-
-      {% set flow  = states('sensor.cx50_pump_flow_lpm') | float(0) %}
-      {{ flow | round(0) }}
+      {% set flow_raw = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+      {% set flow_unit = state_attr('sensor.hydronic_flow_flow_rate', 'unit_of_measurement') %}
+      
+      {# Convert based on actual units reported by the sensor #}
+      {% if flow_unit == 'gal/min' or flow_unit == 'GPM' %}
+        {# Convert GPM to L/min: 1 gal = 3.78541 L #}
+        {{ (flow_raw * 3.78541) | round(1) }}
+      {% elif flow_unit == 'gal/h' or flow_unit == 'GPH' %}
+        {# Convert GPH to L/min: (GPH * 3.78541) / 60 #}
+        {{ (flow_raw * 3.78541 / 60) | round(1) }}
+      {% else %}
+        {# Assume already in L/min or compatible unit #}
+        {{ flow_raw | round(1) }}
+      {% endif %}
 
   - name: "Flow Sensor Discrepancy Ratio"
     unique_id: flow_sensor_discrepancy_ratio
