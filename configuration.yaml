@@ -32,10 +32,13 @@ logger:
 
 # This section is for LEGACY sensor platforms (like 'filter', 'mqtt', etc.)
 # Combine all your legacy sensors (filter and power grid) into one file and include it here.
-sensor: !include sensors/legacy_sensors.yaml 
+sensor: !include sensors/legacy_sensors.yaml
 
 template: !include_dir_merge_list sensors/template/
 utility_meter: !include sensors/utility_meters/utility_meters.yaml
+
+# Binary sensors (includes trend sensors for G2 valve detection)
+binary_sensor: !include sensors/binary_sensors.yaml
 
 
 
@@ -47,25 +50,32 @@ input_boolean: !include helpers/input_boolean.yaml
 
 lovelace:
   dashboards:
-    cx-diagnostic: 
+    cx-diagnostic:
       mode: yaml
       title: CX Diagnostic
       icon: mdi:bug
       show_in_sidebar: true
       filename: dashboards/dashboard_diagnostic.yaml
 
-    cx-modbus: 
+    cx-modbus:
       mode: yaml
       title: CX Modbus
       icon: mdi:bug
       show_in_sidebar: true
       filename: dashboards/dashboard_modbus.yaml
-      
+
     cx-energy:
       mode: yaml
       title: Energy Analysis
       icon: mdi:chart-bar
       show_in_sidebar: true
       filename: dashboards/dashboard_energy.yaml
+
+    cx-sensor-verification:
+      mode: yaml
+      title: Sensor Verification
+      icon: mdi:check-decagram
+      show_in_sidebar: true
+      filename: dashboards/dashboard_sensor_verification.yaml
 
 

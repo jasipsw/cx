@@ -2,50 +2,50 @@
 # These sensors update at specific times or events
 
 
-  - trigger:
-    - platform: time
-      at: "23:59:45"
-  - sensor:
-    - name: "Energy Input (max)"
-      unique_id: cx_input_max
-      state: >
-        {{ states('sensor.cx_daily_energy_input') }}
-      state_class: measurement
-      unit_of_measurement: "kWh"
+- trigger:
+  - platform: time
+    at: "23:59:45"
+  sensor:
+  - name: "Energy Input (max)"
+    unique_id: cx_input_max
+    state: >
+      {{ states('sensor.cx_daily_energy_input') }}
+    state_class: measurement
+    unit_of_measurement: "kWh"
 
-  - trigger:
-    - platform: time
-      at: "23:59:45"
-  - sensor:
-    - name: "Energy Output (max)"
-      unique_id: cx_output_max
-      state: >
-        {{ states('sensor.cx_daily_energy_output') }}
-      state_class: measurement
-      unit_of_measurement: "kWh"
+- trigger:
+  - platform: time
+    at: "23:59:45"
+  sensor:
+  - name: "Energy Output (max)"
+    unique_id: cx_output_max
+    state: >
+      {{ states('sensor.cx_daily_energy_output') }}
+    state_class: measurement
+    unit_of_measurement: "kWh"
 
-  - trigger:
-    - platform: state
-      entity_id: sensor.cx_cop
-  - sensor:
-    - name: "CX Last Known COP"
-      unique_id: cx_last_known_cop
-      state: >
-        {% set current_cop = trigger.to_state.state %}
-        {% set old_value = this.state if this is not none else 'unknown' %}
-        
-        {% if current_cop not in ['unknown', 'unavailable', 'none'] %}
-          {% set cop_num = current_cop | float(-1) %}
-          {% if cop_num > 0 and cop_num < 10 %}
-            {{ cop_num | round(2) }}
-          {% else %}
-            {{ old_value }}
-          {% endif %}
+- trigger:
+  - platform: state
+    entity_id: sensor.cx_cop
+  sensor:
+  - name: "CX Last Known COP"
+    unique_id: cx_last_known_cop
+    state: >
+      {% set current_cop = trigger.to_state.state %}
+      {% set old_value = this.state if this is not none else 'unknown' %}
+
+      {% if current_cop not in ['unknown', 'unavailable', 'none'] %}
+        {% set cop_num = current_cop | float(-1) %}
+        {% if cop_num > 0 and cop_num < 10 %}
+          {{ cop_num | round(2) }}
         {% else %}
           {{ old_value }}
         {% endif %}
-      device_class: power_factor
-      state_class: measurement
+      {% else %}
+        {{ old_value }}
+      {% endif %}
+    device_class: power_factor
+    state_class: measurement
 
   # - trigger:
   #   - platform: state
@@ -61,6 +61,112 @@
   #       {% else %}
   #         {{ states('sensor.cx_last_known_cop') }}
   #       {% endif %}
+  # ========================================================================
+  # HEAT PUMP LAST RUN TRACKING
+  # ========================================================================
+  # These sensors track the last complete heat pump run and calculate COP
+  # A "run" includes the time when water continues circulating after compressor stops
+
+  - trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      to: "off"
+      for:
+        minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
+  - sensor:
+    # Capture the last cycle duration in seconds
+    - name: "Heat Pump Last Cycle Duration"
+      unique_id: heat_pump_last_cycle_duration
+      unit_of_measurement: "s"
+      state_class: measurement
+      icon: mdi:timer-outline
+      state: >
+        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+        {{ (duration * 3600) | round(0) }}
+
+    # Capture the last cycle duration in minutes (for display)
+    - name: "Heat Pump Last Cycle Duration Minutes"
+      unique_id: heat_pump_last_cycle_duration_minutes
+      unit_of_measurement: "min"
+      state_class: measurement
+      icon: mdi:timer-outline
+      state: >
+        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+        {{ (duration * 60) | round(1) }}
+
+  # Track energy accumulated during the last run
+  - trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      from: "off"
+      to: "on"
+  - sensor:
+    - name: "Heat Pump Run Start Energy Input"
+      unique_id: heat_pump_run_start_energy_input
+      unit_of_measurement: "kWh"
+      state_class: total_increasing
+      device_class: energy
+      state: >
+        {{ states('sensor.cx_input_power_kwh') | float(0) }}
+
+    - name: "Heat Pump Run Start Energy Output"
+      unique_id: heat_pump_run_start_energy_output
+      unit_of_measurement: "kWh"
+      state_class: total_increasing
+      device_class: energy
+      state: >
+        {{ states('sensor.cx_output_power_interval') | float(0) }}
+
+  # Calculate energy used during the last run and COP
+  - trigger:
+    - platform: state
+      entity_id: binary_sensor.heat_pump_running
+      to: "off"
+      for:
+        minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
+  - sensor:
+    - name: "Heat Pump Last Run Energy Input"
+      unique_id: heat_pump_last_run_energy_input
+      unit_of_measurement: "kWh"
+      state_class: measurement
+      device_class: energy
+      icon: mdi:lightning-bolt
+      state: >
+        {% set end_energy = states('sensor.cx_input_power_kwh') | float(0) %}
+        {% set start_energy = states('sensor.heat_pump_run_start_energy_input') | float(0) %}
+        {{ (end_energy - start_energy) | round(3) }}
+
+    - name: "Heat Pump Last Run Energy Output"
+      unique_id: heat_pump_last_run_energy_output
+      unit_of_measurement: "kWh"
+      state_class: measurement
+      device_class: energy
+      icon: mdi:fire
+      state: >
+        {% set end_energy = states('sensor.cx_output_power_interval') | float(0) %}
+        {% set start_energy = states('sensor.heat_pump_run_start_energy_output') | float(0) %}
+        {{ (end_energy - start_energy) | round(3) }}
+
+    - name: "Heat Pump Last Run COP"
+      unique_id: heat_pump_last_run_cop
+      state_class: measurement
+      icon: mdi:gauge
+      state: >
+        {% set energy_in = states('sensor.heat_pump_last_run_energy_input') | float(0) %}
+        {% set energy_out = states('sensor.heat_pump_last_run_energy_output') | float(0) %}
+        {% if energy_in > 0.01 %}
+          {{ (energy_out / energy_in) | round(2) }}
+        {% else %}
+          unavailable
+        {% endif %}
+
+    - name: "Heat Pump Last Run Timestamp"
+      unique_id: heat_pump_last_run_timestamp
+      device_class: timestamp
+      icon: mdi:clock-outline
+      state: >
+        {{ now().isoformat() }}
+
   # ========================================================================
   # LIFETIME COST TRACKING
   # ========================================================================

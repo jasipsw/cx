@@ -31,6 +31,10 @@ themes/**
 !custom_components/
 custom_components/**
 
+# Allow custom_templates for Jinja macros
+!custom_templates/
+!custom_templates/**
+
 www/
 www/**
 

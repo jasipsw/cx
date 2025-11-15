@@ -170,7 +170,7 @@
       state_class: measurement
       icon: mdi:lightning-bolt-circle
       state: >
-        {% set thermal_power = states('sensor.cx_thermal_power_output') | float(0) / 1000 %}
+        {% set thermal_power = states('sensor.heat_pump_thermal_power_output') | float(0) / 1000 %}
         {{ thermal_power | round(2) }}
 
     # ------------------------------------------------------------------------
@@ -204,7 +204,7 @@
       icon: mdi:fire
       state: >
         {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.cx_cop') %}
+        {% set cop = states('sensor.heat_pump_cop') %}
         {% if operating_state == 2 and cop not in ['unavailable', 'unknown'] %}
           {{ cop }}
         {% else %}
@@ -217,7 +217,7 @@
       icon: mdi:snowflake
       state: >
         {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.cx_cop') %}
+        {% set cop = states('sensor.heat_pump_cop') %}
         {% if operating_state == 1 and cop not in ['unavailable', 'unknown'] %}
           {{ cop }}
         {% else %}
@@ -230,7 +230,7 @@
       icon: mdi:water-boiler
       state: >
         {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.cx_cop') %}
+        {% set cop = states('sensor.heat_pump_cop') %}
         {% if operating_state == 4 and cop not in ['unavailable', 'unknown'] %}
           {{ cop }}
         {% else %}
@@ -244,7 +244,7 @@
     - name: "Heat Pump Efficiency Rating"
       unique_id: heat_pump_efficiency_rating
       state: >
-        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% set cop = states('sensor.heat_pump_cop') | float(0) %}
         {% if cop >= 4.5 %}
           Excellent
         {% elif cop >= 3.5 %}
@@ -259,7 +259,7 @@
           Unknown
         {% endif %}
       icon: >
-        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% set cop = states('sensor.heat_pump_cop') | float(0) %}
         {% if cop >= 4.5 %}
           mdi:star-circle
         {% elif cop >= 3.5 %}
@@ -292,12 +292,12 @@
         {{ flow_ok and t_out_ok and t_in_ok and cp_ok and rho_ok and mode_ok }}
         
       # State: Calculates thermal power (Q) in kW
-      # NOW ONLY CALCULATES IF THE MODE IS 'Heat'
+      # Calculates for 'Heat' and 'Heat + DHW' modes (any mode producing space heating)
       state: >-
         {% set mode = states('sensor.heat_pump_operating_mode') %}
 
-        {# Only calculate if mode is 'Heat'. Exclude 'DHW', 'Cool', 'Cool + DHW', 'Heat + DHW' #}
-        {% if mode == 'Heat' %}
+        {# Calculate if mode includes heating (Heat or Heat + DHW) #}
+        {% if mode in ['Heat', 'Heat + DHW'] %}
           {% set flow_gpm = states('sensor.cx50_pump_flow_gpm') | float(0) %}
           {% set t_out_f = states('sensor.heat_pump_outlet_temperature') | float(0) %}
           {% set t_in_f = states('sensor.heat_pump_inlet_temperature') | float(0) %}
@@ -322,7 +322,6 @@
       unique_id: "heat_pump_thermal_power_btu_h"
       unit_of_measurement: "BTU/h"
       state_class: "measurement"
-      device_class: "power"
       icon: mdi:sun-thermometer-outline
       
       # Only available if the source kW sensor is available
@@ -338,11 +337,12 @@
 
     - name: "CX C34 C4 Water pump"
       unique_id: cx_c34_water_pump
-      state: >
-        {% set x = states('sensor.cx50_c34') | int %}
-        {% if x |int(0) == 1 %}
-          On
-        {% else %}
-          Off
-        {% endif %}
+      device_class: running
+      state: >-
+        {% set c34_value = states('sensor.cx50_c34') | int(0) %}
+        {% set flow_rate = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+        {{ (c34_value == 1 or flow_rate > 1.0) | lower }}
+      availability: >-
+        {{ states('sensor.cx50_c34') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
 
