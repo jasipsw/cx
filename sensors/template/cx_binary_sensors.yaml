@@ -127,19 +127,15 @@
       state: >
         {{ (states('sensor.bedroom_demand_1') | float(0) > 0.0) | lower }}
 
-
     - name: "Family Room Radiant"
       unique_id: "radiant_family_room"
       state: >
         {{ (states('sensor.family_room_demand_1') | float(0) > 0.0) | lower }}
 
-
-
     - name: "Front Bedroom Radiant"
       unique_id: "radiant_front_bedroom"
       state: >
         {{ (states('sensor.front_bedroom_demand_1') | float(0) > 0.0) | lower }}
-
 
     - name: "Master Suite Radiant"
       unique_id: "radiant_master_suite"

@@ -7,7 +7,7 @@
     availability: >-
       {{ is_state('binary_sensor.master_suite_radiant', 'on') }}
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
 
   - name: "Office Radiant Flow Temp"
     unique_id: "radiant_flow_temp_office"
@@ -18,7 +18,7 @@
       {{ is_state('binary_sensor.office_radiant', 'on') }}
 
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
 
 
   - name: "Main Floor Radiant Flow Temp"
@@ -30,7 +30,7 @@
       {{ is_state('binary_sensor.main_floor_radiant', 'on') }}
 
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
 
 
   - name: "Bedroom Radiant Flow Temp"
@@ -42,7 +42,7 @@
       {{ is_state('binary_sensor.bedroom_floor_radiant', 'on') }}
 
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
 
 
   - name: "Family Room Radiant Flow Temp"
@@ -54,7 +54,7 @@
       {{ is_state('binary_sensor.family_room_radiant', 'on') }}
 
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
 
 
   - name: "Front Bedroom Radiant Flow Temp"
@@ -66,7 +66,7 @@
       {{ is_state('binary_sensor.front_bedroom_radiant', 'on') }}
 
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
 
 
   - name: "Radiant Flow Temp"
@@ -85,4 +85,4 @@
       {% endif %}
 
     state: >-
-      {{ states('sensor.hvac_buffer_tank_supply_temperature') | float(0) }}
+      {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}
