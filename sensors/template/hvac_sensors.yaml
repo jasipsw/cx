@@ -29,7 +29,7 @@
     state_class: measurement
     icon: mdi:waves-arrow-left
     state: >-
-      {% set flow  = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+      {% set flow  = states('sensor.cx50_pump_flow_lpm') | float(0) %}
       {{ flow | round(0) }}
 
   - name: "Flow Sensor Discrepancy Ratio"
