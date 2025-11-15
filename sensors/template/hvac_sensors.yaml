@@ -29,20 +29,8 @@
     state_class: measurement
     icon: mdi:waves-arrow-left
     state: >-
-      {% set flow_raw = states('sensor.hydronic_flow_flow_rate') | float(0) %}
-      {% set flow_unit = state_attr('sensor.hydronic_flow_flow_rate', 'unit_of_measurement') %}
-      
-      {# Convert based on actual units reported by the sensor #}
-      {% if flow_unit == 'gal/min' or flow_unit == 'GPM' %}
-        {# Convert GPM to L/min: 1 gal = 3.78541 L #}
-        {{ (flow_raw * 3.78541) | round(1) }}
-      {% elif flow_unit == 'gal/h' or flow_unit == 'GPH' %}
-        {# Convert GPH to L/min: (GPH * 3.78541) / 60 #}
-        {{ (flow_raw * 3.78541 / 60) | round(1) }}
-      {% else %}
-        {# Assume already in L/min or compatible unit #}
-        {{ flow_raw | round(1) }}
-      {% endif %}
+      {% set flow  = states('sensor.hydronic_flow_flow_rate') | float(0) %}
+      {{ flow | round(0) }}
 
   - name: "Flow Sensor Discrepancy Ratio"
     unique_id: flow_sensor_discrepancy_ratio
@@ -98,36 +86,14 @@
       {% set delta_t = supply - return %}
       {{ delta_t | round(2) }}
 
-  # Buffer return temperature from HVAC load (Celsius)
-  - name: "Buffer Return from HVAC Load"
-    unique_id: buffer_return_from_hvac_load
-    unit_of_measurement: "°C"
-    state_class: measurement
-    device_class: temperature
-    icon: mdi:thermometer
-    state: >-
-      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
-      {{ return_c | round(2) }}
-
-  # Buffer supply temperature to HVAC load (Celsius)
-  - name: "Buffer Supply to HVAC Load"
-    unique_id: buffer_supply_to_hvac_load
-    unit_of_measurement: "°C"
-    state_class: measurement
-    device_class: temperature
-    icon: mdi:thermometer
-    state: >-
-      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
-      {{ supply_c | round(2) }}
-
   - name: "HVAC Buffer Tank Delta T Celsius"
     unique_id: hvac_buffer_tank_delta_t_celsius
     unit_of_measurement: "°C"
     state_class: measurement
     icon: mdi:delta
     state: >-
-      {% set return_c = states('sensor.buffer_return_from_hvac_load') | float(0) %}
-      {% set supply_c = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
+      {% set return_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature_3') | float(0) %}
+      {% set supply_c = states('sensor.shellyplus1_c4d8d5543fc0_temperature') | float(0) %}
       {% set delta_t_c = supply_c - return_c %}
       {{ delta_t_c | round(2) }}
 
@@ -199,9 +165,38 @@
           and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
-      {% set return_c = states('sensor.buffer_return_from_hvac_load') | float(0) %}
-      {% set supply_c = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
-      {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      {# Get temperature values and check units #}
+      {% set return_val = states('sensor.buffer_return_from_hvac_load') | float(0) %}
+      {% set supply_val = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
+      {% set return_unit = state_attr('sensor.buffer_return_from_hvac_load', 'unit_of_measurement') %}
+      {% set supply_unit = state_attr('sensor.buffer_supply_to_hvac_load', 'unit_of_measurement') %}
+      
+      {# Convert temperatures to Celsius if needed #}
+      {% if return_unit == '°F' %}
+        {% set return_c = (return_val - 32) / 1.8 %}
+      {% else %}
+        {% set return_c = return_val %}
+      {% endif %}
+      
+      {% if supply_unit == '°F' %}
+        {% set supply_c = (supply_val - 32) / 1.8 %}
+      {% else %}
+        {% set supply_c = supply_val %}
+      {% endif %}
+      
+      {# Get flow rate and check units #}
+      {% set flow_val = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+      {% set flow_unit = state_attr('sensor.hvac_buffer_tank_flow_rate', 'unit_of_measurement') %}
+      
+      {# Convert flow rate to L/min if needed #}
+      {% if flow_unit == 'gal/min' or flow_unit == 'GPM' %}
+        {% set flow_lpm = flow_val * 3.78541 %}
+      {% elif flow_unit == 'gal/h' or flow_unit == 'GPH' %}
+        {% set flow_lpm = flow_val * 3.78541 / 60 %}
+      {% else %}
+        {% set flow_lpm = flow_val %}
+      {% endif %}
+      
       {% set density = states('input_number.cx_fluid_density') | float(970) %}
       {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
 
