@@ -22,6 +22,9 @@
 !scripts/
 !scripts/**
 
+!python_scripts/
+!python_scripts/**
+
 !automations/
 !automations/**
 
