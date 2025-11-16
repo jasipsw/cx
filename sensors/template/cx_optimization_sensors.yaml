@@ -17,9 +17,9 @@
 
       {# Heat pump is running if pump is on AND (compressor running OR producing heat) #}
       {% if pump_on %}
-        {{ (compressor_freq > 0 or thermal_output > 1000) | lower }}
+        {{ 'on' if (compressor_freq > 0 or thermal_output > 1000) else 'off' }}
       {% else %}
-        {{ false | lower }}
+        off
       {% endif %}
     device_class: running # Valid for binary_sensor
     icon: mdi:heat-pump

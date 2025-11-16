@@ -203,4 +203,4 @@
       {# Only ON if HP running AND valve position is DHW Tank #}
       {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
       {% set valve_dhw = is_state('sensor.g2_valve_position', 'DHW Tank') %}
-      {{ (hp_running and valve_dhw) | lower }}
+      {{ 'on' if (hp_running and valve_dhw) else 'off' }}
