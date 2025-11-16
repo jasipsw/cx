@@ -335,12 +335,16 @@
 
 - binary_sensor:
 
-    - name: "CX C34 C4 Water pump"
-      unique_id: cx_c34_water_pump
+    # Heat Pump Flow Status
+    # Simple, reliable flow detection based on measured flow rate
+    # ON = water flowing through heat pump (flow > 0 L/min)
+    # OFF = no flow detected
+    - name: "Heat Pump Flow Status"
+      unique_id: heat_pump_flow_status
       device_class: running
       state: >-
         {% set flow_rate = states('sensor.cx50_pump_flow_lpm') | float(0) %}
-        {{ 'on' if flow_rate > 1.0 else 'off' }}
+        {{ 'on' if flow_rate > 0 else 'off' }}
       availability: >-
         {{ states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
 
