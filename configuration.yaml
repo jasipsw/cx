@@ -4,6 +4,11 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
+light:
+  - platform: decora_wifi
+    username: !secret my_leviton_username
+    password: !secret my_leviton_password
+
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
@@ -50,27 +55,6 @@ input_boolean: !include helpers/input_boolean.yaml
 
 lovelace:
   dashboards:
-    cx-diagnostic:
-      mode: yaml
-      title: CX Diagnostic
-      icon: mdi:bug
-      show_in_sidebar: true
-      filename: dashboards/dashboard_diagnostic.yaml
-
-    cx-modbus:
-      mode: yaml
-      title: CX Modbus
-      icon: mdi:bug
-      show_in_sidebar: true
-      filename: dashboards/dashboard_modbus.yaml
-
-    cx-energy:
-      mode: yaml
-      title: Energy Analysis
-      icon: mdi:chart-bar
-      show_in_sidebar: true
-      filename: dashboards/dashboard_energy.yaml
-
     cx-sensor-verification:
       mode: yaml
       title: Sensor Verification
