@@ -74,8 +74,7 @@
       {{ (energy_j / 3600000) | round(2) }}
     availability: >
       {{ states('sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] and
-          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) and
-          (states('input_number.cx_fluid_specific_heat') not in ['unknown','unavailable','none'] and states('input_number.cx_fluid_density') not in ['unknown','unavailable','none']) }}
+          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) }}
 
   - name: "Buffer Energy (%)"
     unique_id: buffer_energy_percent
@@ -148,5 +147,4 @@
       {% endif %}
     availability: >
       {{ states('sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] and
-          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) and
-          (states('input_number.cx_fluid_specific_heat') not in ['unknown','unavailable','none'] and states('input_number.cx_fluid_density') not in ['unknown','unavailable','none']) }}
+          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) }}
