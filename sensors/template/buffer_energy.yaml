@@ -26,15 +26,9 @@
         {% set vol_l = vol_state * 3.785411784 %}
       {% endif %}
 
-      {# --- Temperature: use sensor.buffer_temp (auto-detect °F/°C); replace id if different ---#}
-      {% set temp_raw = states('sensor.buffer_temp') | float(0) %}
-      {% set temp_unit = (state_attr('sensor.buffer_temp','unit_of_measurement') or '') | lower() %}
-      {% if temp_unit == '' %}
-        {% if (states('sensor.buffer_temperature') | float('nan')) is not 'nan' and states('sensor.buffer_temperature') not in ['unknown','unavailable','none'] %}
-          {% set temp_raw = states('sensor.buffer_temperature') | float(0) %}
-          {% set temp_unit = (state_attr('sensor.buffer_temperature','unit_of_measurement') or '') | lower() %}
-        {% endif %}
-      {% endif %}
+      {# --- Temperature: use sensor.buffer_tank_temperature (auto-detect °F/°C) ---#}
+      {% set temp_raw = states('sensor.buffer_tank_temperature') | float(0) %}
+      {% set temp_unit = (state_attr('sensor.buffer_tank_temperature','unit_of_measurement') or '') | lower() %}
       {% if 'f' in temp_unit %}
         {% set temp_c = (temp_raw - 32) * 5/9 %}
       {% else %}
@@ -42,12 +36,12 @@
       {% endif %}
 
       {# --- Base temperature: prefer input_number.buffer_base_temp_c, else sensor.buffer_base_temp, else default 40°C ---#}
-      {% set base_c = (states('input_number.buffer_base_temp_c') | float(0)) %}
+      {% set base_c = (states('input_number.buffer_base_temp_c') | float(21)) %}
       {% if base_c == 0 %}
-        {% set base_c = (states('sensor.buffer_base_temp') | float(0)) %}
+        {% set base_c = (states('sensor.buffer_base_temp') | float(21)) %}
       {% endif %}
       {% if base_c == 0 %}
-        {% set base_c = 40.0 %}
+        {% set base_c = 21.0 %}
       {% endif %}
 
       {# --- Fluid properties: prefer user-provided helpers input_number.cx_fluid_specific_heat and input_number.cx_fluid_density ---#}
@@ -79,9 +73,8 @@
       {% set energy_j = mass_kg * cp * delta_c %}
       {{ (energy_j / 3600000) | round(2) }}
     availability: >
-      {{ (states('sensor.buffer_temp') not in ['unknown','unavailable','none'] or states('sensor.buffer_temperature') not in ['unknown','unavailable','none']) and
-          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) and
-          (states('input_number.cx_fluid_specific_heat') not in ['unknown','unavailable','none'] and states('input_number.cx_fluid_density') not in ['unknown','unavailable','none']) }}
+      {{ states('sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] and
+          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) }}
 
   - name: "Buffer Energy (%)"
     unique_id: buffer_energy_percent
@@ -100,20 +93,20 @@
         {% set vol_l = vol_state * 3.785411784 %}
       {% endif %}
 
-      {% set temp_raw = states('sensor.buffer_temp') | float(0) %}
-      {% set temp_unit = (state_attr('sensor.buffer_temp','unit_of_measurement') or '') | lower() %}
+      {% set temp_raw = states('sensor.buffer_tank_temperature') | float(0) %}
+      {% set temp_unit = (state_attr('sensor.buffer_tank_temperature','unit_of_measurement') or '') | lower() %}
       {% if 'f' in temp_unit %}
         {% set temp_c = (temp_raw - 32) * 5/9 %}
       {% else %}
         {% set temp_c = temp_raw %}
       {% endif %}
 
-      {% set base_c = (states('input_number.buffer_base_temp_c') | float(0)) %}
+      {% set base_c = (states('input_number.buffer_base_temp_c') | float(21)) %}
       {% if base_c == 0 %}
-        {% set base_c = (states('sensor.buffer_base_temp') | float(0)) %}
+        {% set base_c = (states('sensor.buffer_base_temp') | float(21)) %}
       {% endif %}
       {% if base_c == 0 %}
-        {% set base_c = 40.0 %}
+        {% set base_c = 21.0 %}
       {% endif %}
 
       {% set max_c = (states('input_number.buffer_max_temp_c') | float(0)) %}
@@ -153,6 +146,5 @@
         0
       {% endif %}
     availability: >
-      {{ (states('sensor.buffer_temp') not in ['unknown','unavailable','none'] or states('sensor.buffer_temperature') not in ['unknown','unavailable','none']) and
-          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) and
-          (states('input_number.cx_fluid_specific_heat') not in ['unknown','unavailable','none'] and states('input_number.cx_fluid_density') not in ['unknown','unavailable','none']) }}
+      {{ states('sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] and
+          (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) }}

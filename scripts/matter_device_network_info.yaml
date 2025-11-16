@@ -1,0 +1,77 @@
+# Matter Device Network Information Extractor
+# Paste this template into Developer Tools → Template to find MAC/IP addresses
+# of your Leviton Matter switches
+
+{# Get all light entities #}
+{% set ns = namespace(devices=[]) %}
+{% for entity_id in states.light | map(attribute='entity_id') | list %}
+  {# Get device info for this entity #}
+  {% set device_id = device_id(entity_id) %}
+  {% if device_id %}
+    {# Get device details #}
+    {% set device = device_attr(device_id, 'identifiers') %}
+    {% set manufacturer = device_attr(device_id, 'manufacturer') %}
+    {% set model = device_attr(device_id, 'model') %}
+    {% set name = device_attr(device_id, 'name') %}
+
+    {# Check if this is a Matter device (Leviton) #}
+    {% if manufacturer and ('leviton' in manufacturer.lower() or 'matter' in (device | string).lower()) %}
+      {# Try to extract MAC address from device identifiers #}
+      {% set mac = namespace(address='Unknown') %}
+      {% set ip = namespace(address='Unknown') %}
+
+      {# Check entity attributes for network info #}
+      {% set entity_attrs = states[entity_id].attributes %}
+
+      {# Look for MAC in various places #}
+      {% if 'mac_address' in entity_attrs %}
+        {% set mac.address = entity_attrs.mac_address %}
+      {% elif 'device_info' in entity_attrs and 'mac' in entity_attrs.device_info %}
+        {% set mac.address = entity_attrs.device_info.mac %}
+      {% endif %}
+
+      {# Look for IP address #}
+      {% if 'ip_address' in entity_attrs %}
+        {% set ip.address = entity_attrs.ip_address %}
+      {% elif 'host' in entity_attrs %}
+        {% set ip.address = entity_attrs.host %}
+      {% endif %}
+
+      {# Store device info #}
+      {% set ns.devices = ns.devices + [{
+        'entity_id': entity_id,
+        'name': name,
+        'manufacturer': manufacturer,
+        'model': model,
+        'mac_address': mac.address,
+        'ip_address': ip.address,
+        'device_id': device_id
+      }] %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{# Format output as markdown table #}
+## Matter/Leviton Light Switches - Network Information
+
+| Device Name | Entity ID | Manufacturer | Model | MAC Address | IP Address | Device ID |
+|------------|-----------|--------------|-------|-------------|------------|-----------|
+{% for device in ns.devices %}
+| {{ device.name }} | {{ device.entity_id }} | {{ device.manufacturer }} | {{ device.model }} | {{ device.mac_address }} | {{ device.ip_address }} | {{ device.device_id }} |
+{% endfor %}
+
+---
+
+**Total Devices Found:** {{ ns.devices | length }}
+
+**Next Steps:**
+1. Copy the MAC addresses from the table above
+2. Go to your Ubiquiti UniFi Controller → Clients
+3. Search for each MAC address
+4. Rename the client to match the Device Name from this table
+
+**Note:** If MAC/IP addresses show as "Unknown", they may not be exposed through the Matter integration.
+In that case, you can:
+- Check the Matter integration device details in Settings → Devices & Services → Matter
+- Use the Ubiquiti controller to identify devices by turning switches on/off and watching for network activity
+- Check if the devices expose additional attributes by examining specific entity states
