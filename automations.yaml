@@ -707,31 +707,40 @@
           (thermal energy tracking now active)
         entity_id: sensor.cx_output_power_interval
 
-# Manual reset for CX Output Power Interval integration sensor
+# Manual reset instructions for CX Output Power Interval integration sensor
+# NOTE: integration.reset service not available in this HA version
 # Run this from Settings → Automations → [This automation] → Run
 - id: reset_cx_output_power_interval
-  alias: "Reset CX Output Power Interval Sensor"
-  description: Manually reset the thermal energy integration sensor to zero
+  alias: "Reset CX Output Power Interval Sensor - Instructions"
+  description: Shows instructions to manually reset the thermal energy integration sensor
   trigger: []  # Manual trigger only
   condition: []
   action:
-    - service: logbook.log
+    - service: persistent_notification.create
       data:
-        name: Sensor Reset
+        title: "Reset CX Output Power Interval Sensor"
         message: >
-          ⚠️ Resetting CX Output Power Interval from {{ states('sensor.cx_output_power_interval') }} kWh to 0
-        entity_id: sensor.cx_output_power_interval
-    - service: integration.reset
-      target:
-        entity_id: sensor.cx_output_power_interval
-    - delay:
-        seconds: 2
-    - service: logbook.log
-      data:
-        name: Sensor Reset Complete
-        message: >
-          ✅ CX Output Power Interval reset complete. New value: {{ states('sensor.cx_output_power_interval') }} kWh
-        entity_id: sensor.cx_output_power_interval
+          **Current Value:** {{ states('sensor.cx_output_power_interval') }} kWh
+
+
+          **To reset this sensor to 0:**
+
+          1. Go to **Developer Tools → States**
+
+          2. Find entity: `sensor.cx_output_power_interval`
+
+          3. Click on it
+
+          4. Under "Set State", enter: `0`
+
+          5. Click **Set State**
+
+
+          The sensor will continue accumulating from 0 going forward.
+
+
+          *(The integration.reset service is not available in your Home Assistant version)*
+        notification_id: cx_output_reset_instructions
   mode: single
 
 - id: log_cycle_duration_sensor_initialized
