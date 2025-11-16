@@ -339,10 +339,8 @@
       unique_id: cx_c34_water_pump
       device_class: running
       state: >-
-        {% set c34_value = states('sensor.cx50_c34') | int(0) %}
         {% set flow_rate = states('sensor.cx50_pump_flow_lpm') | float(0) %}
-        {{ 'on' if (c34_value == 1 or flow_rate > 1.0) else 'off' }}
+        {{ 'on' if flow_rate > 1.0 else 'off' }}
       availability: >-
-        {{ states('sensor.cx50_c34') not in ['unknown', 'unavailable']
-            and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
+        {{ states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
 
