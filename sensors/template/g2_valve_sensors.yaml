@@ -52,7 +52,6 @@
         {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
         {% set dhw_trend = is_state('binary_sensor.dhw_tank_heating_trend', 'on') %}
         {% set buf_trend = is_state('binary_sensor.buffer_tank_heating_trend', 'on') %}
-        {% set mode = states('sensor.heat_pump_operating_mode') %}
 
         {# G2 valve defaults to Buffer Tank position when HP is off #}
         {% if not hp_running %}
@@ -99,7 +98,7 @@
           {% endif %}
 
         {% elif not dhw_trend and not buf_trend %}
-          {# Neither trend active - use delta-T correlation as fallback #}
+          {# Neither trend active - use delta-T correlation #}
           {% set hp_out = states('sensor.heat_pump_outlet_temperature') | float(0) %}
           {% set hp_in = states('sensor.heat_pump_inlet_temperature') | float(0) %}
           {% set dhw_supply = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
@@ -114,14 +113,7 @@
           {% set dhw_diff = (dhw_delta - hp_delta) | abs %}
           {% set buf_diff = (buf_delta - hp_delta) | abs %}
 
-          {% if hp_delta < 2.0 %}
-            {# Delta-T too small - HP barely running, use modbus mode #}
-            {% if 'DHW' in mode %}
-              DHW Tank
-            {% else %}
-              Buffer Tank
-            {% endif %}
-          {% elif dhw_diff < buf_diff %}
+          {% if dhw_diff < buf_diff %}
             DHW Tank
           {% else %}
             Buffer Tank
