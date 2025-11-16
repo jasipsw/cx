@@ -51,6 +51,76 @@ views:
 
               **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
 
+          # ========================================================================
+          # PRIORITY MONITORING - PRIMARY FOCUS AREAS
+          # ========================================================================
+
+          # HEAT PUMP FLOW DETECTION
+          - type: markdown
+            title: 🌊 Heat Pump Flow Detection (NEW - Priority #1)
+            grid_options:
+              columns: full
+            content: |
+              ## Flow Status - Reliable Detection (No C34 Dependencies)
+
+              | Sensor | State | Source | Logic | Status |
+              |--------|-------|--------|-------|--------|
+              | **Flow Status** | **{{ states('binary_sensor.heat_pump_flow_status') }}** | Flow meter | ON if flow > 0 L/min | {{ '✅ WORKING' if states('binary_sensor.heat_pump_flow_status') == 'on' else '⚠️ No flow' }} |
+              | **HP Running** | **{{ states('binary_sensor.heat_pump_running') }}** | Flow + Compressor/Thermal | Flow ON AND (Comp>0 OR Thermal>1kW) | {{ '✅ WORKING' if states('binary_sensor.heat_pump_running') == 'on' else '⏸️ Off' }} |
+
+              ### Current Measurements
+              | Metric | Value | Status |
+              |--------|-------|--------|
+              | Flow Rate | {{ states('sensor.cx50_pump_flow_lpm') }} L/min | {{ '✅' if states('sensor.cx50_pump_flow_lpm') | float(0) > 0 else '❌' }} |
+              | Compressor Freq | {{ states('sensor.cx50_compressor_frequency') }} Hz | {{ '✅ Running' if states('sensor.cx50_compressor_frequency') | float(0) > 0 else '⏸️ Off' }} |
+              | Thermal Output | {{ states('sensor.heat_pump_thermal_power_output') }} W | {{ '✅ Producing heat' if states('sensor.heat_pump_thermal_power_output') | float(0) > 1000 else '⏸️ Standby' }} |
+
+              **Key Changes:**
+              - ✅ Created `binary_sensor.heat_pump_flow_status` - simple, reliable
+              - ✅ Eliminated all C34 modbus dependencies (unreliable)
+              - ✅ `binary_sensor.heat_pump_running` now uses flow_status
+              - ✅ Detection chain now operational!
+
+          # ENERGY ACCUMULATION & UTILITY METERS
+          - type: markdown
+            title: ⚡ Energy Accumulation & Utility Meters (Priority #2)
+            grid_options:
+              columns: full
+            content: |
+              ## Integration Sensors (Power → Energy)
+
+              | Sensor | Current Value | Source | Source Power | Method | Status |
+              |--------|---------------|--------|--------------|--------|--------|
+              | **Input Energy** | {{ states('sensor.cx_input_power_kwh') }} kWh | Electrical Power | {{ states('sensor.heat_pump_electrical_power_input') }} W | Riemann (left) | {{ '✅' if states('sensor.cx_input_power_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **Output Energy** | {{ states('sensor.cx_output_power_interval') }} kWh | Thermal Power | {{ states('sensor.heat_pump_thermal_power_output') }} W | Riemann (left) | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              ## Utility Meters (Energy Tracking)
+
+              ### Output Energy Meters
+              | Period | Value | Source Health | Status |
+              |--------|-------|---------------|--------|
+              | **Hourly** | {{ states('sensor.cx_output_power_hourly') }} kWh | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.cx_output_power_hourly') | float(0) < 100 else '⚠️ High' }} |
+              | **Daily** | {{ states('sensor.cx_output_power_daily') }} kWh | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.cx_output_power_daily') | float(0) < 2000 else '⚠️ High' }} |
+              | **Monthly** | {{ states('sensor.cx_output_power_monthly') }} kWh | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} | {{ '⚠️ Needs reset' if states('sensor.cx_output_power_monthly') | float(0) > 10000 else '✅' }} |
+
+              ### Input Energy Meters
+              | Period | Value | Sanity Check | Status |
+              |--------|-------|--------------|--------|
+              | **Hourly** | {{ states('sensor.cx_input_power_hourly') }} kWh | {{ '✅ <100kWh' if states('sensor.cx_input_power_hourly') | float(0) < 100 else '❌' }} | {{ '✅' if states('sensor.cx_input_power_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **Daily** | {{ states('sensor.cx_input_power_daily') }} kWh | {{ '✅ <2000kWh' if states('sensor.cx_input_power_daily') | float(0) < 2000 else '❌' }} | {{ '✅' if states('sensor.cx_input_power_daily') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **Monthly** | {{ states('sensor.cx_input_power_monthly') }} kWh | {{ '✅ <60000kWh' if states('sensor.cx_input_power_monthly') | float(0) < 60000 else '❌' }} | {{ '✅' if states('sensor.cx_input_power_monthly') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              **Energy-Based COP:** {{ (states('sensor.cx_output_power_interval') | float(0) / states('sensor.cx_input_power_kwh') | float(1)) | round(2) if states('sensor.cx_input_power_kwh') | float(0) > 0 else 'N/A' }}
+
+              **Notes:**
+              - Integration sensors accumulate power (W) over time to produce energy (kWh)
+              - Utility meters reset on schedule (hourly/daily/monthly)
+              - Monthly meter may need manual reset if showing total accumulated value
+
+          # ========================================================================
+          # DETAILED DIAGNOSTICS
+          # ========================================================================
+
           # CRITICAL SENSOR AVAILABILITY CHECK
           - type: markdown
             title: 🔍 Critical Sensor Availability (Debug)
