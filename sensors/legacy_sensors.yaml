@@ -211,28 +211,32 @@
       unit_of_measurement: "Wh"
       unique_id: battery_rated_capacity
 
-- platform: integration
-  source: sensor.heat_pump_electrical_power_input
-  name: "CX Input Power kWh"
-  unique_id: cx_input_power_kwh
-  unit_prefix: k
-  unit_time: h
-  method: left
-  round: 3
+# ------------------------------------------------------------------------
+# COMMENTED OUT FOR RESET - Uncomment after restart to recreate with 0 values
+# ------------------------------------------------------------------------
+# - platform: integration
+#   source: sensor.heat_pump_electrical_power_input
+#   name: "CX Input Power kWh"
+#   unique_id: cx_input_power_kwh
+#   unit_prefix: k
+#   unit_time: h
+#   method: left
+#   round: 3
 
 # ------------------------------------------------------------------------
 # Thermal Power Output Integration (Total - All Modes)
 # Converts instantaneous thermal power (W) to accumulated energy (kWh)
 # Source: sensor.heat_pump_thermal_power_output (includes Heat, Cool, DHW)
+# COMMENTED OUT FOR RESET - Uncomment after restart to recreate with 0 values
 # ------------------------------------------------------------------------
-- platform: integration
-  source: sensor.heat_pump_thermal_power_output
-  name: "CX Output Power Interval"
-  unique_id: cx_output_power_interval
-  unit_prefix: k
-  unit_time: h
-  method: left
-  round: 3
+# - platform: integration
+#   source: sensor.heat_pump_thermal_power_output
+#   name: "CX Output Power Interval"
+#   unique_id: cx_output_power_interval
+#   unit_prefix: k
+#   unit_time: h
+#   method: left
+#   round: 3
 
 # ------------------------------------------------------------------------
 # Space Heating Electrical Energy Integration
