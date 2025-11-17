@@ -147,7 +147,7 @@ cx_boost_mode:
         message: "Maximum heating performance"
 
 cx_reset_utility_meters:
-  alias: "Reset CX Utility Meters"
+  alias: "Reset Heat Pump Utility Meters"
   icon: mdi:restart
   sequence:
     # Reset INPUT meters
@@ -155,37 +155,37 @@ cx_reset_utility_meters:
       data:
         value: "0"
       target:
-        entity_id: sensor.cx_hourly_energy_input
+        entity_id: sensor.hp_electrical_energy_hourly
     - service: utility_meter.calibrate
       data:
         value: "0"
       target:
-        entity_id: sensor.cx_daily_energy_input
+        entity_id: sensor.hp_electrical_energy_daily
     - service: utility_meter.calibrate
       data:
         value: "0"
       target:
-        entity_id: sensor.cx_monthly_energy_input
+        entity_id: sensor.hp_electrical_energy_monthly
     # Reset OUTPUT meters
     - service: utility_meter.calibrate
       data:
         value: "0"
       target:
-        entity_id: sensor.cx_hourly_energy_output
+        entity_id: sensor.hp_thermal_energy_output_hourly
     - service: utility_meter.calibrate
       data:
         value: "0"
       target:
-        entity_id: sensor.cx_daily_energy_output
+        entity_id: sensor.hp_thermal_energy_output_daily
     - service: utility_meter.calibrate
       data:
         value: "0"
       target:
-        entity_id: sensor.cx_monthly_energy_output
+        entity_id: sensor.hp_thermal_energy_output_monthly
     - service: notify.persistent_notification
       data:
         title: "Utility Meters Reset"
-        message: "CX input and output energy meters have been reset to 0 kWh"
+        message: "Heat pump input and output energy meters have been reset to 0 kWh"
 
 # ============================================================================
 # SYSTEM MAINTENANCE SCRIPTS
