@@ -78,42 +78,6 @@ xxx50clark_daily_grid_power_meter:
   periodically_resetting: false
   cycle: monthly
 
-cx_hourly_energy_output:
-  source: sensor.cx_output_power_interval
-  name: CX Hourly Energy Output
-  unique_id: cx_hourly_energy_output
-  cycle: hourly
-
-cx_daily_energy_output:
-  source: sensor.cx_output_power_interval
-  name: CX Daily Energy Output
-  unique_id: cx_daily_energy_output
-  cycle: daily
-
-cx_monthly_energy_output:
-  source: sensor.cx_output_power_interval
-  name: CX Monthly Energy Output
-  unique_id: cx_monthly_energy_output
-  cycle: monthly
-
-cx_hourly_energy_input:
-  source: sensor.cx_input_power_kwh
-  name: CX Hourly Energy Input
-  unique_id: cx_hourly_energy_input
-  cycle: hourly
-
-cx_daily_energy_input:
-  source: sensor.cx_input_power_kwh
-  name: CX Daily Energy Input
-  unique_id: cx_daily_energy_input
-  cycle: daily
-
-cx_monthly_energy_input:
-  source: sensor.cx_input_power_kwh
-  name: CX Monthly Energy Input
-  unique_id: cx_monthly_energy_input
-  cycle: monthly
-
 solar_all_panels_output:
   source: sensor.solar_power_watts
   name: Solar Panel Output
@@ -202,47 +166,41 @@ hp_standby_loss_monthly:
 # Tracks total electrical energy consumed by heat pump
 # ------------------------------------------------------------------------
 hp_electrical_energy_hourly:
-  source: sensor.cx_input_power_kwh
+  source: sensor.heat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Hourly)
   unique_id: hp_electrical_energy_hourly
   cycle: hourly
-  delta_values: true
 
 hp_electrical_energy_daily:
-  source: sensor.cx_input_power_kwh
+  source: sensor.heat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Daily)
   unique_id: hp_electrical_energy_daily
   cycle: daily
-  delta_values: true
 
 hp_electrical_energy_monthly:
-  source: sensor.cx_input_power_kwh
+  source: sensor.heat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Monthly)
   unique_id: hp_electrical_energy_monthly
   cycle: monthly
-  delta_values: true
 
 # ------------------------------------------------------------------------
 # Heat Pump Thermal Energy Output (Hourly/Daily/Monthly)
 # Tracks total thermal energy produced by heat pump
 # ------------------------------------------------------------------------
 hp_thermal_energy_output_hourly:
-  source: sensor.cx_output_power_interval
+  source: sensor.heat_pump_output_power_interval_kwh
   name: HP Thermal Output (Hourly)
   unique_id: hp_thermal_energy_output_hourly
   cycle: hourly
-  delta_values: true
 
 hp_thermal_energy_output_daily:
-  source: sensor.cx_output_power_interval
+  source: sensor.heat_pump_output_power_interval_kwh
   name: HP Thermal Output (Daily)
   unique_id: hp_thermal_energy_output_daily
   cycle: daily
-  delta_values: true
 
 hp_thermal_energy_output_monthly:
-  source: sensor.cx_output_power_interval
+  source: sensor.heat_pump_output_power_interval_kwh
   name: HP Thermal Output (Monthly)
   unique_id: hp_thermal_energy_output_monthly
   cycle: monthly
-  delta_values: true

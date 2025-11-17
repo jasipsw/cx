@@ -128,7 +128,6 @@
     - name: "Heat Pump Last Run Energy Input"
       unique_id: heat_pump_last_run_energy_input
       unit_of_measurement: "kWh"
-      state_class: measurement
       device_class: energy
       icon: mdi:lightning-bolt
       state: >
@@ -139,7 +138,6 @@
     - name: "Heat Pump Last Run Energy Output"
       unique_id: heat_pump_last_run_energy_output
       unit_of_measurement: "kWh"
-      state_class: measurement
       device_class: energy
       icon: mdi:fire
       state: >

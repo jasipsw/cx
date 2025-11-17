@@ -6,25 +6,25 @@
   # ------------------------------------------------------------------------
   # Heat Pump Running Detection (Improved Logic)
   # More precise than just checking power > 500W
-  # Requires: Water pump ON AND (Compressor running OR Active heat transfer)
+  # Requires: Water flow detected AND (Compressor running OR Active heat transfer)
   # ------------------------------------------------------------------------
   - name: "Heat Pump Running"
     unique_id: heat_pump_running
     state: >-
-      {% set pump_on = is_state('binary_sensor.cx_c34_c4_water_pump', 'on') %}
+      {% set flow_active = is_state('binary_sensor.heat_pump_flow_status', 'on') %}
       {% set compressor_freq = states('sensor.cx50_compressor_frequency') | float(0) %}
       {% set thermal_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
 
-      {# Heat pump is running if pump is on AND (compressor running OR producing heat) #}
-      {% if pump_on %}
-        {{ (compressor_freq > 0 or thermal_output > 1000) | lower }}
+      {# Heat pump is running if flow detected AND (compressor running OR producing heat) #}
+      {% if flow_active %}
+        {{ 'on' if (compressor_freq > 0 or thermal_output > 1000) else 'off' }}
       {% else %}
-        {{ false | lower }}
+        off
       {% endif %}
     device_class: running # Valid for binary_sensor
     icon: mdi:heat-pump
     availability: >-
-      {{ states('binary_sensor.cx_c34_c4_water_pump') not in ['unknown', 'unavailable']
+      {{ states('binary_sensor.heat_pump_flow_status') not in ['unknown', 'unavailable']
           and states('sensor.cx50_compressor_frequency') not in ['unknown', 'unavailable']
           and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] }}
 
@@ -136,6 +136,27 @@
       {% endif %}
 
   # ------------------------------------------------------------------------
+  # System Distribution Losses (Watts)
+  # Calculates thermal power lost in distribution between HP and HVAC load
+  # Formula: Losses = HP Output - HVAC Load
+  # ------------------------------------------------------------------------
+  - name: "System Distribution Losses"
+    unique_id: system_distribution_losses
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:leak
+    state: >-
+      {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+      {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
+
+      {% if hp_output > 100 %}
+        {{ (hp_output - hvac_load) | round(0) }}
+      {% else %}
+        0
+      {% endif %}
+
+  # ------------------------------------------------------------------------
   # System Distribution Efficiency (Daily)
   # Compares Energy Used by House (Load) vs. Energy Produced by HP (Source)
   # Formula: Efficiency = (Load / Source) * 100
@@ -148,7 +169,7 @@
     state: >-
       {% set load_kwh = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
       {% set source_kwh = states('sensor.hvac_hp_thermal_energy_produced_daily') | float(0) %}
-      
+
       {% if source_kwh > 0.5 %}
         {{ ((load_kwh / source_kwh) * 100) | round(1) }}
       {% else %}
