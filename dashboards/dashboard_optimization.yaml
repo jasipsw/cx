@@ -1,0 +1,504 @@
+# CX50 Heat Pump Optimization Dashboard
+# Purpose: Consolidated single-view dashboard for heat pump optimization monitoring
+# Focus: Actionable insights, progress tracking, and real-time optimization metrics
+# Updated: 2025-11-17 - Fixed all sensor names to match current configuration
+
+title: Heat Pump Optimization
+views:
+  - title: Optimization Overview
+    path: optimization-overview
+    icon: mdi:speedometer
+    badges: []
+    cards:
+      # ========================================================================
+      # HEADER - Optimization Goal
+      # ========================================================================
+      - type: markdown
+        content: |
+          # 🎯 Heat Pump Optimization Dashboard
+
+          **Mission:** Improve COP from 2.0-2.5 → **4.55** (manufacturer rating)
+
+          **Root Cause:** Short cycling with high startup penalties
+
+          ---
+
+      # ========================================================================
+      # KPI OVERVIEW - Key Performance Indicators
+      # ========================================================================
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.heat_pump_cop
+            name: Current COP
+            min: 0
+            max: 6
+            needle: true
+            severity:
+              green: 4.0
+              yellow: 3.0
+              red: 0
+            segments:
+              - from: 0
+                color: '#db4437'
+              - from: 3.0
+                color: '#ff9800'
+              - from: 4.0
+                color: '#0f9d58'
+
+          - type: entity
+            entity: sensor.heat_pump_cop
+            name: Current COP
+            icon: mdi:gauge
+
+      # ========================================================================
+      # KPI CARDS ROW 1
+      # ========================================================================
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.heat_pump_cop
+            name: Current COP
+            icon: mdi:gauge
+
+          - type: entity
+            entity: input_number.target_cop
+            name: Target COP
+            icon: mdi:target
+
+          - type: entity
+            entity: sensor.heat_pump_current_cycle_duration_minutes
+            name: Current Runtime
+            icon: mdi:timer-outline
+
+          - type: entity
+            entity: sensor.heat_pump_last_cycle_duration_minutes
+            name: Last Cycle Duration
+            icon: mdi:history
+
+      # ========================================================================
+      # RUNNING STATUS
+      # ========================================================================
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: binary_sensor.heat_pump_running
+            name: Heat Pump Status
+            icon: mdi:heat-pump
+
+          - type: entity
+            entity: binary_sensor.heat_pump_in_startup_phase
+            name: Startup Phase
+            icon: mdi:rocket-launch
+
+          - type: entity
+            entity: binary_sensor.heat_pump_steady_state
+            name: Steady State
+            icon: mdi:check-circle
+
+          - type: entity
+            entity: binary_sensor.heat_pump_last_cycle_was_short
+            name: Last Cycle Short
+            icon: mdi:alert-circle
+
+      # ========================================================================
+      # 3-PHASE PROGRESS TRACKER
+      # ========================================================================
+      - type: markdown
+        content: |
+          ## 📊 Optimization Phase Progress
+
+      - type: entities
+        title: Current Phase Selection
+        show_header_toggle: false
+        entities:
+          - entity: input_select.optimization_phase
+            name: Optimization Phase
+
+      - type: entities
+        title: Phase 1 - Buffer Differential Optimization
+        show_header_toggle: false
+        entities:
+          - entity: input_number.buffer_differential_target
+            name: Buffer Differential Target (°F)
+          - entity: sensor.hvac_buffer_tank_delta_t
+            name: Current Buffer Delta T (°F)
+
+      - type: markdown
+        content: |
+          **Phase 1 Goal:** Increase from 10°F to 18°F to reduce cycling
+          **Status:** Monitor current delta T vs target
+
+      - type: entities
+        title: Phase 2 - Supply Temperature Reduction
+        show_header_toggle: false
+        entities:
+          - entity: input_number.heat_pump_supply_temp_target
+            name: Supply Temperature Target (°F)
+          - entity: sensor.heat_pump_outlet_temperature
+            name: Current Supply Temperature (°F)
+          - entity: sensor.heat_pump_heating_target_temp
+            name: Heating Setpoint (°F)
+
+      - type: markdown
+        content: |
+          **Phase 2 Goal:** Reduce from 90°F to 85°F for better efficiency
+          **Status:** Monitor current supply temp vs target
+
+      - type: entities
+        title: Phase 3 - Fine-Tune to Optimal
+        show_header_toggle: false
+        entities:
+          - entity: sensor.heat_pump_outlet_temperature
+            name: Supply Temperature (°F)
+          - entity: sensor.heat_pump_cop
+            name: Current COP
+          - entity: input_number.target_cop
+            name: Target COP
+          - entity: sensor.heat_pump_heating_target_temp
+            name: Heating Setpoint (°F)
+
+      - type: markdown
+        content: |
+          **Phase 3 Goal:** Fine-tune to 82°F (27.8°C) for optimal COP
+          **Target:** Achieve COP ≥ 4.0
+
+      # ========================================================================
+      # ACTIONABLE ALERTS & RECOMMENDATIONS
+      # ========================================================================
+      - type: markdown
+        content: |
+          ## ⚠️ Active Alerts & Recommendations
+
+      - type: entities
+        title: System Status Alerts
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: binary_sensor.heat_pump_running
+            name: Heat Pump Status
+            icon: mdi:heat-pump
+          - entity: binary_sensor.heat_pump_last_cycle_was_short
+            name: Last Cycle Was Short (<5 min)
+            icon: mdi:alert-circle
+          - entity: binary_sensor.circulator_running_hp_off
+            name: Standby Circulation Loss
+            icon: mdi:alert
+          - entity: binary_sensor.heat_pump_in_startup_phase
+            name: Startup Phase Active
+            icon: mdi:rocket-launch
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.heat_pump_last_cycle_was_short
+            state: "on"
+        card:
+          type: markdown
+          content: |
+            ### 🚨 Short Cycling Detected!
+
+            **Issue:** Last cycle was less than 5 minutes - startup penalty reducing efficiency
+
+            **Action Required:**
+            1. Increase buffer differential target
+            2. Check thermostat deadband settings
+            3. Verify zone valve operation
+
+            **Target:** Minimum 15 minutes runtime per cycle
+
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.circulator_running_hp_off
+            state: "on"
+        card:
+          type: markdown
+          content: |
+            ### ⚠️ Standby Energy Loss Detected!
+
+            **Issue:** Circulator pump running without heat pump
+
+            **Impact:** Wasting energy and cooling buffer tank
+
+            **Current Loss Rate:** {{ states('sensor.hp_standby_thermal_loss_rate') }} W
+
+            **Action:** Check pump control logic and zone valves
+
+      # ========================================================================
+      # ENERGY & COST TRACKING
+      # ========================================================================
+      - type: markdown
+        content: |
+          ## 💰 Energy Tracking
+
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.heat_pump_input_power_interval_kwh
+            name: Today's Electrical Input
+            icon: mdi:lightning-bolt
+
+          - type: entity
+            entity: sensor.heat_pump_output_power_interval_kwh
+            name: Today's Thermal Output
+            icon: mdi:fire
+
+      - type: entities
+        title: Utility Meter Tracking
+        entities:
+          - entity: sensor.heat_pump_input_power_interval_kwh
+            name: Today's Electrical Input
+            icon: mdi:lightning-bolt           
+
+          - entity: sensor.heat_pump_output_power_interval_kwh
+            name: Today's Thermal Output
+            icon: mdi:fire
+
+          - entity: sensor.hp_electrical_energy_hourly
+            name: Hourly Electrical Input
+            icon: mdi:lightning-bolt
+          - entity: sensor.hp_electrical_energy_daily
+            name: Daily Electrical Input
+            icon: mdi:lightning-bolt
+          - entity: sensor.hp_electrical_energy_monthly
+            name: Monthly Electrical Input
+            icon: mdi:lightning-bolt
+
+          - entity: sensor.hp_thermal_energy_output_hourly
+            name: Hourly Thermal Output
+            icon: mdi:fire
+          - entity: sensor.hp_thermal_energy_output_daily
+            name: Daily Thermal Output
+            icon: mdi:fire
+          - entity: sensor.hp_thermal_energy_output_monthly
+            name: Monthly Thermal Output
+            icon: mdi:fire
+
+
+      - type: entities
+        title: Standby Loss Tracking
+        entities:
+          - entity: sensor.hp_standby_thermal_loss_rate
+            name: Current Standby Loss Rate (W)
+            icon: mdi:leak
+          - entity: sensor.hp_standby_energy_loss_daily
+            name: Today's Standby Loss (kWh)
+            icon: mdi:cash-remove
+          - entity: sensor.hp_standby_loss_daily
+            name: Daily Standby Loss (Utility Meter)
+            icon: mdi:meter-electric
+
+      # ========================================================================
+      # REAL-TIME OPTIMIZATION METRICS
+      # ========================================================================
+      - type: markdown
+        content: |
+          ## 📈 Real-Time Performance Metrics
+
+      - type: horizontal-stack
+        cards:
+          - type: entities
+            title: COP Performance
+            entities:
+              - entity: sensor.heat_pump_cop
+                name: Current COP
+                icon: mdi:gauge
+              - entity: sensor.heat_pump_average_steady_state_cop
+                name: Steady State COP (Average)
+                icon: mdi:check-circle
+              - entity: sensor.heat_pump_last_cycle_cop
+                name: Last Cycle COP
+                icon: mdi:history
+
+          - type: entities
+            title: Temperature Monitoring
+            entities:
+              - entity: sensor.heat_pump_inlet_temperature
+                name: Inlet Temp (°F)
+              - entity: sensor.heat_pump_outlet_temperature
+                name: Outlet Temp (°F)
+              - entity: sensor.heat_pump_delta_t
+                name: Delta T (°F)
+              - entity: sensor.heat_pump_ambient_temperature
+                name: Outdoor Temp (°F)
+
+      - type: horizontal-stack
+        cards:
+          - type: entities
+            title: Power Metrics
+            entities:
+              - entity: sensor.heat_pump_electrical_power_input_kw
+                name: Electrical Input (kW)
+                icon: mdi:flash
+              - entity: sensor.heat_pump_thermal_power_output_kw
+                name: Thermal Output (kW)
+                icon: mdi:fire
+              - entity: sensor.cx50_pump_flow_gpm
+                name: Flow Rate (GPM)
+                icon: mdi:waves
+
+          - type: entities
+            title: System Efficiency
+            entities:
+              - entity: sensor.system_distribution_efficiency
+                name: Distribution Efficiency (%)
+                icon: mdi:percent
+              - entity: sensor.hvac_thermal_power_used
+                name: HVAC Load (W)
+                icon: mdi:home-thermometer
+              - entity: sensor.system_loss_analysis
+                name: Loss Analysis
+                icon: mdi:information
+
+      # ========================================================================
+      # CYCLE DURATION & TIMING
+      # ========================================================================
+      - type: entities
+        title: Cycle Duration Tracking
+        entities:
+          - entity: sensor.heat_pump_current_cycle_duration
+            name: Current Cycle Duration (seconds)
+          - entity: sensor.heat_pump_current_cycle_duration_minutes
+            name: Current Cycle Duration (minutes)
+          - entity: sensor.heat_pump_current_cycle_remaining
+            name: Time Remaining to Minimum (seconds)
+          - entity: sensor.heat_pump_last_cycle_duration
+            name: Last Cycle Duration (seconds)
+          - entity: sensor.heat_pump_last_cycle_duration_minutes
+            name: Last Cycle Duration (minutes)
+          - entity: binary_sensor.heat_pump_last_cycle_was_short
+            name: Last Cycle Was Short
+
+      # ========================================================================
+      # COP TREND GRAPH
+      # ========================================================================
+      - type: history-graph
+        title: COP Performance - Last 24 Hours
+        hours_to_show: 24
+        refresh_interval: 60
+        entities:
+          - entity: sensor.heat_pump_cop
+            name: Overall COP
+          - entity: sensor.heat_pump_average_steady_state_cop
+            name: Steady State COP (Avg)
+
+      # ========================================================================
+      # CYCLE DURATION MONITORING
+      # ========================================================================
+      - type: history-graph
+        title: Cycle Duration - Last 48 Hours
+        hours_to_show: 48
+        refresh_interval: 60
+        entities:
+          - entity: sensor.heat_pump_current_cycle_duration_minutes
+            name: Runtime (minutes)
+
+      # ========================================================================
+      # QUICK CONTROLS
+      # ========================================================================
+      - type: markdown
+        content: |
+          ## 🎮 Quick Controls & Settings
+
+      - type: entities
+        title: Optimization Controls
+        show_header_toggle: false
+        entities:
+          - entity: input_select.optimization_phase
+            name: Current Optimization Phase
+          - entity: input_boolean.enable_cop_optimization
+            name: Enable COP Optimization Tracking
+          - entity: input_boolean.enable_short_cycle_alerts
+            name: Enable Short Cycle Alerts
+          - entity: input_boolean.enable_startup_penalty_tracking
+            name: Enable Startup Penalty Tracking
+
+      - type: entities
+        title: Heat Pump Setpoints
+        show_header_toggle: false
+        entities:
+          - entity: sensor.heat_pump_heating_target_temp
+            name: Heating Setpoint (°C)
+            icon: mdi:thermometer-chevron-up
+          - entity: sensor.heat_pump_cooling_target_temp
+            name: Cooling Setpoint (°C)
+            icon: mdi:thermometer-chevron-down
+          - entity: sensor.heat_pump_dhw_target_temp
+            name: DHW Setpoint (°C)
+            icon: mdi:water-boiler
+          - entity: sensor.cx50_p27_compressor_max_percent
+            name: Max Compressor Speed (%)
+            icon: mdi:speedometer
+
+      - type: entities
+        title: Optimization Targets
+        show_header_toggle: false
+        entities:
+          - entity: input_number.buffer_differential_target
+            name: Buffer Differential Target (°F)
+          - entity: input_number.heat_pump_supply_temp_target
+            name: Supply Temperature Target (°F)
+          - entity: input_number.target_cop
+            name: Target COP
+          - entity: input_number.minimum_runtime_target
+            name: Minimum Runtime Target (min)
+
+      # ========================================================================
+      # POWER & ENERGY VISUALIZATION
+      # ========================================================================
+      - type: history-graph
+        title: Power Input vs Output - Last 24 Hours
+        hours_to_show: 24
+        refresh_interval: 60
+        entities:
+          - entity: sensor.heat_pump_electrical_power_input
+            name: Electrical Input (W)
+          - entity: sensor.heat_pump_thermal_power_output
+            name: Thermal Output (W)
+
+      # ========================================================================
+      # BUFFER TANK MONITORING
+      # ========================================================================
+      - type: entities
+        title: Buffer Tank Monitoring
+        entities:
+          - entity: sensor.hvac_buffer_tank_supply_temperature
+            name: Buffer Supply Temp (°F)
+          - entity: sensor.hvac_buffer_tank_return_temperature
+            name: Buffer Return Temp (°F)
+          - entity: sensor.hvac_buffer_tank_delta_t
+            name: Buffer Delta T (°F)
+          - entity: sensor.hvac_thermal_power_used
+            name: HVAC Thermal Power Used (W)
+
+      # ========================================================================
+      # FOOTER - OPTIMIZATION TIPS
+      # ========================================================================
+      - type: markdown
+        content: |
+          ---
+
+          ## 💡 Optimization Tips
+
+          ### To Improve COP:
+          1. **Increase runtime** - Target 15+ minutes per cycle
+          2. **Reduce cycling frequency** - Minimize startup penalties
+          3. **Optimize temperatures** - Lower supply temp increases efficiency
+          4. **Eliminate standby losses** - Stop pump when HP is off
+          5. **Monitor outdoor temp** - Performance varies with ambient conditions
+
+          ### Quick Wins:
+          - ✅ Increase buffer differential (Phase 1)
+          - ✅ Lower supply temperature gradually (Phase 2)
+          - ✅ Fix standby circulation issues
+          - ✅ Adjust zone control to reduce short cycling
+
+          ### Monitor These Key Metrics:
+          - **COP** - Should trend toward 4.55
+          - **Cycle Duration** - Should increase to 15+ minutes
+          - **Startup Phase** - Should become smaller % of total runtime
+          - **Standby Losses** - Should be near zero
+
+          ---
+
+          **Dashboard Last Updated:** 2025-11-17
+          **Sensor Names:** Updated to match current configuration

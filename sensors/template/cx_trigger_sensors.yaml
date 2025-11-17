@@ -67,32 +67,22 @@
 # These sensors track the last complete heat pump run and calculate COP
 # A "run" includes the time when water continues circulating after compressor stops
 
-- trigger:
-  - platform: state
-    entity_id: binary_sensor.heat_pump_running
-    to: "off"
-    for:
-      minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
-  sensor:
-    # Capture the last cycle duration in seconds
-    - name: "Heat Pump Last Cycle Duration"
-      unique_id: heat_pump_last_cycle_duration
-      unit_of_measurement: "s"
-      state_class: measurement
-      icon: mdi:timer-outline
-      state: >
-        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {{ (duration * 3600) | round(0) }}
-
-    # Capture the last cycle duration in minutes (for display)
-    - name: "Heat Pump Last Cycle Duration Minutes"
-      unique_id: heat_pump_last_cycle_duration_minutes
-      unit_of_measurement: "min"
-      state_class: measurement
-      icon: mdi:timer-outline
-      state: >
-        {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
-        {{ (duration * 60) | round(1) }}
+# - trigger:
+#   - platform: state
+#     entity_id: binary_sensor.heat_pump_running
+#     to: "off"
+#     for:
+#       minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
+#   sensor:
+#     # Capture the last cycle duration in seconds
+#     - name: "Heat Pump Last Cycle Duration"
+#       unique_id: heat_pump_last_cycle_duration
+#       unit_of_measurement: "s"
+#       state_class: measurement
+#       icon: mdi:timer-outline
+#       state: >
+#         {% set duration = states('sensor.heat_pump_current_cycle_duration') | float(0) %}
+#         {{ (duration * 3600) | round(0) }}
 
 # Track energy accumulated during the last run
 - trigger:
@@ -107,7 +97,7 @@
       state_class: total_increasing
       device_class: energy
       state: >
-        {{ states('sensor.cx_input_power_kwh') | float(0) }}
+        {{ states('sensor.heat_pump_input_power_interval_kwh') | float(0) }}
 
     - name: "Heat Pump Run Start Energy Output"
       unique_id: heat_pump_run_start_energy_output
@@ -115,57 +105,94 @@
       state_class: total_increasing
       device_class: energy
       state: >
-        {{ states('sensor.cx_output_power_interval') | float(0) }}
+        {{ states('sensor.heat_pump_output_power_interval_kwh') | float(0) }}
 
 # Calculate energy used during the last run and COP
 - trigger:
   - platform: state
     entity_id: binary_sensor.heat_pump_running
+    from: "on"
     to: "off"
-    for:
-      minutes: 5  # Wait 5 minutes after HP stops to ensure water circulation has ended
   sensor:
-    - name: "Heat Pump Last Run Energy Input"
-      unique_id: heat_pump_last_run_energy_input
-      unit_of_measurement: "kWh"
-      state_class: measurement
-      device_class: energy
-      icon: mdi:lightning-bolt
-      state: >
-        {% set end_energy = states('sensor.cx_input_power_kwh') | float(0) %}
-        {% set start_energy = states('sensor.heat_pump_run_start_energy_input') | float(0) %}
-        {{ (end_energy - start_energy) | round(3) }}
+  - name: "Heat Pump Last Run Energy Input"
+    unique_id: heat_pump_last_run_energy_input
+    unit_of_measurement: "kWh"
+    device_class: energy
+    icon: mdi:lightning-bolt
+    state: >
+      {% set end_energy = states('sensor.heat_pump_input_power_interval_kwh') | float(0) %}
+      {% set start_energy = states('sensor.heat_pump_run_start_energy_input') | float(0) %}
+      {{ (end_energy - start_energy) | round(3) }}
 
-    - name: "Heat Pump Last Run Energy Output"
-      unique_id: heat_pump_last_run_energy_output
-      unit_of_measurement: "kWh"
-      state_class: measurement
-      device_class: energy
-      icon: mdi:fire
-      state: >
-        {% set end_energy = states('sensor.cx_output_power_interval') | float(0) %}
-        {% set start_energy = states('sensor.heat_pump_run_start_energy_output') | float(0) %}
-        {{ (end_energy - start_energy) | round(3) }}
+  - name: "Heat Pump Last Run Energy Output"
+    unique_id: heat_pump_last_run_energy_output
+    unit_of_measurement: "kWh"
+    device_class: energy
+    icon: mdi:fire
+    state: >
+      {% set end_energy = states('sensor.heat_pump_output_power_interval_kwh') | float(0) %}
+      {% set start_energy = states('sensor.heat_pump_run_start_energy_output') | float(0) %}
+      {{ (end_energy - start_energy) | round(3) }}
 
-    - name: "Heat Pump Last Run COP"
-      unique_id: heat_pump_last_run_cop
-      state_class: measurement
-      icon: mdi:gauge
-      state: >
-        {% set energy_in = states('sensor.heat_pump_last_run_energy_input') | float(0) %}
-        {% set energy_out = states('sensor.heat_pump_last_run_energy_output') | float(0) %}
-        {% if energy_in > 0.01 %}
-          {{ (energy_out / energy_in) | round(2) }}
-        {% else %}
-          unavailable
-        {% endif %}
+  - name: "Heat Pump Last Run COP"
+    unique_id: heat_pump_last_run_cop
+    state_class: measurement
+    icon: mdi:gauge
+    state: >
+      {% set energy_in = states('sensor.heat_pump_last_run_energy_input') | float(0) %}
+      {% set energy_out = states('sensor.heat_pump_last_run_energy_output') | float(0) %}
+      {% if energy_in > 0.01 %}
+        {{ (energy_out / energy_in) | round(2) }}
+      {% else %}
+        0
+      {% endif %}
 
-    - name: "Heat Pump Last Run Timestamp"
-      unique_id: heat_pump_last_run_timestamp
+  - name: "Heat Pump Last Run Timestamp"
+    unique_id: heat_pump_last_run_timestamp
+    device_class: timestamp
+    icon: mdi:clock-outline
+    state: >
+      {{ now().isoformat() }}
+
+  - name: "Heat Pump Last Off Time"
+    unique_id: heat_pump_last_run_off_time
+    device_class: timestamp
+    icon: mdi:clock-outline
+    state: >
+      {{ now().isoformat() }}
+
+
+  - name: "Heat Pump Last Run Elapsed Time"
+    unique_id: heat_pump_last_run_elapsed_time
+    device_class: duration
+    state_class: measurement
+    unit_of_measurement: s      
+    icon: mdi:clock-outline
+    state: >
+      {{ (now() - trigger.from_state.last_changed).total_seconds() | timestamp_custom('%-H hr %-M min %-S sec', false) }}
+
+- trigger:
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: "off"
+    to: "on"
+  sensor:
+    - name: "Heat Pump Last Run On Time"
+      unique_id: heat_pump_last_run_on_time
       device_class: timestamp
       icon: mdi:clock-outline
       state: >
         {{ now().isoformat() }}
+
+    - name: "Heat Pump Last Standby Elapsed Time"
+      unique_id: heat_pump_last_standby_elapsed_time
+      device_class: duration
+      state_class: measurement
+      unit_of_measurement: s      
+      icon: mdi:clock-outline
+      state: >
+        {{ (now() - trigger.from_state.last_changed).total_seconds() | timestamp_custom('%-H hr %-M min %-S sec', false) }}
+        
 
   # ========================================================================
   # LIFETIME COST TRACKING
