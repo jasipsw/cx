@@ -136,6 +136,27 @@
       {% endif %}
 
   # ------------------------------------------------------------------------
+  # System Distribution Losses (Watts)
+  # Calculates thermal power lost in distribution between HP and HVAC load
+  # Formula: Losses = HP Output - HVAC Load
+  # ------------------------------------------------------------------------
+  - name: "System Distribution Losses"
+    unique_id: system_distribution_losses
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:leak
+    state: >-
+      {% set hp_output = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+      {% set hvac_load = states('sensor.hvac_thermal_power_used') | float(0) %}
+
+      {% if hp_output > 100 %}
+        {{ (hp_output - hvac_load) | round(0) }}
+      {% else %}
+        0
+      {% endif %}
+
+  # ------------------------------------------------------------------------
   # System Distribution Efficiency (Daily)
   # Compares Energy Used by House (Load) vs. Energy Produced by HP (Source)
   # Formula: Efficiency = (Load / Source) * 100
@@ -148,7 +169,7 @@
     state: >-
       {% set load_kwh = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
       {% set source_kwh = states('sensor.hvac_hp_thermal_energy_produced_daily') | float(0) %}
-      
+
       {% if source_kwh > 0.5 %}
         {{ ((load_kwh / source_kwh) * 100) | round(1) }}
       {% else %}
