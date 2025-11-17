@@ -87,15 +87,7 @@
     state_class: measurement
     unit_of_measurement: "COP"
     state: >-
-      {% set cop_entity = 'sensor.heat_pump_current_cop' %}
-      {% set steady_state = is_state('binary_sensor.heat_pump_steady_state', 'on') %}
-      {% set enable = is_state('input_boolean.enable_cop_optimization', 'on') %}
-
-      {% if steady_state and enable %}
-        {{ states(cop_entity) }}
-      {% else %}
-        {{ states('sensor.heat_pump_average_steady_state_cop') }}
-      {% endif %}
+      {{ states('sensor.heat_pump_last_run_cop') }}
       
   - name: "System Distribution Efficiency"
     unique_id: system_distribution_efficiency
