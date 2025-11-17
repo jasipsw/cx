@@ -91,14 +91,9 @@ views:
               | **Input Energy** | {{ states('sensor.heat_pump_input_power_interval_kwh') }} kWh | Electrical Power | {{ states('sensor.heat_pump_input_power_interval_kwh') }} W | Riemann (left) | {{ '✅' if states('sensor.heat_pump_input_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
               | **Output Energy** | {{ states('sensor.heat_pump_output_power_interval_kwh') }} kWh | Thermal Power | {{ states('sensor.heat_pump_output_power_interval_kwh') }} W | Riemann (left) | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
 
-              ## Utility Meters (Energy Tracking)
+              **Energy-Based COP:** {{ (states('sensor.heat_pump_output_power_interval_kwh') | float(0) / states('sensor.heat_pump_input_power_interval_kwh') | float(1)) | round(2) if states('sensor.heat_pump_input_power_interval_kwh') | float(0) > 0 else 'N/A' }}
 
-              ### Output Energy Meters
-              | Period | Value | Source Health | Status |
-              |--------|-------|---------------|--------|
-              | **Hourly** | {{ states('sensor.hp_thermal_energy_output_hourly') }} kWh | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') | float(0) < 100 else '⚠️ High' }} |
-              | **Daily** | {{ states('sensor.hp_thermal_energy_output_daily') }} kWh | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') | float(0) < 2000 else '⚠️ High' }} |
-              | **Monthly** | {{ states('sensor.hp_thermal_energy_output_monthly') }} kWh | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} | {{ '⚠️ Needs reset' if states('sensor.hp_thermal_energy_output_monthly') | float(0) > 10000 else '✅' }} |
+              ## Utility Meters (Energy Tracking)
 
               ### Input Energy Meters
               | Period | Value | Sanity Check | Status |
@@ -107,7 +102,13 @@ views:
               | **Daily** | {{ states('sensor.hp_electrical_energy_daily') }} kWh | {{ '✅ <2000kWh' if states('sensor.hp_electrical_energy_daily') | float(0) < 2000 else '❌' }} | {{ '✅' if states('sensor.hp_electrical_energy_daily') not in ['unknown', 'unavailable'] else '❌' }} |
               | **Monthly** | {{ states('sensor.hp_electrical_energy_monthly') }} kWh | {{ '✅ <60000kWh' if states('sensor.hp_electrical_energy_monthly') | float(0) < 60000 else '❌' }} | {{ '✅' if states('sensor.hp_electrical_energy_monthly') not in ['unknown', 'unavailable'] else '❌' }} |
 
-              **Energy-Based COP:** {{ (states('sensor.heat_pump_output_power_interval_kwh') | float(0) / states('sensor.heat_pump_input_power_interval_kwh') | float(1)) | round(2) if states('sensor.heat_pump_input_power_interval_kwh') | float(0) > 0 else 'N/A' }}
+              ### Output Energy Meters
+              | Period | Value | Source Health | Status |
+              |--------|-------|---------------|--------|
+              | **Hourly** | {{ states('sensor.hp_thermal_energy_output_hourly') }} kWh | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') | float(0) < 100 else '⚠️ High' }} |
+              | **Daily** | {{ states('sensor.hp_thermal_energy_output_daily') }} kWh | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') | float(0) < 2000 else '⚠️ High' }} |
+              | **Monthly** | {{ states('sensor.hp_thermal_energy_output_monthly') }} kWh | {{ '✅' if states('sensor.hp_thermal_energy_output_monthly') not in ['unknown', 'unavailable'] else '❌' }} | {{ '⚠️ Needs reset' if states('sensor.hp_thermal_energy_output_monthly') | float(0) > 10000 else '✅' }} |
+
 
               **Notes:**
               - Integration sensors accumulate power (W) over time to produce energy (kWh)
@@ -808,19 +809,20 @@ views:
             grid_options:
               columns: full
             content: |
-              ## Energy Output Meters (Source: heat_pump_output_power_interval_kwh)
-              | Meter | Value | Source Status | Meter Status |
-              |-------|-------|---------------|--------------|
-              | Hourly | {{ states('sensor.hp_thermal_energy_output_hourly') }} kWh | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌ Source unavailable' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
-              | Daily | {{ states('sensor.hp_thermal_energy_output_daily') }} kWh | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌ Source unavailable' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') not in ['unknown', 'unavailable'] else '❌' }} |
-              | Monthly | {{ states('sensor.hp_thermal_energy_output_monthly') }} kWh | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌ Source unavailable' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_monthly') not in ['unknown', 'unavailable'] else '❌' }} |
-
               ## Energy Input Meters (Source: heat_pump_input_power_interval_kwh)
               | Meter | Value | Sanity Check | Status |
               |-------|-------|--------------|--------|
               | Hourly | {{ states('sensor.hp_electrical_energy_hourly') }} kWh | {{ '✅ <100kWh' if states('sensor.hp_electrical_energy_hourly') | float(0) < 100 else '❌ TOO HIGH - Corrupted' }} | {{ '✅' if states('sensor.hp_electrical_energy_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
               | Daily | {{ states('sensor.hp_electrical_energy_daily') }} kWh | {{ '✅ <2000kWh' if states('sensor.hp_electrical_energy_daily') | float(0) < 2000 else '❌ TOO HIGH - Corrupted' }} | {{ '✅' if states('sensor.hp_electrical_energy_daily') not in ['unknown', 'unavailable'] else '❌' }} |
               | Monthly | {{ states('sensor.hp_electrical_energy_monthly') }} kWh | {{ '✅ <60000kWh' if states('sensor.hp_electrical_energy_monthly') | float(0) < 60000 else '❌ TOO HIGH - Corrupted' }} | {{ '✅' if states('sensor.hp_electrical_energy_monthly') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              ## Energy Output Meters (Source: heat_pump_output_power_interval_kwh)
+              | Meter | Value | Source Status | Meter Status |
+              |-------|-------|---------------|--------------|
+              | Hourly | {{ states('sensor.hp_thermal_energy_output_hourly') }} kWh | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') not in ['unknown', 'unavailable'] else '❌ Source unavailable' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
+              | Daily | {{ states('sensor.hp_thermal_energy_output_daily') }} kWh | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') not in ['unknown', 'unavailable'] else '❌ Source unavailable' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') not in ['unknown', 'unavailable'] else '❌' }} |
+              | Monthly | {{ states('sensor.hp_thermal_energy_output_monthly') }} kWh | {{ '✅' if states('sensor.hp_thermal_energy_output_monthly') not in ['unknown', 'unavailable'] else '❌ Source unavailable' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_monthly') not in ['unknown', 'unavailable'] else '❌' }} |
+
 
               **Data Flow:** Integration Sensors → Utility Meters → Reset on Cycle
 
