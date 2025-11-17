@@ -378,28 +378,6 @@
       {# Convert C to F #}
       {{ (temp * 1.8 + 32.0) | round(2) }}
 
-  - name: "Heat Pump Cooling Target Temp"
-    unique_id: heat_pump_cooling_target_temp
-    unit_of_measurement: "°F"
-    state_class: measurement
-    device_class: temperature
-    icon: mdi:thermometer
-    state: >-
-      {% set temp = states('sensor.cx50_cooling_target_temp_c') | float(0) %}
-      {# Convert C to F #}
-      {{ (temp * 1.8 + 32.0) | round(2) }}
-
-  - name: "Heat Pump DHW Target Temp"
-    unique_id: heat_pump_dhw_target_temp
-    unit_of_measurement: "°F"
-    state_class: measurement
-    device_class: temperature
-    icon: mdi:thermometer
-    state: >-
-      {% set temp = states('sensor.cx50_dhw_target_temp_c') | float(0) %}
-      {# Convert C to F #}
-      {{ (temp * 1.8 + 32.0) | round(2) }}
-
   - name: "Heat Pump Heating Temp Max"
     unique_id: heat_pump_heating_temp_max
     unit_of_measurement: "°F"
