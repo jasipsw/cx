@@ -1,0 +1,184 @@
+# Leviton WiFi + Matter Device Correlation Script
+# This helps correlate devices between integrations and find network info
+# Paste into Developer Tools → Template
+
+{# Collect all light entities and group by device #}
+{% set ns = namespace(devices={}) %}
+
+{% for entity_id in states.light | map(attribute='entity_id') | list %}
+  {% set dev_id = device_id(entity_id) %}
+  {% if dev_id %}
+    {% set manufacturer = device_attr(dev_id, 'manufacturer') | string %}
+
+    {# Only process Leviton devices #}
+    {% if 'leviton' in manufacturer.lower() %}
+      {% set device_name = device_attr(dev_id, 'name') %}
+      {% set model = device_attr(dev_id, 'model') %}
+      {% set identifiers = device_attr(dev_id, 'identifiers') %}
+      {% set connections = device_attr(dev_id, 'connections') %}
+
+      {# Determine integration type from identifiers #}
+      {% set integration = namespace(type='Unknown', id='') %}
+      {% for id_tuple in identifiers %}
+        {% set id_str = id_tuple | string %}
+        {% if 'matter' in id_str.lower() %}
+          {% set integration.type = 'Matter' %}
+          {% set integration.id = id_tuple[1] if id_tuple | length > 1 else '' %}
+        {% elif 'leviton' in id_str.lower() or 'decora' in id_str.lower() %}
+          {% set integration.type = 'Leviton WiFi' %}
+          {% set integration.id = id_tuple[1] if id_tuple | length > 1 else '' %}
+        {% endif %}
+      {% endfor %}
+
+      {# Extract network info from connections #}
+      {% set mac_addr = namespace(value='Not exposed') %}
+      {% set ip_addr = namespace(value='Not exposed') %}
+      {% for conn_tuple in connections %}
+        {% if conn_tuple[0] == 'mac' %}
+          {% set mac_addr.value = conn_tuple[1] %}
+        {% elif conn_tuple[0] == 'ip' %}
+          {% set ip_addr.value = conn_tuple[1] %}
+        {% endif %}
+      {% endfor %}
+
+      {# Get entity attributes #}
+      {% set attrs = states[entity_id].attributes %}
+
+      {# Store or update device info #}
+      {% if dev_id not in ns.devices %}
+        {% set ns.devices = dict(ns.devices, **{dev_id: {
+          'name': device_name,
+          'model': model,
+          'integrations': [integration.type],
+          'integration_ids': [integration.id],
+          'mac_address': mac_addr.value,
+          'ip_address': ip_addr.value,
+          'entities': [entity_id],
+          'manufacturer': manufacturer
+        }}) %}
+      {% else %}
+        {# Device already exists - this shouldn't happen but handle it #}
+        {% set existing = ns.devices[dev_id] %}
+        {% if integration.type not in existing.integrations %}
+          {% set updated_integrations = existing.integrations + [integration.type] %}
+          {% set updated_ids = existing.integration_ids + [integration.id] %}
+          {% set updated_entities = existing.entities + [entity_id] %}
+          {% set ns.devices = dict(ns.devices, **{dev_id: dict(existing, **{
+            'integrations': updated_integrations,
+            'integration_ids': updated_ids,
+            'entities': updated_entities
+          })}) %}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+## Leviton Device Integration Analysis
+
+### Devices by Integration Type
+
+{% set leviton_only = ns.devices.values() | selectattr('integrations', 'equalto', ['Leviton WiFi']) | list %}
+{% set matter_only = ns.devices.values() | selectattr('integrations', 'equalto', ['Matter']) | list %}
+{% set both = ns.devices.values() | select('search', 'integrations.*Matter.*Leviton|integrations.*Leviton.*Matter') | list %}
+
+**Summary:**
+- Leviton WiFi only: {{ leviton_only | length }}
+- Matter only: {{ matter_only | length }}
+- Both integrations: {{ both | length }}
+- **Total unique devices: {{ ns.devices | length }}**
+
+---
+
+### Network Information Available
+
+| Device Name | Integration(s) | MAC Address | IP Address | Identifier |
+|------------|---------------|-------------|------------|------------|
+{% for dev_id, device in ns.devices.items() %}
+| {{ device.name }} | {{ device.integrations | join(', ') }} | {{ device.mac_address }} | {{ device.ip_address }} | {{ device.integration_ids[0][:16] }}... |
+{% endfor %}
+
+---
+
+### Analysis & Recommendations
+
+{% if ns.devices.values() | selectattr('mac_address', '!=', 'Not exposed') | list | length > 0 %}
+✅ **GOOD NEWS!** Some devices expose MAC addresses through the device registry connections.
+
+**Devices with MAC addresses:**
+{% for dev_id, device in ns.devices.items() %}
+{% if device.mac_address != 'Not exposed' %}
+- **{{ device.name }}**: `{{ device.mac_address }}`
+{% endif %}
+{% endfor %}
+
+**Next steps:**
+1. Copy these MAC addresses
+2. Go to UniFi Controller → Clients
+3. Search for each MAC to find the device
+4. Rename in UniFi to match device name
+
+{% else %}
+❌ **Network info not exposed through integrations**
+
+Both Matter and Leviton WiFi integrations use cloud/protocol-based communication and don't expose local network details in the device registry.
+
+**Alternative approach - Network discovery:**
+
+Since your switches are WiFi-based, they MUST have IP addresses on your Ubiquiti network. Use this method:
+
+### Method 1: UniFi Controller Activity Monitoring
+1. Open UniFi Controller → Clients
+2. Filter by "Recently Active"
+3. Look for devices with:
+   - Manufacturer: Leviton or Unknown
+   - Hostname: might contain "Leviton" or "Decora"
+4. Turn OFF one specific light switch
+5. Watch for a client to go offline/inactive
+6. That's your device! Note the MAC/IP
+7. Turn the switch back ON
+8. Rename the client in UniFi
+9. Repeat for each switch
+
+### Method 2: UniFi Controller Signal Strength
+1. Open UniFi Controller → Clients
+2. Look at signal strength (RSSI) for unknown devices
+3. Use physical proximity to APs to identify switches
+4. Cross-reference with room locations in HA
+
+### Method 3: Network Scan
+Run this from a machine on your network:
+```bash
+# Scan your network for Leviton devices
+sudo nmap -sn 192.168.1.0/24 | grep -B 2 "Leviton"
+
+# Or use arp-scan
+sudo arp-scan --localnet | grep -i leviton
+```
+
+### Method 4: Check Device Diagnostics in HA
+1. Go to Settings → Devices & Services
+2. Click on Leviton or Matter integration
+3. Click on a device
+4. Click the three dots → Download diagnostics
+5. Open the JSON file and search for "ip", "mac", "network", "host"
+
+{% endif %}
+
+---
+
+### Diagnostic Data
+
+**First 3 devices - raw identifiers:**
+{% for dev_id, device in (ns.devices.items() | list)[:3] %}
+
+**{{ device.name }}:**
+- Model: {{ device.model }}
+- Integration IDs: {{ device.integration_ids }}
+- Entities: {{ device.entities | join(', ') }}
+
+{% endfor %}
+
+---
+
+**💡 TIP:** If you find one device's IP/MAC through UniFi activity monitoring, you can use that to establish a pattern (signal strength, IP range, etc.) to find the others more easily.
