@@ -8,59 +8,49 @@ views:
     sections:
       - type: grid
         column_span: 3
+        
         cards:
-          # OVERVIEW CARD
-          - type: markdown
-            title: 📋 Sensor Verification Overview
-            grid_options:
-              columns: full
-            content: |
-              ## Purpose
-              This dashboard traces data flow through all sensor calculation layers to identify issues.
-
-              ## Recent Changes (2025-11-17)
-              - ✅ Renamed integration sensors to reset accumulated values (from ~21,000 kWh)
-              - ✅ Created `sensor.heat_pump_input_power_interval_kwh` (electrical energy accumulation)
-              - ✅ Created `sensor.heat_pump_output_power_interval_kwh` (thermal energy accumulation)
-              - ✅ Fixed utility meters to reference correct integration sensors with `delta_values: true`
-              - ✅ Removed duplicate `cx_*` utility meters (kept `hp_*` versions)
-              - ✅ Created `binary_sensor.heat_pump_flow_status` (reliable flow-based detection)
-              - ✅ Eliminated all C34 modbus dependencies (unreliable register)
-              - ✅ Energy-based COP now showing realistic values (~3.08)
-
-              ## Previous Changes (2025-11-15)
-              - ✅ **NEW: Buffer energy storage sensors** (`sensor.buffer_energy_kwh` and `sensor.buffer_energy_percent`)
-              - ✅ Fixed `buffer_energy.yaml` sensor references (now uses `sensor.buffer_tank_temperature`)
-              - ✅ Fixed `buffer_energy.yaml` and `cx_trigger_sensors.yaml` template syntax errors
-              - ✅ Created cycle tracking sensors (current/last duration, cycle remaining)
-              - ✅ Created `sensor.heat_pump_last_cycle_cop` (COP at cycle completion)
-              - ✅ Fixed `radiant_sensors.yaml` template syntax errors
-              - ✅ Improved heat pump running detection (pump + compressor + heat transfer)
-              - ✅ Added standby power tracking sensors
-              - ✅ **G2 valve position detection** (temperature-based, shows actual heat routing)
-
-              ## Known Issues
-              - ⚠️ Modbus operating mode may not match actual G2 valve position (now detected by temperature analysis)
-              - ⚠️ Cycle duration sensor may not be tracking correctly (shows 0.016 seconds)
-
-              ## Data Flow
-              ```
-              Modbus → Raw Sensors (cx_sensors.yaml)
-                ↓
-              Calculated Power (electrical & thermal)
-                ↓
-              Integration Sensors (legacy_sensors.yaml) → Energy (kWh)
-                ↓
-              Utility Meters (utility_meters.yaml) → Hourly/Daily/Monthly
-                ↓
-              Optimization Sensors (cx_optimization_sensors.yaml) → Mode filtering
-              ```
-
-              **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
-
           # ========================================================================
           # PRIORITY MONITORING - PRIMARY FOCUS AREAS
           # ========================================================================
+          - type: custom:flex-table-card
+            title: 🔌 Heat Pump Last Run Statistics
+            auto_format: true
+            clickable: true
+            grid_options:
+              columns: 18
+            entities:
+              - sensor.heat_pump_last_run_energy_input
+              - sensor.heat_pump_last_run_energy_output 
+              - sensor.heat_pump_last_run_timestamp
+              - sensor.heat_pump_run_start_energy_input
+              - sensor.heat_pump_run_start_energy_output
+              - sensor.heat_pump_input_power_interval_kwh
+              - sensor.heat_pump_output_power_interval_kwh
+#              - sensor.heat_pump_last_run_cop
+
+            columns:
+              - name: ""
+                data: icon
+                align: center
+
+              - name: Sensor Name
+                data: friendly_name
+                align: left
+
+              - name: unique_id
+                data: object_id
+                align: left
+
+              # COLUMN 2: VALUE
+              - name: Value
+                data: state
+                align: center
+
+              # - name: Status
+              #   data: state
+              #   align: center
+              #   modify: "['unknown', 'unavailable'].includes(x) ? '❌' : '✅'"
 
           # HEAT PUMP FLOW DETECTION
           - type: markdown
@@ -653,19 +643,20 @@ views:
               - ✅ `sensor: !include sensors/legacy_sensors.yaml`
               - ✅ `utility_meter: !include sensors/utility_meters/utility_meters.yaml`
 
+              # (Replace the "Issues Found:" block in the Entity Registry Check card with the following)
               **Issues Found:**
               {% set issues = [] %}
               {% if states('binary_sensor.cx_c34_water_pump') in ['unknown', 'unavailable'] %}
-                {% set _ = issues.append('Water pump binary sensor not working') %}
+                {% set issues = issues + ['Water pump binary sensor not working'] %}
               {% endif %}
               {% if states('binary_sensor.heat_pump_running') in ['unknown', 'unavailable'] %}
-                {% set _ = issues.append('Heat pump running sensor not working (depends on water pump)') %}
+                {% set issues = issues + ['Heat pump running sensor not working (depends on water pump)'] %}
               {% endif %}
               {% if states('sensor.heat_pump_output_power_interval_kwh') in ['unknown', 'unavailable'] %}
-                {% set _ = issues.append('Integration sensor not initialized') %}
+                {% set issues = issues + ['Integration sensor not initialized'] %}
               {% endif %}
               {% if states('sensor.heat_pump_outlet_temperature') in ['unknown', 'unavailable'] and states('sensor.cx50_outlet_temp') in ['unknown', 'unavailable'] %}
-                {% set _ = issues.append('CRITICAL: No outlet temperature sensor available') %}
+                {% set issues = issues + ['CRITICAL: No outlet temperature sensor available'] %}
               {% endif %}
 
               {% if issues | length > 0 %}
@@ -675,7 +666,6 @@ views:
               {% else %}
               ✅ All critical sensors are loaded and available
               {% endif %}
-
           # EVENT TIMELINE CARD
           - type: logbook
             title: 🔔 Heat Pump Event Timeline
@@ -704,7 +694,6 @@ views:
               - sensor.heat_pump_output_power_interval_kwh
               - sensor.heat_pump_input_power_interval_kwh
 
-          # CARD 1: RAW HEAT PUMP SENSORS
           - type: markdown
             title: 🔌 Raw Heat Pump Sensors (cx_sensors.yaml)
             grid_options:
@@ -937,3 +926,52 @@ views:
               | Last Cycle Short | {{ states('binary_sensor.heat_pump_last_cycle_was_short') }} | Last < 300s |
 
               **Data Flow:** Operating Mode → Filter Power Sensors → COP Tracking
+          # OVERVIEW CARD
+          - type: markdown
+            title: 📋 Sensor Verification Overview
+            grid_options:
+              columns: full
+            content: |
+              ## Purpose
+              This dashboard traces data flow through all sensor calculation layers to identify issues.
+
+              ## Recent Changes (2025-11-17)
+              - ✅ Renamed integration sensors to reset accumulated values (from ~21,000 kWh)
+              - ✅ Created `sensor.heat_pump_input_power_interval_kwh` (electrical energy accumulation)
+              - ✅ Created `sensor.heat_pump_output_power_interval_kwh` (thermal energy accumulation)
+              - ✅ Fixed utility meters to reference correct integration sensors with `delta_values: true`
+              - ✅ Removed duplicate `cx_*` utility meters (kept `hp_*` versions)
+              - ✅ Created `binary_sensor.heat_pump_flow_status` (reliable flow-based detection)
+              - ✅ Eliminated all C34 modbus dependencies (unreliable register)
+              - ✅ Energy-based COP now showing realistic values (~3.08)
+
+              ## Previous Changes (2025-11-15)
+              - ✅ **NEW: Buffer energy storage sensors** (`sensor.buffer_energy_kwh` and `sensor.buffer_energy_percent`)
+              - ✅ Fixed `buffer_energy.yaml` sensor references (now uses `sensor.buffer_tank_temperature`)
+              - ✅ Fixed `buffer_energy.yaml` and `cx_trigger_sensors.yaml` template syntax errors
+              - ✅ Created cycle tracking sensors (current/last duration, cycle remaining)
+              - ✅ Created `sensor.heat_pump_last_cycle_cop` (COP at cycle completion)
+              - ✅ Fixed `radiant_sensors.yaml` template syntax errors
+              - ✅ Improved heat pump running detection (pump + compressor + heat transfer)
+              - ✅ Added standby power tracking sensors
+              - ✅ **G2 valve position detection** (temperature-based, shows actual heat routing)
+
+              ## Known Issues
+              - ⚠️ Modbus operating mode may not match actual G2 valve position (now detected by temperature analysis)
+              - ⚠️ Cycle duration sensor may not be tracking correctly (shows 0.016 seconds)
+
+              ## Data Flow
+              ```
+              Modbus → Raw Sensors (cx_sensors.yaml)
+                ↓
+              Calculated Power (electrical & thermal)
+                ↓
+              Integration Sensors (legacy_sensors.yaml) → Energy (kWh)
+                ↓
+              Utility Meters (utility_meters.yaml) → Hourly/Daily/Monthly
+                ↓
+              Optimization Sensors (cx_optimization_sensors.yaml) → Mode filtering
+              ```
+
+              **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+
