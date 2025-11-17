@@ -65,4 +65,11 @@ lovelace:
       show_in_sidebar: true
       filename: dashboards/dashboard_sensor_verification.yaml
 
+    cx-optimization:
+      mode: yaml
+      title: Heat Pump Optimization
+      icon: mdi:speedometer
+      show_in_sidebar: true
+      filename: dashboards/dashboard_optimization.yaml
+
 
