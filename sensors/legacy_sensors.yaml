@@ -289,6 +289,36 @@
   round: 3
 
 # ------------------------------------------------------------------------
+# Buffer Tank Energy Input
+# Accumulates thermal energy arriving at the buffer tank from heat pump
+# Only accumulates when G2 valve is directing flow to buffer tank
+# Source: sensor.buffer_tank_thermal_power_input
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.buffer_tank_thermal_power_input
+  name: "Buffer Tank Energy Input"
+  unique_id: buffer_tank_energy_input
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# DHW Tank Energy Input
+# Accumulates thermal energy arriving at the DHW tank from heat pump
+# Only accumulates when G2 valve is directing flow to DHW tank
+# Source: sensor.dhw_tank_thermal_power_input
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.dhw_tank_thermal_power_input
+  name: "DHW Tank Energy Input"
+  unique_id: dhw_tank_energy_input
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
 # Heat Pump Standby Thermal Loss Accumulation
 # Accumulates energy lost when circulator runs but HP is off
 # In heating mode: hot water cooled by outdoor coil

@@ -906,6 +906,107 @@ views:
 
               **Data Flow:** HP Running + Buffer Temps → G2 Position → Mode Classification
 
+          # CARD 5.6: ENERGY BALANCE TRACKING (NEW - 2025-11-17)
+          - type: markdown
+            title: ⚖️ Energy Balance Tracking (thermal_power_sensors.yaml + legacy_sensors.yaml)
+            grid_options:
+              columns: full
+            content: |
+              ## Overview
+              Tracks energy at each stage: **HP Output → G2 Valve → Buffer/DHW Tanks → HVAC Load**
+
+              This enables calculation of:
+              - Piping losses between HP and tanks
+              - Distribution efficiency
+              - System calibration
+              - Separate DHW vs heating tracking
+
+              ---
+
+              ## Current System State
+              | Parameter | Value | Status |
+              |-----------|-------|--------|
+              | Heat Pump Running | {{ states('binary_sensor.heat_pump_running') }} | {{ '🔥 Active' if is_state('binary_sensor.heat_pump_running', 'on') else '⏸️ Idle' }} |
+              | G2 Valve Position | {{ states('sensor.g2_valve_position') }} | {{ '🏠 Heating' if states('sensor.g2_valve_position') == 'Buffer Tank' else ('🚿 DHW' if states('sensor.g2_valve_position') == 'DHW Tank' else '⏸️ Idle') }} |
+              | Operating Mode | {{ states('sensor.heat_pump_operating_mode') }} | {{ '✅' if states('sensor.heat_pump_operating_mode') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              ---
+
+              ## Thermal Power Sensors (Instantaneous - Watts)
+              | Sensor | Value | G2 Position | Status |
+              |--------|-------|-------------|--------|
+              | **HP Thermal Output** | {{ states('sensor.heat_pump_thermal_power_output') }}W ({{ (states('sensor.heat_pump_thermal_power_output') \| float(0) / 1000) \| round(2) }}kW) | - | {{ '✅ Producing' if states('sensor.heat_pump_thermal_power_output') \| float(0) > 1000 else '⏸️ Standby' }} |
+              | **Buffer Tank Input** | {{ states('sensor.buffer_tank_thermal_power_input') }}W ({{ (states('sensor.buffer_tank_thermal_power_input') \| float(0) / 1000) \| round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.buffer_tank_thermal_power_input') \| float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'Buffer Tank' else '⚠️ Should be receiving') }} |
+              | **DHW Tank Input** | {{ states('sensor.dhw_tank_thermal_power_input') }}W ({{ (states('sensor.dhw_tank_thermal_power_input') \| float(0) / 1000) \| round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.dhw_tank_thermal_power_input') \| float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'DHW Tank' else '⚠️ Should be receiving') }} |
+              | **HVAC Load Output** | {{ states('sensor.hvac_thermal_power_used') }}W ({{ (states('sensor.hvac_thermal_power_used') \| float(0) / 1000) \| round(2) }}kW) | - | {{ '✅ Delivering' if states('sensor.hvac_thermal_power_used') \| float(0) > 100 else '⏸️ No demand' }} |
+
+              **Expected Behavior:**
+              - When G2 → Buffer: Buffer Input > 0, DHW Input = 0
+              - When G2 → DHW: DHW Input > 0, Buffer Input = 0
+              - HP Output ≈ Buffer Input OR DHW Input (whichever is active)
+
+              ---
+
+              ## Integration Sensors (Accumulated Energy - kWh)
+              | Sensor | Value | Source Power | Status |
+              |--------|-------|--------------|--------|
+              | **HP Electrical Input** | {{ states('sensor.cx_input_power_kwh') }} kWh | {{ states('sensor.heat_pump_electrical_power_input') }}W | {{ '✅' if states('sensor.cx_input_power_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **HP Thermal Output** | {{ states('sensor.cx_output_power_interval') }} kWh | {{ states('sensor.heat_pump_thermal_power_output') }}W | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **Buffer Tank Input** | {{ states('sensor.buffer_tank_energy_input') }} kWh | {{ states('sensor.buffer_tank_thermal_power_input') }}W | {{ '✅' if states('sensor.buffer_tank_energy_input') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **DHW Tank Input** | {{ states('sensor.dhw_tank_energy_input') }} kWh | {{ states('sensor.dhw_tank_thermal_power_input') }}W | {{ '✅' if states('sensor.dhw_tank_energy_input') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **HVAC Load Used** | {{ states('sensor.hvac_thermal_energy_used') }} kWh | {{ states('sensor.hvac_thermal_power_used') }}W | {{ '✅' if states('sensor.hvac_thermal_energy_used') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              ---
+
+              ## Utility Meters - Hourly Tracking
+              | Meter | Value | Source Health | Meter Status |
+              |-------|-------|---------------|--------------|
+              | HP Electrical (Hourly) | {{ states('sensor.hp_electrical_energy_hourly') }} kWh | {{ '✅' if states('sensor.cx_input_power_kwh') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_electrical_energy_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
+              | HP Thermal (Hourly) | {{ states('sensor.hp_thermal_energy_output_hourly') }} kWh | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
+              | Buffer Input (Hourly) | {{ states('sensor.buffer_tank_energy_input_hourly') }} kWh | {{ '✅' if states('sensor.buffer_tank_energy_input') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.buffer_tank_energy_input_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
+              | DHW Input (Hourly) | {{ states('sensor.dhw_tank_energy_input_hourly') }} kWh | {{ '✅' if states('sensor.dhw_tank_energy_input') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.dhw_tank_energy_input_hourly') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              ## Utility Meters - Daily Tracking
+              | Meter | Value | Source Health | Meter Status |
+              |-------|-------|---------------|--------------|
+              | HP Electrical (Daily) | {{ states('sensor.hp_electrical_energy_daily') }} kWh | {{ '✅' if states('sensor.cx_input_power_kwh') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_electrical_energy_daily') not in ['unknown', 'unavailable'] else '❌' }} |
+              | HP Thermal (Daily) | {{ states('sensor.hp_thermal_energy_output_daily') }} kWh | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.hp_thermal_energy_output_daily') not in ['unknown', 'unavailable'] else '❌' }} |
+              | Buffer Input (Daily) | {{ states('sensor.buffer_tank_energy_input_daily') }} kWh | {{ '✅' if states('sensor.buffer_tank_energy_input') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.buffer_tank_energy_input_daily') not in ['unknown', 'unavailable'] else '❌' }} |
+              | DHW Input (Daily) | {{ states('sensor.dhw_tank_energy_input_daily') }} kWh | {{ '✅' if states('sensor.dhw_tank_energy_input') not in ['unknown', 'unavailable'] else '❌' }} | {{ '✅' if states('sensor.dhw_tank_energy_input_daily') not in ['unknown', 'unavailable'] else '❌' }} |
+
+              ---
+
+              ## Energy Balance Analysis (Daily Values)
+              {% set hp_out = states('sensor.hp_thermal_energy_output_daily') | float(0) %}
+              {% set buf_in = states('sensor.buffer_tank_energy_input_daily') | float(0) %}
+              {% set dhw_in = states('sensor.dhw_tank_energy_input_daily') | float(0) %}
+              {% set hvac_out = states('sensor.hvac_thermal_energy_used') | float(0) %}
+              {% set hp_elec = states('sensor.hp_electrical_energy_daily') | float(0) %}
+              {% set total_tank_in = buf_in + dhw_in %}
+              {% set piping_loss = hp_out - total_tank_in %}
+              {% set piping_loss_pct = (piping_loss / hp_out * 100) if hp_out > 0 else 0 %}
+              {% set dist_eff = (hvac_out / buf_in * 100) if buf_in > 0.1 else 0 %}
+              {% set system_cop = (hp_out / hp_elec) if hp_elec > 0.1 else 0 %}
+
+              | Metric | Calculation | Value | Status |
+              |--------|-------------|-------|--------|
+              | **HP Thermal Output** | Integration sensor | {{ hp_out \| round(2) }} kWh | {{ '✅' if hp_out > 0 else '⏸️ Not running yet' }} |
+              | **Total Tank Input** | Buffer + DHW | {{ total_tank_in \| round(2) }} kWh | {{ '✅' if total_tank_in > 0 else '⏸️ Not running yet' }} |
+              | **Piping Loss** | HP Out - Tank In | {{ piping_loss \| round(2) }} kWh ({{ piping_loss_pct \| round(1) }}%) | {{ '✅ <10%' if piping_loss_pct < 10 and hp_out > 0 else ('⚠️ High losses' if piping_loss_pct >= 10 else '⏸️ Waiting for data') }} |
+              | **Buffer Input** | Integration sensor | {{ buf_in \| round(2) }} kWh | {{ '✅' if buf_in > 0 else '⏸️' }} |
+              | **DHW Input** | Integration sensor | {{ dhw_in \| round(2) }} kWh | {{ '✅' if dhw_in > 0 else '⏸️' }} |
+              | **HVAC Load** | Integration sensor | {{ hvac_out \| round(2) }} kWh | {{ '✅' if hvac_out > 0 else '⏸️' }} |
+              | **Distribution Efficiency** | HVAC / Buffer × 100 | {{ dist_eff \| round(1) }}% | {{ '✅ Good' if 70 < dist_eff < 150 and buf_in > 0.1 else ('⚠️ Check sensors' if buf_in > 0.1 else '⏸️ Waiting for data') }} |
+              | **Daily COP** | HP Out / HP Elec | {{ system_cop \| round(2) }} | {{ '✅ Good' if 2 < system_cop < 6 and hp_elec > 0.1 else ('⚠️ Check range' if hp_elec > 0.1 else '⏸️ Waiting for data') }} |
+
+              **Notes:**
+              - Piping losses should be <10% (well-insulated system)
+              - Distribution efficiency >100% means buffer is releasing stored heat
+              - Distribution efficiency <100% means buffer is storing heat
+              - Over full heating cycles, distribution efficiency should average 80-100%
+
+              **Data Flow:** HP Output → Buffer/DHW Input (via G2) → HVAC Load → Energy Balance
+
           # CARD 6: OPTIMIZATION SENSORS
           - type: markdown
             title: 🎯 Optimization Sensors (cx_optimization_sensors.yaml)
