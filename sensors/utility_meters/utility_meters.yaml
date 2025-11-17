@@ -170,21 +170,18 @@ hp_electrical_energy_hourly:
   name: HP Electrical Energy (Hourly)
   unique_id: hp_electrical_energy_hourly
   cycle: hourly
-  delta_values: true
 
 hp_electrical_energy_daily:
   source: sensor.heat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Daily)
   unique_id: hp_electrical_energy_daily
   cycle: daily
-  delta_values: true
 
 hp_electrical_energy_monthly:
   source: sensor.heat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Monthly)
   unique_id: hp_electrical_energy_monthly
   cycle: monthly
-  delta_values: true
 
 # ------------------------------------------------------------------------
 # Heat Pump Thermal Energy Output (Hourly/Daily/Monthly)
@@ -195,18 +192,15 @@ hp_thermal_energy_output_hourly:
   name: HP Thermal Output (Hourly)
   unique_id: hp_thermal_energy_output_hourly
   cycle: hourly
-  delta_values: true
 
 hp_thermal_energy_output_daily:
   source: sensor.heat_pump_output_power_interval_kwh
   name: HP Thermal Output (Daily)
   unique_id: hp_thermal_energy_output_daily
   cycle: daily
-  delta_values: true
 
 hp_thermal_energy_output_monthly:
   source: sensor.heat_pump_output_power_interval_kwh
   name: HP Thermal Output (Monthly)
   unique_id: hp_thermal_energy_output_monthly
   cycle: monthly
-  delta_values: true
