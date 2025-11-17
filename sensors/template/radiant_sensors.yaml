@@ -74,8 +74,15 @@
     unit_of_measurement: "°F"
     state_class: measurement
     icon: mdi:thermometer
-    availability: >
-      {{ states('sensor.hvac_buffer_tank_flow_rate') | float(0) > 0 }}    
+    availability: >-
+      {% set value = states('sensor.hvac_buffer_tank_flow_rate') | float('unavailable') %}
+      {% if value == 'unavailable' %}
+        false
+      {% elif value > 0 %}
+        true
+      {% else %}
+        false
+      {% endif %}
 
     state: >-
       {{ states('sensor.buffer_supply_to_hvac_load') | float(0) }}

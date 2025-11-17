@@ -233,46 +233,26 @@ views:
       - type: horizontal-stack
         cards:
           - type: entity
-            entity: sensor.heat_pump_input_power_interval_kwh
+            entity: sensor.cx_daily_energy_input
             name: Today's Electrical Input
             icon: mdi:lightning-bolt
 
           - type: entity
-            entity: sensor.heat_pump_output_power_interval_kwh
+            entity: sensor.cx_daily_energy_output
             name: Today's Thermal Output
             icon: mdi:fire
 
       - type: entities
         title: Utility Meter Tracking
         entities:
-          - entity: sensor.heat_pump_input_power_interval_kwh
-            name: Today's Electrical Input
-            icon: mdi:lightning-bolt           
-
-          - entity: sensor.heat_pump_output_power_interval_kwh
-            name: Today's Thermal Output
-            icon: mdi:fire
-
-          - entity: sensor.hp_electrical_energy_hourly
-            name: Hourly Electrical Input
-            icon: mdi:lightning-bolt
-          - entity: sensor.hp_electrical_energy_daily
-            name: Daily Electrical Input
-            icon: mdi:lightning-bolt
-          - entity: sensor.hp_electrical_energy_monthly
-            name: Monthly Electrical Input
-            icon: mdi:lightning-bolt
-
-          - entity: sensor.hp_thermal_energy_output_hourly
-            name: Hourly Thermal Output
-            icon: mdi:fire
-          - entity: sensor.hp_thermal_energy_output_daily
-            name: Daily Thermal Output
-            icon: mdi:fire
-          - entity: sensor.hp_thermal_energy_output_monthly
-            name: Monthly Thermal Output
-            icon: mdi:fire
-
+          - entity: sensor.cx_daily_energy_input
+            name: Daily Electrical Input (kWh)
+          - entity: sensor.cx_daily_energy_output
+            name: Daily Thermal Output (kWh)
+          - entity: sensor.cx_monthly_energy_input
+            name: Monthly Electrical Input (kWh)
+          - entity: sensor.cx_monthly_energy_output
+            name: Monthly Thermal Output (kWh)
 
       - type: entities
         title: Standby Loss Tracking
