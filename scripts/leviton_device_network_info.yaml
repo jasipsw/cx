@@ -1,0 +1,138 @@
+# Leviton WiFi Integration - Network Information Extractor
+# Paste this template into Developer Tools → Template to find IP addresses
+# This queries the Leviton WiFi integration which should have network info
+
+{# Get all devices from device registry #}
+{% set ns = namespace(leviton_devices=[], matter_devices=[]) %}
+
+{# Iterate through all light entities to find their devices #}
+{% for entity_id in states.light | map(attribute='entity_id') | list %}
+  {% set device_id = device_id(entity_id) %}
+  {% if device_id %}
+    {% set manufacturer = device_attr(device_id, 'manufacturer') | string %}
+    {% set name = device_attr(device_id, 'name') %}
+    {% set model = device_attr(device_id, 'model') %}
+    {% set identifiers = device_attr(device_id, 'identifiers') %}
+    {% set config_entries = device_attr(device_id, 'config_entries') %}
+
+    {# Check if this is a Leviton device #}
+    {% if 'leviton' in manufacturer.lower() %}
+      {# Get all entity attributes to find IP #}
+      {% set entity_attrs = states[entity_id].attributes %}
+
+      {# Try to extract IP from various sources #}
+      {% set ip = namespace(address='Unknown') %}
+      {% set mac = namespace(address='Unknown') %}
+
+      {# Check entity attributes #}
+      {% if 'ip_address' in entity_attrs %}
+        {% set ip.address = entity_attrs.ip_address %}
+      {% elif 'host' in entity_attrs %}
+        {% set ip.address = entity_attrs.host %}
+      {% elif 'ip' in entity_attrs %}
+        {% set ip.address = entity_attrs.ip %}
+      {% endif %}
+
+      {% if 'mac_address' in entity_attrs %}
+        {% set mac.address = entity_attrs.mac_address %}
+      {% elif 'mac' in entity_attrs %}
+        {% set mac.address = entity_attrs.mac %}
+      {% endif %}
+
+      {# Determine integration type #}
+      {% set integration = 'Unknown' %}
+      {% if identifiers %}
+        {% for id_tuple in identifiers %}
+          {% if 'matter' in (id_tuple | string).lower() %}
+            {% set integration = 'Matter' %}
+          {% elif 'leviton' in (id_tuple | string).lower() %}
+            {% set integration = 'Leviton WiFi' %}
+          {% elif 'decora' in (id_tuple | string).lower() %}
+            {% set integration = 'Leviton WiFi' %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {# Store device info #}
+      {% set device_info = {
+        'name': name,
+        'entity_id': entity_id,
+        'manufacturer': manufacturer,
+        'model': model,
+        'ip_address': ip.address,
+        'mac_address': mac.address,
+        'integration': integration,
+        'device_id': device_id,
+        'identifiers': identifiers | string
+      } %}
+
+      {% if integration == 'Leviton WiFi' %}
+        {% set ns.leviton_devices = ns.leviton_devices + [device_info] %}
+      {% else %}
+        {% set ns.matter_devices = ns.matter_devices + [device_info] %}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+## Leviton Device Network Information
+
+### Leviton WiFi Integration Devices
+{% if ns.leviton_devices | length > 0 %}
+| Device Name | Entity ID | Model | IP Address | MAC Address |
+|------------|-----------|-------|------------|-------------|
+{% for device in ns.leviton_devices %}
+| {{ device.name }} | {{ device.entity_id }} | {{ device.model }} | {{ device.ip_address }} | {{ device.mac_address }} |
+{% endfor %}
+
+**Leviton WiFi Devices Found:** {{ ns.leviton_devices | length }}
+{% else %}
+**No Leviton WiFi integration devices found.**
+
+If you have the Leviton integration installed, the devices might not be showing up.
+Check Settings → Devices & Services → Leviton
+{% endif %}
+
+---
+
+### Matter Integration Devices
+{% if ns.matter_devices | length > 0 %}
+| Device Name | Entity ID | Model | IP Address | MAC Address |
+|------------|-----------|-------|------------|-------------|
+{% for device in ns.matter_devices %}
+| {{ device.name }} | {{ device.entity_id }} | {{ device.model }} | {{ device.ip_address }} | {{ device.mac_address }} |
+{% endfor %}
+
+**Matter Devices Found:** {{ ns.matter_devices | length }}
+{% else %}
+**No Matter integration devices found.**
+{% endif %}
+
+---
+
+### Diagnostic Information
+
+**Total Leviton Lights Found:** {{ (ns.leviton_devices | length) + (ns.matter_devices | length) }}
+
+{% if ns.leviton_devices | length > 0 %}
+**Next Steps:**
+1. Copy IP/MAC addresses from the Leviton WiFi table above
+2. Go to UniFi Controller → Clients
+3. Search for each IP or MAC address
+4. Rename the client to match the device name
+{% else %}
+**Troubleshooting:**
+- Verify Leviton integration is installed and configured
+- Check if devices appear in Settings → Devices & Services → Leviton
+- Some attributes might not be exposed at the entity level - see advanced script below
+{% endif %}
+
+---
+
+### Debug: Raw Identifiers (First 3 Leviton WiFi Devices)
+{% for device in ns.leviton_devices[:3] %}
+**{{ device.name }}:**
+- Integration: {{ device.integration }}
+- Identifiers: {{ device.identifiers }}
+
+{% endfor %}
