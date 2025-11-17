@@ -123,11 +123,11 @@ views:
             name: Buffer Differential Target (°F)
           - entity: sensor.hvac_buffer_tank_delta_t
             name: Current Buffer Delta T (°F)
-          - type: section
-          - type: markdown
-            content: |
-              **Goal:** Increase from 10°F to 18°F to reduce cycling
-              **Status:** Check if current delta T ≥ 18°F
+
+      - type: markdown
+        content: |
+          **Phase 1 Goal:** Increase from 10°F to 18°F to reduce cycling
+          **Status:** Monitor current delta T vs target
 
       - type: entities
         title: Phase 2 - Supply Temperature Reduction
@@ -139,11 +139,11 @@ views:
             name: Current Supply Temperature (°F)
           - entity: number.cx50_heating_setpoint_c
             name: Heating Setpoint (°C)
-          - type: section
-          - type: markdown
-            content: |
-              **Goal:** Reduce from 90°F to 85°F for better efficiency
-              **Status:** Check if supply temp ≤ 85°F
+
+      - type: markdown
+        content: |
+          **Phase 2 Goal:** Reduce from 90°F to 85°F for better efficiency
+          **Status:** Monitor current supply temp vs target
 
       - type: entities
         title: Phase 3 - Fine-Tune to Optimal
@@ -155,11 +155,13 @@ views:
             name: Current COP
           - entity: input_number.target_cop
             name: Target COP
-          - type: section
-          - type: markdown
-            content: |
-              **Goal:** Fine-tune to 82°F (27.8°C) for optimal COP
-              **Target:** Achieve COP ≥ 4.0
+          - entity: number.cx50_heating_setpoint_c
+            name: Heating Setpoint (°C)
+
+      - type: markdown
+        content: |
+          **Phase 3 Goal:** Fine-tune to 82°F (27.8°C) for optimal COP
+          **Target:** Achieve COP ≥ 4.0
 
       # ========================================================================
       # ACTIONABLE ALERTS & RECOMMENDATIONS
@@ -323,9 +325,6 @@ views:
               - entity: sensor.hvac_thermal_power_used
                 name: HVAC Load (W)
                 icon: mdi:home-thermometer
-              - entity: sensor.system_distribution_losses
-                name: Distribution Losses (W)
-                icon: mdi:leak
               - entity: sensor.system_loss_analysis
                 name: Loss Analysis
                 icon: mdi:information
