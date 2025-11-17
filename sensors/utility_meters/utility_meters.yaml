@@ -240,3 +240,51 @@ hp_thermal_energy_output_monthly:
   name: HP Thermal Output (Monthly)
   unique_id: hp_thermal_energy_output_monthly
   cycle: monthly
+
+# ------------------------------------------------------------------------
+# Buffer Tank Energy Input (Hourly/Daily/Monthly)
+# Tracks thermal energy arriving at buffer tank from heat pump
+# Only accumulates when G2 valve directs flow to buffer tank
+# Used to calculate piping losses and distribution efficiency
+# ------------------------------------------------------------------------
+buffer_tank_energy_input_hourly:
+  source: sensor.buffer_tank_energy_input
+  name: Buffer Tank Energy In (Hourly)
+  unique_id: buffer_tank_energy_input_hourly
+  cycle: hourly
+
+buffer_tank_energy_input_daily:
+  source: sensor.buffer_tank_energy_input
+  name: Buffer Tank Energy In (Daily)
+  unique_id: buffer_tank_energy_input_daily
+  cycle: daily
+
+buffer_tank_energy_input_monthly:
+  source: sensor.buffer_tank_energy_input
+  name: Buffer Tank Energy In (Monthly)
+  unique_id: buffer_tank_energy_input_monthly
+  cycle: monthly
+
+# ------------------------------------------------------------------------
+# DHW Tank Energy Input (Hourly/Daily/Monthly)
+# Tracks thermal energy arriving at DHW tank from heat pump
+# Only accumulates when G2 valve directs flow to DHW tank
+# Used to calculate DHW system efficiency
+# ------------------------------------------------------------------------
+dhw_tank_energy_input_hourly:
+  source: sensor.dhw_tank_energy_input
+  name: DHW Tank Energy In (Hourly)
+  unique_id: dhw_tank_energy_input_hourly
+  cycle: hourly
+
+dhw_tank_energy_input_daily:
+  source: sensor.dhw_tank_energy_input
+  name: DHW Tank Energy In (Daily)
+  unique_id: dhw_tank_energy_input_daily
+  cycle: daily
+
+dhw_tank_energy_input_monthly:
+  source: sensor.dhw_tank_energy_input
+  name: DHW Tank Energy In (Monthly)
+  unique_id: dhw_tank_energy_input_monthly
+  cycle: monthly
