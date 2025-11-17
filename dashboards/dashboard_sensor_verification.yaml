@@ -91,8 +91,8 @@ views:
 
               | Sensor | Current Value | Source | Source Power | Method | Status |
               |--------|---------------|--------|--------------|--------|--------|
-              | **Input Energy** | {{ states('sensor.cx_input_power_kwh') }} kWh | Electrical Power | {{ states('sensor.heat_pump_electrical_power_input') }} W | Riemann (left) | {{ '✅' if states('sensor.cx_input_power_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
-              | **Output Energy** | {{ states('sensor.cx_output_power_interval') }} kWh | Thermal Power | {{ states('sensor.heat_pump_thermal_power_output') }} W | Riemann (left) | {{ '✅' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **Input Energy** | {{ states('sensor.heat_pump_input_power_interval_kwh') }} kWh | Electrical Power | {{ states('sensor.heat_pump_input_power_interval_kwh') }} W | Riemann (left) | {{ '✅' if states('sensor.heat_pump_input_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
+              | **Output Energy** | {{ states('sensor.heat_pump_output_power_interval_kwh') }} kWh | Thermal Power | {{ states('sensor.heat_pump_output_power_interval_kwh') }} W | Riemann (left) | {{ '✅' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] else '❌' }} |
 
               ## Utility Meters (Energy Tracking)
 
@@ -110,7 +110,7 @@ views:
               | **Daily** | {{ states('sensor.cx_input_power_daily') }} kWh | {{ '✅ <2000kWh' if states('sensor.cx_input_power_daily') | float(0) < 2000 else '❌' }} | {{ '✅' if states('sensor.cx_input_power_daily') not in ['unknown', 'unavailable'] else '❌' }} |
               | **Monthly** | {{ states('sensor.cx_input_power_monthly') }} kWh | {{ '✅ <60000kWh' if states('sensor.cx_input_power_monthly') | float(0) < 60000 else '❌' }} | {{ '✅' if states('sensor.cx_input_power_monthly') not in ['unknown', 'unavailable'] else '❌' }} |
 
-              **Energy-Based COP:** {{ (states('sensor.cx_output_power_interval') | float(0) / states('sensor.cx_input_power_kwh') | float(1)) | round(2) if states('sensor.cx_input_power_kwh') | float(0) > 0 else 'N/A' }}
+              **Energy-Based COP:** {{ (states('sensor.heat_pump_output_power_interval_kwh') | float(0) / states('sensor.heat_pump_input_power_interval_kwh') | float(1)) | round(2) if states('sensor.heat_pump_input_power_interval_kwh') | float(0) > 0 else 'N/A' }}
 
               **Notes:**
               - Integration sensors accumulate power (W) over time to produce energy (kWh)
@@ -744,12 +744,12 @@ views:
               ## Integration Platform (Power → Energy over time)
               | Sensor | Source | Value | Method | Status |
               |--------|--------|-------|--------|--------|
-              | **CX Input Power kWh** | heat_pump_electrical_power_input (W) | {{ states('sensor.cx_input_power_kwh') }} kWh | Riemann (left) | {{ '✅ Accumulating' if states('sensor.cx_input_power_kwh') not in ['unknown', 'unavailable'] and states('sensor.cx_input_power_kwh') | float(-1) >= 0 else '❌' }} |
-              | **CX Output Power Interval** | heat_pump_thermal_power_output (W) | {{ states('sensor.cx_output_power_interval') }} kWh | Riemann (left) | {{ '✅ Accumulating' if states('sensor.cx_output_power_interval') not in ['unknown', 'unavailable'] and states('sensor.cx_output_power_interval') | float(-1) >= 0 else '❌ Not initialized yet' }} |
+              | **Heat Pump Input Power Interval** | hwat_pump_input_power_interval_kwh (W) | {{ states('sensor.hwat_pump_input_power_interval_kwh') }} kWh | Riemann (left) | {{ '✅ Accumulating' if states('sensor.hwat_pump_input_power_interval_kwh') not in ['unknown', 'unavailable'] and states('sensor.hwat_pump_input_power_interval_kwh') | float(-1) >= 0 else '❌' }} |
+              | **Heat Pump Output Power Interval** | heat_pump_output_power_interval_kwh (W) | {{ states('sensor.heat_pump_output_power_interval_kwh') }} kWh | Riemann (left) | {{ '✅ Accumulating' if states('sensor.heat_pump_output_power_interval_kwh') not in ['unknown', 'unavailable'] and states('sensor.heat_pump_output_power_interval_kwh') | float(-1) >= 0 else '❌ Not initialized yet' }} |
 
               ## Expected Relationship (Energy-Based COP)
-              {% set input = states('sensor.cx_input_power_kwh') | float(0) %}
-              {% set output = states('sensor.cx_output_power_interval') | float(0) %}
+              {% set input = states('sensor.hwat_pump_input_power_interval_kwh') | float(0) %}
+              {% set output = states('sensor.heat_pump_output_power_interval_kwh') | float(0) %}
               {% if input > 1 and output > 0 %}
               | Metric | Value | Status |
               |--------|-------|--------|

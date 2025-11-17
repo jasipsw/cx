@@ -202,21 +202,21 @@ hp_standby_loss_monthly:
 # Tracks total electrical energy consumed by heat pump
 # ------------------------------------------------------------------------
 hp_electrical_energy_hourly:
-  source: sensor.cx_input_power_kwh
+  source: sensor.hwat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Hourly)
   unique_id: hp_electrical_energy_hourly
   cycle: hourly
   delta_values: true
 
 hp_electrical_energy_daily:
-  source: sensor.cx_input_power_kwh
+  source: sensor.hwat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Daily)
   unique_id: hp_electrical_energy_daily
   cycle: daily
   delta_values: true
 
 hp_electrical_energy_monthly:
-  source: sensor.cx_input_power_kwh
+  source: sensor.hwat_pump_input_power_interval_kwh
   name: HP Electrical Energy (Monthly)
   unique_id: hp_electrical_energy_monthly
   cycle: monthly

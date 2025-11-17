@@ -214,14 +214,14 @@
 # ------------------------------------------------------------------------
 # COMMENTED OUT FOR RESET - Uncomment after restart to recreate with 0 values
 # ------------------------------------------------------------------------
-# - platform: integration
-#   source: sensor.heat_pump_electrical_power_input
-#   name: "CX Input Power kWh"
-#   unique_id: cx_input_power_kwh
-#   unit_prefix: k
-#   unit_time: h
-#   method: left
-#   round: 3
+- platform: integration
+  source: sensor.heat_pump_electrical_power_input
+  name: "Heat_pump Input Power Interval"
+  unique_id: heat_pump_input_power_interval_kwh
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
 
 # ------------------------------------------------------------------------
 # Thermal Power Output Integration (Total - All Modes)
@@ -229,14 +229,14 @@
 # Source: sensor.heat_pump_thermal_power_output (includes Heat, Cool, DHW)
 # COMMENTED OUT FOR RESET - Uncomment after restart to recreate with 0 values
 # ------------------------------------------------------------------------
-# - platform: integration
-#   source: sensor.heat_pump_thermal_power_output
-#   name: "CX Output Power Interval"
-#   unique_id: cx_output_power_interval
-#   unit_prefix: k
-#   unit_time: h
-#   method: left
-#   round: 3
+- platform: integration
+  source: sensor.heat_pump_thermal_power_output
+  name: "Heat Pump Output Power Interval"
+  unique_id: heat_pump_output_power_interval_kwh
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
 
 # ------------------------------------------------------------------------
 # Space Heating Electrical Energy Integration
