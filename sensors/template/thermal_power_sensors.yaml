@@ -1,0 +1,145 @@
+# ============================================================================
+# Thermal Power Sensors for Energy Balance Tracking
+# ============================================================================
+# This file creates thermal power sensors to track energy flow at different
+# points in the system for energy balance analysis and loss calculations
+#
+# Energy Flow:
+#   Heat Pump Output → G2 Valve → Buffer Tank OR DHW Tank
+#   Buffer Tank → HVAC Load (radiant floors, AHUs)
+#
+# Sensors Created:
+#   1. Buffer Tank Energy Input (from HP via G2 valve)
+#   2. DHW Tank Energy Input (from HP via G2 valve)
+#   3. HVAC Load Output (already exists in hvac_sensors.yaml)
+#
+# Energy Balance Analysis:
+#   HP Output = Buffer Input + DHW Input + Piping Losses
+#   Buffer Input = HVAC Load + Buffer Tank Storage Change + Distribution Losses
+# ============================================================================
+
+- sensor:
+  # --------------------------------------------------------------------------
+  # Buffer Tank Thermal Power Input
+  # Measures thermal power arriving AT the buffer tank from the heat pump
+  # This is different from HVAC thermal power which measures energy LEAVING
+  # the buffer tank to the distribution system
+  # ONLY calculates when G2 valve is directing flow to buffer tank
+  # --------------------------------------------------------------------------
+  - name: "Buffer Tank Thermal Power Input"
+    unique_id: buffer_tank_thermal_power_input
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:radiator
+    availability: >-
+      {{ states('sensor.supply_from_heat_pump') not in ['unknown', 'unavailable']
+          and states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable']
+          and states('sensor.g2_valve_position') not in ['unknown', 'unavailable']
+          and is_state('binary_sensor.heat_pump_running', 'on') }}
+    state: >-
+      {# Check G2 valve position - only calculate if valve is directing to buffer #}
+      {% set g2_position = states('sensor.g2_valve_position') %}
+
+      {% if g2_position == 'Buffer Tank' %}
+        {# Get temperature values and check units #}
+        {% set supply_val = states('sensor.supply_from_heat_pump') | float(0) %}
+        {% set return_val = states('sensor.buffer_return_to_heat_pump') | float(0) %}
+        {% set supply_unit = state_attr('sensor.supply_from_heat_pump', 'unit_of_measurement') %}
+        {% set return_unit = state_attr('sensor.buffer_return_to_heat_pump', 'unit_of_measurement') %}
+
+        {# Convert temperatures to Celsius if needed #}
+        {% if supply_unit == '°F' %}
+          {% set supply_c = (supply_val - 32) / 1.8 %}
+        {% else %}
+          {% set supply_c = supply_val %}
+        {% endif %}
+
+        {% if return_unit == '°F' %}
+          {% set return_c = (return_val - 32) / 1.8 %}
+        {% else %}
+          {% set return_c = return_val %}
+        {% endif %}
+
+        {# Get flow rate from heat pump (HP flow goes to buffer when G2 is in buffer mode) #}
+        {% set flow_lpm = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+
+        {# Fluid properties #}
+        {% set density = states('input_number.cx_fluid_density') | float(970) %}
+        {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+
+        {# Calculate thermal power: Q = ṁ × Cp × ΔT #}
+        {% set delta_t_c = supply_c - return_c %}
+        {% set flow_lps = flow_lpm / 60 %}
+        {% set flow_kgs = (flow_lps * density) / 1000 %}
+        {% set specific_heat_j = specific_heat * 1000 %}
+        {% set thermal_power = flow_kgs * specific_heat_j * delta_t_c %}
+
+        {{ thermal_power | round(0) }}
+      {% else %}
+        {# G2 valve not directing to buffer - no power input #}
+        0
+      {% endif %}
+
+  # --------------------------------------------------------------------------
+  # DHW Tank Thermal Power Input
+  # Measures thermal power arriving AT the DHW tank from the heat pump
+  # Uses DHW supply/return temps and HP flow rate
+  # ONLY calculates when G2 valve is directing flow to DHW tank
+  # --------------------------------------------------------------------------
+  - name: "DHW Tank Thermal Power Input"
+    unique_id: dhw_tank_thermal_power_input
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:water-boiler
+    availability: >-
+      {{ states('sensor.dhw_supply_from_heat_pump') not in ['unknown', 'unavailable']
+          and states('sensor.dhw_return_to_heat_pump') not in ['unknown', 'unavailable']
+          and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable']
+          and states('sensor.g2_valve_position') not in ['unknown', 'unavailable']
+          and is_state('binary_sensor.heat_pump_running', 'on') }}
+    state: >-
+      {# Check G2 valve position - only calculate if valve is directing to DHW #}
+      {% set g2_position = states('sensor.g2_valve_position') %}
+
+      {% if g2_position == 'DHW Tank' %}
+        {# Get DHW supply and return temperatures #}
+        {% set supply_val = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
+        {% set return_val = states('sensor.dhw_return_to_heat_pump') | float(0) %}
+        {% set supply_unit = state_attr('sensor.dhw_supply_from_heat_pump', 'unit_of_measurement') %}
+        {% set return_unit = state_attr('sensor.dhw_return_to_heat_pump', 'unit_of_measurement') %}
+
+        {# Convert temperatures to Celsius if needed #}
+        {% if supply_unit == '°F' %}
+          {% set supply_c = (supply_val - 32) / 1.8 %}
+        {% else %}
+          {% set supply_c = supply_val %}
+        {% endif %}
+
+        {% if return_unit == '°F' %}
+          {% set return_c = (return_val - 32) / 1.8 %}
+        {% else %}
+          {% set return_c = return_val %}
+        {% endif %}
+
+        {# Get flow rate from heat pump (HP flow goes to DHW when G2 is in DHW mode) #}
+        {% set flow_lpm = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+
+        {# Fluid properties #}
+        {% set density = states('input_number.cx_fluid_density') | float(970) %}
+        {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+
+        {# Calculate thermal power: Q = ṁ × Cp × ΔT #}
+        {% set delta_t_c = supply_c - return_c %}
+        {% set flow_lps = flow_lpm / 60 %}
+        {% set flow_kgs = (flow_lps * density) / 1000 %}
+        {% set specific_heat_j = specific_heat * 1000 %}
+        {% set thermal_power = flow_kgs * specific_heat_j * delta_t_c %}
+
+        {{ thermal_power | round(0) }}
+      {% else %}
+        {# G2 valve not directing to DHW - no power input #}
+        0
+      {% endif %}

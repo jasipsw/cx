@@ -10,6 +10,16 @@
   sampling_size: 1000  # Set a high sampling size for accuracy
   precision: 2
 
+- platform: statistics
+  name: "HVAC Flow Rate Average"
+  entity_id: sensor.hvac_buffer_tank_flow_rate
+  unique_id: hvac_flow_rate_average
+  state_characteristic: average_linear
+  max_age:
+    minutes: 1
+  precision: 1  
+
+
 # Power and Grid Sensors
 # Leviton Current Transformers and Power Monitoring
 
@@ -17,7 +27,7 @@
   sensors:
     grid_power_consumption_watts:
       value_template: >-
-        {% set enphase_grid_kw = states('sensor.envoy_202425002148_current_net_power_consumption') | float %}
+        {% set enphase_grid_kw = states('sensor.envoy_202425002148_current_net_power_consumption') | float(0) %}
         {% set enphase_grid_watts  = enphase_grid_kw * 1000 | float %}
         {% set lc2_grid_watts  = states('sensor.lc2_grid_power_watts_2') | int(0) %}
         {% set x  = lc2_grid_watts + enphase_grid_watts | int(0) %}
@@ -189,7 +199,7 @@
 
     solar_power_production_watts:
       value_template: >-
-        {% set enphase = states('sensor.envoy_202425002148_current_power_production') | float %}
+        {% set enphase = states('sensor.envoy_202425002148_current_power_production') | float(0) %}
         {% set enphase_watts = enphase * 1000 | float %}
         {{ enphase_watts | float }}
       unit_of_measurement: "W"
@@ -273,6 +283,36 @@
   source: sensor.hvac_thermal_power_used
   name: "HVAC Thermal Energy Used"
   unique_id: hvac_thermal_energy_used
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# Buffer Tank Energy Input
+# Accumulates thermal energy arriving at the buffer tank from heat pump
+# Only accumulates when G2 valve is directing flow to buffer tank
+# Source: sensor.buffer_tank_thermal_power_input
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.buffer_tank_thermal_power_input
+  name: "Buffer Tank Energy Input"
+  unique_id: buffer_tank_energy_input
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ------------------------------------------------------------------------
+# DHW Tank Energy Input
+# Accumulates thermal energy arriving at the DHW tank from heat pump
+# Only accumulates when G2 valve is directing flow to DHW tank
+# Source: sensor.dhw_tank_thermal_power_input
+# ------------------------------------------------------------------------
+- platform: integration
+  source: sensor.dhw_tank_thermal_power_input
+  name: "DHW Tank Energy Input"
+  unique_id: dhw_tank_energy_input
   unit_prefix: k
   unit_time: h
   method: left
