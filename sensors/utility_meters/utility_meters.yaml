@@ -78,42 +78,6 @@ xxx50clark_daily_grid_power_meter:
   periodically_resetting: false
   cycle: monthly
 
-cx_hourly_energy_output:
-  source: sensor.heat_pump_thermal_power_output
-  name: CX Hourly Energy Output
-  unique_id: cx_hourly_energy_output
-  cycle: hourly
-
-cx_daily_energy_output:
-  source: sensor.heat_pump_thermal_power_output
-  name: CX Daily Energy Output
-  unique_id: cx_daily_energy_output
-  cycle: daily
-
-cx_monthly_energy_output:
-  source: sensor.heat_pump_thermal_power_output
-  name: CX Monthly Energy Output
-  unique_id: cx_monthly_energy_output
-  cycle: monthly
-
-cx_hourly_energy_input:
-  source: sensor.heat_pump_input_power_interval_kwh
-  name: CX Hourly Energy Input
-  unique_id: cx_hourly_energy_input
-  cycle: hourly
-
-cx_daily_energy_input:
-  source: sensor.heat_pump_input_power_interval_kwh
-  name: CX Daily Energy Input
-  unique_id: cx_daily_energy_input
-  cycle: daily
-
-cx_monthly_energy_input:
-  source: sensor.heat_pump_input_power_interval_kwh
-  name: CX Monthly Energy Input
-  unique_id: cx_monthly_energy_input
-  cycle: monthly
-
 solar_all_panels_output:
   source: sensor.solar_power_watts
   name: Solar Panel Output
