@@ -137,8 +137,8 @@ views:
             name: Supply Temperature Target (°F)
           - entity: sensor.heat_pump_outlet_temperature
             name: Current Supply Temperature (°F)
-          - entity: number.cx50_heating_setpoint_c
-            name: Heating Setpoint (°C)
+          - entity: sensor.heat_pump_heating_target_temp
+            name: Heating Setpoint (°F)
 
       - type: markdown
         content: |
@@ -155,8 +155,8 @@ views:
             name: Current COP
           - entity: input_number.target_cop
             name: Target COP
-          - entity: number.cx50_heating_setpoint_c
-            name: Heating Setpoint (°C)
+          - entity: sensor.heat_pump_heating_target_temp
+            name: Heating Setpoint (°F)
 
       - type: markdown
         content: |
@@ -396,16 +396,16 @@ views:
         title: Heat Pump Setpoints
         show_header_toggle: false
         entities:
-          - entity: number.cx50_heating_setpoint_c
+          - entity: sensor.heat_pump_heating_target_temp
             name: Heating Setpoint (°C)
             icon: mdi:thermometer-chevron-up
-          - entity: number.cx50_cooling_setpoint_c
+          - entity: sensor.heat_pump_cooling_target_temp
             name: Cooling Setpoint (°C)
             icon: mdi:thermometer-chevron-down
-          - entity: number.cx50_dhw_setpoint_c
+          - entity: sensor.heat_pump_dhw_target_temp
             name: DHW Setpoint (°C)
             icon: mdi:water-boiler
-          - entity: number.cx50_compressor_max_percentage
+          - entity: sensor.cx50_p27_compressor_max_percent
             name: Max Compressor Speed (%)
             icon: mdi:speedometer
 
