@@ -384,24 +384,29 @@ views:
               **Home Assistant adds _2, _3, etc. suffixes when there's an entity_id or unique_id conflict.**
               **These usually indicate configuration problems and should be investigated.**
 
-              {# Match true HA duplicates: _2 through _9 or _10 through _99 #}
-              {# Excludes serial numbers (e.g., inverter_482332040587) and measurement types (e.g., pm2_5) #}
+              {# Find true duplicates: entities ending in _2 through _99 where the original also exists #}
+              {# This excludes serial numbers (e.g., inverter_482332040587) and measurement types (e.g., pm2_5) #}
               {%- set duplicates = namespace(found=false) %}
               {%- for entity in states %}
-                {%- if entity.entity_id | regex_match('(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$') %}
-                  {%- set duplicates.found = true %}
+                {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
+                  {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
+                  {%- if states[original] is defined %}
+                    {%- set duplicates.found = true %}
+                  {%- endif %}
                 {%- endif %}
               {%- endfor %}
 
               {%- if duplicates.found %}
               ### ⚠️ DUPLICATES FOUND - ACTION REQUIRED
 
-              | Domain | Entity ID | Friendly Name | Current State | Status | Likely Original |
-              |--------|-----------|---------------|---------------|--------|-----------------|
+              | Domain | Entity ID | Friendly Name | Current State | Status | Original Entity | Original State |
+              |--------|-----------|---------------|---------------|--------|-----------------|----------------|
               {%- for entity in states %}
-                {%- if entity.entity_id | regex_match('(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$') %}
-                  {%- set original = entity.entity_id | regex_replace('(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$', '') %}
-              | {{ entity.domain }} | `{{ entity.entity_id }}` | {{ entity.name }} | {{ entity.state }} | {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (check if needed)' }} | `{{ original }}` |
+                {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
+                  {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
+                  {%- if states[original] is defined %}
+              | {{ entity.domain }} | `{{ entity.entity_id }}` | {{ entity.name }} | {{ entity.state }} | {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active' }} | `{{ original }}` | {{ states[original].state }} |
+                  {%- endif %}
                 {%- endif %}
               {%- endfor %}
 
