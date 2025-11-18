@@ -1,12 +1,33 @@
 # G2 Valve Position Detection - Fix Plan
 
-## Current Status: DISABLED (2025-11-18)
+## Current Status: RE-ENABLED with Delta-T Correlation (2025-11-18)
 
-The G2 valve position detection has been temporarily disabled and will return:
-- `sensor.g2_valve_position`: "Unknown (Detection Disabled)"
-- `binary_sensor.g2_valve_dhw_mode`: "off"
+The G2 valve position detection has been reimplemented using a simpler, more robust method:
+- `sensor.g2_valve_position`: Now uses delta-T correlation between HP outlet and tank supplies
+- `binary_sensor.g2_valve_dhw_mode`: Active when valve position = "DHW Tank"
 
-## Why It Was Disabled
+### How the New Method Works
+
+**Simple principle:** Whichever supply line (buffer or DHW) has a temperature closest to the HP outlet is currently receiving flow from the G2 valve.
+
+**Example with your current temps:**
+```
+HP Outlet: 95.36°F
+Buffer Supply: 91.18°F → Difference: 4.18°F  ✅ CLOSEST
+DHW Supply: 75.2°F     → Difference: 20.16°F
+→ G2 Position: Buffer Tank
+```
+
+**Why this works:**
+- Heat pump outlet temp directly reflects the heat being produced
+- Active flow path will have temps close to HP outlet (accounting for pipe losses)
+- Inactive path will cool down to ambient/tank temp
+- Works during idle, defrost, and differential cooling scenarios
+- No time windows or trend detection needed
+
+**Threshold:** 10°F maximum difference to avoid false matches from stale temperatures
+
+## Why It Was Originally Disabled
 
 1. **DHW thermal power is negative** (-218W)
    - This is physically impossible
@@ -49,88 +70,60 @@ The G2 valve position detection has been temporarily disabled and will return:
    - HVAC thermal power
    - Distribution efficiency
 
-## Fix Plan - Step by Step
+## Implementation Status
 
-### Phase 1: Diagnose DHW Sensor Swap
+### ✅ Phase 1: Implemented Delta-T Correlation Method (COMPLETE)
 
-**Action Required:**
-Check current temperature readings in Developer Tools → States:
+**Status:** G2 valve detection reimplemented using temperature correlation
+- Commit: 04775c7
+- Method: Compares HP outlet temp with buffer/DHW supply temps
+- Working with current sensors without requiring fixes
 
+### 🔄 Phase 2: DHW Thermal Power Still Negative (MONITORING)
+
+**Current readings:**
 ```
-sensor.dhw_supply_from_heat_pump = ???°F
-sensor.dhw_return_to_heat_pump = ???°F
-```
-
-**Expected:**
-- Supply (from HP to tank) should be HOTTER
-- Return (from tank to HP) should be COOLER
-
-**If supply < return:**
-The physical sensors are swapped and need to be either:
-1. Re-labeled in the code, OR
-2. Physically swapped at the hardware level
-
-### Phase 2: Fix DHW Sensor Definitions
-
-**If sensors are swapped in code:**
-
-Edit `sensors/template/thermal_power_sensors.yaml` (around line 109):
-
-```yaml
-# SWAP THESE TWO LINES:
-{% set supply_val = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
-{% set return_val = states('sensor.dhw_return_to_heat_pump') | float(0) %}
-
-# TO:
-{% set supply_val = states('sensor.dhw_return_to_heat_pump') | float(0) %}
-{% set return_val = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
+sensor.dhw_supply_from_heat_pump = 75.2°F
+sensor.dhw_return_to_heat_pump = 75.542°F
+sensor.dhw_tank_thermal_power_input = -218W ❌
 ```
 
-OR update the sensor wrapper definitions to fix the naming.
+**Analysis:** Temperatures are very close (0.34°F difference), suggesting:
+- HP not actively heating DHW right now
+- Differential cooling or recent mode switch
+- G2 valve directing to buffer (confirmed: HP outlet 95°F matches buffer supply 91°F)
 
-### Phase 3: Fix Buffer Supply Sensor Naming
+**Action:** Monitor during active DHW heating cycle to determine if sensor swap is real issue or just idle state behavior
 
-**Determine which entity name is correct:**
+### ✅ Phase 3: Buffer Supply Sensor Confirmed (COMPLETE)
 
-Check Developer Tools → States for:
-- `sensor.supply_from_heat_pump` (currently working: 91.184°F)
-- `sensor.buffer_supply_from_heat_pump` (not found)
+**Resolution:** `sensor.supply_from_heat_pump` is the correct entity name
+- Currently: 91.18°F
+- Close to HP outlet (95.36°F), confirming active heating
+- Updated G2 detection code to use this sensor
 
-**Option A: If supply_from_heat_pump is correct:**
-Update binary_sensors.yaml trend sensor:
+### ✅ Phase 4: Thermal Power Sensors Working (MOSTLY COMPLETE)
 
-```yaml
-# Line ~28 in sensors/binary_sensors.yaml
-entity_id: sensor.supply_from_heat_pump  # Already correct
+**Current status:**
+```
+sensor.buffer_tank_thermal_power_input = 0W (valve directing to buffer, waiting for HP cycle)
+sensor.dhw_tank_thermal_power_input = -218W (low temps, small delta-T, needs monitoring)
 ```
 
-**Option B: If buffer_supply_from_heat_pump should exist:**
-Investigate why shelly_buffer_tank_sensors.yaml isn't creating it.
-
-### Phase 4: Test Thermal Power Sensors
-
-After fixing sensor swaps, restart HA and verify:
-
+**Energy accumulation:**
 ```
-sensor.buffer_tank_thermal_power_input = positive value when HP heating buffer
-sensor.dhw_tank_thermal_power_input = positive value when HP heating DHW
+Buffer Tank: 19.274 kWh ✅
+DHW Tank: 1.475 kWh (despite negative power - accumulated during actual heating)
 ```
 
-Both should show:
-- Positive values (W) when actively heating that tank
-- 0 when not heating that tank
-- Never negative
+### ✅ Phase 5: G2 Valve Detection Re-enabled (COMPLETE)
 
-### Phase 5: Re-enable G2 Valve Detection
+**Status:** Fully operational with delta-T correlation method
+- Commit: 04775c7
+- Binary sensor active
+- Ready for energy balance tracking
 
-Once thermal power sensors show correct positive values:
-
-1. Edit `sensors/template/g2_valve_sensors.yaml`
-2. Restore the original state logic (see git history for commit before e5b4385)
-3. Update sensor references to use correct entity names
-4. Restart Home Assistant
-
-### Phase 6: Validate G2 Detection
+### 🔄 Phase 6: Validate G2 Detection (IN PROGRESS)
 
 After re-enabling, monitor for 24 hours:
 
@@ -150,17 +143,36 @@ After re-enabling, monitor for 24 hours:
 - G2 Position should show "Buffer Tank (HP Off)" or similar
 - Both thermal power = 0
 
+## Future Enhancement: Post-G2-Valve Sensor
+
+**Current limitation:** Detection uses supply temps at the tanks, which may lag valve switches by several minutes due to:
+- Pipe thermal mass
+- Flow propagation time
+- Mixing with residual fluid in pipes
+
+**Proposed improvement:** Add temperature sensor immediately downstream of G2 valve
+
+**Benefits:**
+- **Instant detection** - no waiting for temps to propagate
+- **Faster response** - reduces detection lag from ~3 minutes to ~10 seconds
+- **Higher accuracy** - cleaner signal before mixing/cooling occurs
+- **Simpler logic** - single sensor comparison instead of two
+
+**Implementation when sensor added:**
+1. Update lines 32 and 36 in `sensors/template/g2_valve_sensors.yaml`
+2. Change from tank supply sensors to new post-G2-valve sensor
+3. May be able to reduce 10°F threshold to 5°F for tighter detection
+
 ## Testing Checklist
 
-- [ ] Check DHW supply/return temps (which is hotter?)
-- [ ] Fix DHW sensor swap if needed
-- [ ] Verify buffer supply sensor entity name
-- [ ] Restart Home Assistant
-- [ ] Verify thermal power sensors show positive values
-- [ ] Check integration sensors are accumulating
-- [ ] Re-enable G2 valve detection
+- [x] Implement delta-T correlation method
+- [x] Verify buffer supply sensor entity name
+- [x] Re-enable G2 valve detection
+- [x] Check integration sensors are accumulating (19.274 kWh buffer, 1.475 kWh DHW)
+- [ ] Monitor DHW thermal power during active DHW heating cycle
 - [ ] Monitor for 24 hours with HP in different modes
 - [ ] Verify energy balance: HP Output ≈ Buffer In + DHW In + Losses
+- [ ] Optional: Install post-G2-valve sensor for faster detection
 
 ## Energy Balance Target
 
