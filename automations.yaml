@@ -866,3 +866,80 @@
           COP {{ states('sensor.heat_pump_last_cycle_cop') }}
           ({{ states('sensor.heat_pump_operating_mode') }} mode)
         entity_id: binary_sensor.heat_pump_running
+
+# ============================================================================
+# DUPLICATE ENTITY DETECTOR
+# ============================================================================
+
+- id: 'duplicate_entity_detector_notification'
+  alias: Duplicate Entity Detector - Notification
+  description: Automatically detect and notify about duplicate entities (_2, _3, etc.) created by Home Assistant
+  triggers:
+    # Check on Home Assistant startup
+    - platform: homeassistant
+      event: start
+
+    # Check every hour to catch duplicates created during runtime
+    - platform: time_pattern
+      hours: "/1"
+
+  conditions: []
+
+  actions:
+    # Check if any duplicate entities exist
+    - if:
+        - condition: template
+          value_template: >
+            {%- set duplicates = namespace(found=false) %}
+            {%- for entity in states %}
+              {%- if entity.entity_id | regex_match('.*_[234567890]+$') %}
+                {%- set duplicates.found = true %}
+              {%- endif %}
+            {%- endfor %}
+            {{ duplicates.found }}
+      then:
+        # Send persistent notification with duplicate entity list
+        - action: persistent_notification.create
+          data:
+            title: "⚠️ Duplicate Entities Detected"
+            notification_id: duplicate_entity_detector
+            message: >
+              **Home Assistant has created duplicate entities with `_2`, `_3`, etc. suffixes.**
+
+              This usually happens when:
+              - `unique_id` changed in YAML
+              - `entity_id` conflicts with existing entity
+              - HA restart with config changes
+
+
+              **Duplicates found:**
+
+              {%- for entity in states %}
+                {%- if entity.entity_id | regex_match('.*_[234567890]+$') %}
+                  {%- set original = entity.entity_id | regex_replace('_[234567890]+$', '') %}
+
+              - **{{ entity.domain }}.{{ entity.entity_id.split('.')[1] }}**
+                - Status: {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (' + entity.state + ')' }}
+                - Friendly Name: {{ entity.name }}
+                - Likely Original: `{{ original }}`
+                {%- endif %}
+              {%- endfor %}
+
+
+              **How to fix:**
+
+              1. Go to **Settings → Devices & Services → Entities**
+              2. Search for entities ending in `_2`, `_3`, etc.
+              3. Click on each duplicate entity
+              4. Click **Delete** (if unavailable/unwanted)
+              5. Restart Home Assistant to recreate correctly
+
+
+              **Alternatively**, check the **Sensor Verification Dashboard** for a detailed table.
+      else:
+        # Clear the notification if no duplicates found
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: duplicate_entity_detector
+
+  mode: single
