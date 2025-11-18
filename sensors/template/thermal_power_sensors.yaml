@@ -36,13 +36,13 @@
       {{ states('sensor.supply_from_heat_pump') not in ['unknown', 'unavailable']
           and states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable']
           and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable']
-          and states('sensor.g2_valve_position') not in ['unknown', 'unavailable']
-          and is_state('binary_sensor.heat_pump_running', 'on') }}
+          and states('sensor.g2_valve_position') not in ['unknown', 'unavailable'] }}
     state: >-
-      {# Check G2 valve position - only calculate if valve is directing to buffer #}
+      {# Only calculate when HP is running AND G2 valve is directing to buffer #}
+      {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
       {% set g2_position = states('sensor.g2_valve_position') %}
 
-      {% if g2_position == 'Buffer Tank' %}
+      {% if hp_running and g2_position == 'Buffer Tank' %}
         {# Get temperature values and check units #}
         {% set supply_val = states('sensor.supply_from_heat_pump') | float(0) %}
         {% set return_val = states('sensor.buffer_return_to_heat_pump') | float(0) %}
@@ -78,7 +78,7 @@
 
         {{ thermal_power | round(0) }}
       {% else %}
-        {# G2 valve not directing to buffer - no power input #}
+        {# HP not running or G2 valve not directing to buffer - no power input #}
         0
       {% endif %}
 
@@ -98,13 +98,13 @@
       {{ states('sensor.dhw_supply_from_heat_pump') not in ['unknown', 'unavailable']
           and states('sensor.dhw_return_to_heat_pump') not in ['unknown', 'unavailable']
           and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable']
-          and states('sensor.g2_valve_position') not in ['unknown', 'unavailable']
-          and is_state('binary_sensor.heat_pump_running', 'on') }}
+          and states('sensor.g2_valve_position') not in ['unknown', 'unavailable'] }}
     state: >-
-      {# Check G2 valve position - only calculate if valve is directing to DHW #}
+      {# Only calculate when HP is running AND G2 valve is directing to DHW #}
+      {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
       {% set g2_position = states('sensor.g2_valve_position') %}
 
-      {% if g2_position == 'DHW Tank' %}
+      {% if hp_running and g2_position == 'DHW Tank' %}
         {# Get DHW supply and return temperatures #}
         {% set supply_val = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
         {% set return_val = states('sensor.dhw_return_to_heat_pump') | float(0) %}
@@ -140,6 +140,6 @@
 
         {{ thermal_power | round(0) }}
       {% else %}
-        {# G2 valve not directing to DHW - no power input #}
+        {# HP not running or G2 valve not directing to DHW - no power input #}
         0
       {% endif %}
