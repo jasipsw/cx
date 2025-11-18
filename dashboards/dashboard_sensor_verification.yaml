@@ -318,6 +318,32 @@ views:
 
               **Purpose:** Verify Shelly integration sensor names match our configuration
 
+          # ALL UTILITY METERS DIAGNOSTIC
+          - type: markdown
+            title: 📊 All Utility Meters (Diagnostic)
+            grid_options:
+              columns: full
+            content: |
+              ## All Utility Meters in System
+              **This shows ALL utility meters and energy tracking sensors (state_class: total_increasing):**
+
+              | Friendly Name | Entity ID | Current Value | Unit | Source | Last Reset | Status |
+              |---------------|-----------|---------------|------|--------|------------|--------|
+              {%- for entity in states.sensor %}
+                {%- if state_attr(entity.entity_id, 'state_class') == 'total_increasing' %}
+              | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ state_attr(entity.entity_id, 'source') if state_attr(entity.entity_id, 'source') else '-' }} | {{ state_attr(entity.entity_id, 'last_reset')[:19] if state_attr(entity.entity_id, 'last_reset') else '-' }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                {%- endif %}
+              {%- endfor %}
+
+              **Purpose:** Verify all utility meters are created and tracking correctly
+
+              **Key Utility Meters to Check:**
+              - `hp_electrical_energy_hourly/daily/monthly` - HP electrical input
+              - `hp_thermal_energy_output_hourly/daily/monthly` - HP thermal output
+              - `buffer_tank_energy_input_hourly/daily/monthly` - Buffer tank energy (NEW)
+              - `dhw_tank_energy_input_hourly/daily/monthly` - DHW tank energy (NEW)
+
+
           # G2 VALVE & DHW SYSTEM STATUS
           - type: markdown
             title: 🔀 G2 Valve Position Detection (Delta-T Correlation)
