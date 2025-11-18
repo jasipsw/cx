@@ -374,6 +374,67 @@ views:
               - `buffer_tank_energy_input` - **NEW** Accumulates buffer thermal power
               - `dhw_tank_energy_input` - **NEW** Accumulates DHW thermal power
 
+          # DUPLICATE ENTITY DETECTOR
+          - type: markdown
+            title: ⚠️ Duplicate Entity Detector (Finds _2, _3, _4 suffixes)
+            grid_options:
+              columns: full
+            content: |
+              ## Duplicate/Conflicted Entities Detection
+              **Home Assistant adds _2, _3, etc. suffixes when there's an entity_id or unique_id conflict.**
+              **These usually indicate configuration problems and should be investigated.**
+
+              {%- set duplicates = namespace(found=false) %}
+              {%- for entity in states %}
+                {%- if entity.entity_id | regex_match('.*_[234567890]+$') %}
+                  {%- set duplicates.found = true %}
+                {%- endif %}
+              {%- endfor %}
+
+              {%- if duplicates.found %}
+              ### ⚠️ DUPLICATES FOUND - ACTION REQUIRED
+
+              | Domain | Entity ID | Friendly Name | Current State | Status | Likely Original |
+              |--------|-----------|---------------|---------------|--------|-----------------|
+              {%- for entity in states %}
+                {%- if entity.entity_id | regex_match('.*_[234567890]+$') %}
+                  {%- set original = entity.entity_id | regex_replace('_[234567890]+$', '') %}
+              | {{ entity.domain }} | `{{ entity.entity_id }}` | {{ entity.name }} | {{ entity.state }} | {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (check if needed)' }} | `{{ original }}` |
+                {%- endif %}
+              {%- endfor %}
+
+              ### What This Means
+
+              **Why duplicates are created:**
+              1. **Unique ID conflict** - Two sensor definitions have the same unique_id
+              2. **Entity ID conflict** - Integration tried to create entity that already exists
+              3. **Renamed sensor** - Old entity still in registry after YAML rename
+              4. **Integration conflict** - Multiple integrations trying to create same entity
+
+              **What to do:**
+              1. Check if the "Likely Original" entity exists and is working
+              2. If original is working, the duplicate can be safely deleted from entity registry
+              3. If original doesn't exist, investigate YAML configuration for conflicts
+              4. Delete duplicates via: Settings → Devices & Services → Entities → (search for entity) → Delete
+
+              **Common causes in your system:**
+              - `buffer_supply_from_heat_pump_2` - Likely conflict between YAML definition and existing entity
+              - Check shelly_buffer_tank_sensors.yaml for unique_id mismatches
+
+              {%- else %}
+
+              ### ✅ NO DUPLICATES FOUND
+
+              All entities have clean names with no _2, _3, etc. suffixes.
+              This indicates no current entity_id or unique_id conflicts.
+
+              {%- endif %}
+
+              **Pro Tip:** If you see duplicates appearing after config changes, it usually means:
+              - Your YAML is trying to create an entity that already exists
+              - Check entity registry vs your template/platform definitions
+              - Make sure unique_id matches what Home Assistant expects
+
 
           # G2 VALVE & DHW SYSTEM STATUS
           - type: markdown
