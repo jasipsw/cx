@@ -26,10 +26,8 @@
           {# HP is running - determine valve position by temperature correlation #}
 
           {# Get HP outlet temperature (heat source) #}
-          {% set hp_outlet = states('sensor.heat_pump_outlet_temperature') | float(0) %}
+          {% set hp_outlet = states('sensor.main_supply_from_heat_pump') | float(0) %}
 
-          {# Get buffer supply temperature (one possible destination) #}
-          {# TODO: Replace with post-G2-valve sensor when available #}
           {% set buffer_supply = states('sensor.supply_from_heat_pump') | float(0) %}
 
           {# Get DHW supply temperature (other possible destination) #}
@@ -47,24 +45,23 @@
           {% elif dhw_diff < buffer_diff and dhw_diff < 10.0 %}
             DHW Tank
           {% else %}
-            {# Temperature differences too large or equal - unable to determine #}
-            Unknown (No Clear Match)
+            Buffer Tank            
           {% endif %}
         {% endif %}
 
       attributes:
         hp_outlet_temp: >-
-          {{ states('sensor.heat_pump_outlet_temperature') | float(0) | round(2) }}
+          {{ states('sensor.main_supply_from_heat_pump') | float(0) | round(2) }}
         buffer_supply_temp: >-
           {{ states('sensor.supply_from_heat_pump') | float(0) | round(2) }}
         dhw_supply_temp: >-
           {{ states('sensor.dhw_supply_from_heat_pump') | float(0) | round(2) }}
         buffer_temp_diff: >-
-          {% set hp_outlet = states('sensor.heat_pump_outlet_temperature') | float(0) %}
+          {% set hp_outlet = states('sensor.main_supply_from_heat_pump') | float(0) %}
           {% set buffer_supply = states('sensor.supply_from_heat_pump') | float(0) %}
           {{ (hp_outlet - buffer_supply) | abs | round(2) }}
         dhw_temp_diff: >-
-          {% set hp_outlet = states('sensor.heat_pump_outlet_temperature') | float(0) %}
+          {% set hp_outlet = states('sensor.main_supply_from_heat_pump') | float(0) %}
           {% set dhw_supply = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
           {{ (hp_outlet - dhw_supply) | abs | round(2) }}
         detection_method: "Delta-T Correlation"

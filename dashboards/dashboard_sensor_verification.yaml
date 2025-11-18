@@ -491,6 +491,17 @@ views:
               | DHW Supply (to house) | {{ states('sensor.dhw_hot_water_out') }}°F | {{ '✅' if states('sensor.dhw_hot_water_out') not in ['unknown', 'unavailable'] else '⚠️' }} |
               | DHW Cold Water In | {{ states('sensor.dhw_cold_water_in') }}°F | {{ '✅' if states('sensor.dhw_cold_water_in') not in ['unknown', 'unavailable'] else '⚠️' }} |
 
+
+              ## Supply Temperatures
+              | Sensor | Value | Status |
+              |--------|-------|--------|
+              | Heat Pump Outlet Temperature (Heat Pump Internal Sensor)  | {{ states('sensor.heat_pump_outlet_temperature') }}°F | {{ '✅' if states('sensor.heat_pump_outlet_temperature') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | Main Supply From Heat Pump (Mecahanical Room)  | {{ states('sensor.main_supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.main_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | Buffer Tank Supply From Heat Pump (Mecahanical Room)  | {{ states('sensor.supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.main_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | DHW Tank Supply From Heat Pump  (Mecahanical Room)  | {{ states('sensor.dhw_supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.dhw_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '⚠️' }} |
+
+              detection_method: "Delta-T Correlation"
+
               ## Detection Status
               {% set valve_pos = states('sensor.g2_valve_position') %}
               {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}

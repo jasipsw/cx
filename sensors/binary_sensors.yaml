@@ -30,4 +30,3 @@
       sample_duration: 180  # Look at last 3 minutes of data (shorter window)
       min_gradient: 0.0033  # Minimum rise rate: 0.2°F/min (0.2/60 seconds)
       max_samples: 6  # Use 6 samples over the 3-minute window
-
