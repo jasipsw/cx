@@ -1095,3 +1095,33 @@
           {% endif %}
         entity_id: input_boolean.enable_supply_temp_optimization
   mode: single
+
+# One-time reminder - can be deleted after it runs
+- id: 'reminder_llm_optimization_20251119'
+  alias: "Reminder: Consider AI/LLM for Optimization"
+  description: One-time reminder to consider AI/LLM features for thermal optimization
+  triggers:
+    - platform: time
+      at: "09:00:00"
+  conditions:
+    - condition: template
+      value_template: "{{ now().date() == strptime('2025-11-19', '%Y-%m-%d').date() }}"
+  actions:
+    - action: persistent_notification.create
+      data:
+        title: "Reminder: AI/LLM for Optimization"
+        message: >
+          Consider whether HA's AI/LLM integrations would be useful for thermal optimization.
+
+          Options to explore:
+          - Daily analysis reports via conversation.process
+          - Anomaly detection for unusual patterns
+          - Weather-aware recommendations
+
+          Setup required: OpenAI, Anthropic, or Ollama integration
+        notification_id: llm_optimization_reminder
+    - action: notify.mobile_app_pixel_8_pro
+      data:
+        title: "Reminder: AI/LLM for Optimization"
+        message: "Consider AI/LLM features for thermal optimization analysis"
+  mode: single
