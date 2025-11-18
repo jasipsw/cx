@@ -957,15 +957,15 @@
 # ADAPTIVE SUPPLY TEMPERATURE OPTIMIZATION
 # ============================================================================
 
-- id: 'adaptive_supply_temp_optimization'
-  alias: Adaptive Supply Temperature Optimization
+- id: 'supply_temp_optimization_recommendations'
+  alias: Supply Temperature Optimization Recommendations
   description: >
-    Automatically adjusts CX50 heating setpoint based on zone demand.
-    Reduces setpoint when demand is low (improves COP), increases when demand is high.
+    Analyzes zone demand and sends recommendations for CX50 setpoint changes.
+    User reviews and manually applies changes to account for radiant floor thermal lag.
   triggers:
-    # Check every 30 minutes
+    # Check every 6 hours
     - platform: time_pattern
-      minutes: "/30"
+      hours: "/6"
 
   conditions:
     # Must be enabled
@@ -980,13 +980,13 @@
 
   actions:
     - choose:
-        # DECREASE setpoint when demand is low
+        # RECOMMEND DECREASE when demand has been low
         - conditions:
             - condition: state
               entity_id: sensor.radiant_system_demand_level
               state: "Low"
               for:
-                minutes: "{{ states('input_number.supply_temp_adjustment_delay') | int(30) }}"
+                hours: 4
             # Verify we're above minimum limit
             - condition: template
               value_template: >
@@ -995,25 +995,30 @@
                 {% set min_c = (min_f - 32) / 1.8 %}
                 {{ current_c > (min_c + 0.5) }}
           sequence:
-            # Decrease setpoint by 0.5°C (~1°F)
-            - action: number.set_value
-              target:
-                entity_id: number.cx50_heating_setpoint_c
+            - action: persistent_notification.create
               data:
-                value: >
-                  {% set current = states('number.cx50_heating_setpoint_c') | float(30) %}
-                  {{ (current - 0.5) | round(1) }}
-            # Log the change
+                title: "Supply Temp Recommendation: Decrease"
+                message: >
+                  **Recommendation:** Decrease setpoint by 1°F
+
+                  **Current:** {{ states('number.cx50_heating_setpoint_c') }}°C ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
+
+                  **Suggested:** {{ (states('number.cx50_heating_setpoint_c') | float - 0.5) | round(1) }}°C ({{ ((states('number.cx50_heating_setpoint_c') | float - 0.5) * 1.8 + 32) | round(1) }}°F)
+
+                  **Reason:** Demand has been Low for 4+ hours
+
+                  Zones calling: {{ states('sensor.radiant_zones_calling') }}
+                  Flow rate: {{ states('sensor.hvac_buffer_tank_flow_rate') }} gal/min
+                  Outdoor temp: {{ states('sensor.heat_pump_ambient_temperature') }}°F
+                notification_id: supply_temp_recommendation
             - action: logbook.log
               data:
                 name: Supply Temp Optimization
                 message: >
-                  🔽 Decreased setpoint by 0.5°C to {{ (states('number.cx50_heating_setpoint_c') | float - 0.5) | round(1) }}°C
-                  ({{ ((states('number.cx50_heating_setpoint_c') | float - 0.5) * 1.8 + 32) | round(1) }}°F)
-                  - Demand was Low for {{ states('input_number.supply_temp_adjustment_delay') }} min
+                  📋 RECOMMENDATION: Decrease setpoint by 0.5°C - Demand Low for 4+ hours
                 entity_id: number.cx50_heating_setpoint_c
 
-        # INCREASE setpoint when demand is high
+        # RECOMMEND INCREASE when demand has been high
         - conditions:
             - condition: or
               conditions:
@@ -1021,12 +1026,12 @@
                   entity_id: sensor.radiant_system_demand_level
                   state: "High"
                   for:
-                    minutes: "{{ states('input_number.supply_temp_adjustment_delay') | int(30) }}"
+                    hours: 4
                 - condition: state
                   entity_id: sensor.radiant_system_demand_level
                   state: "Very High"
                   for:
-                    minutes: "{{ (states('input_number.supply_temp_adjustment_delay') | int(30) / 2) | int }}"
+                    hours: 2
             # Verify we're below maximum limit
             - condition: template
               value_template: >
@@ -1035,33 +1040,37 @@
                 {% set max_c = (max_f - 32) / 1.8 %}
                 {{ current_c < (max_c - 0.5) }}
           sequence:
-            # Increase setpoint by 0.5°C (~1°F)
-            - action: number.set_value
-              target:
-                entity_id: number.cx50_heating_setpoint_c
+            - action: persistent_notification.create
               data:
-                value: >
-                  {% set current = states('number.cx50_heating_setpoint_c') | float(30) %}
-                  {{ (current + 0.5) | round(1) }}
-            # Log the change
+                title: "Supply Temp Recommendation: Increase"
+                message: >
+                  **Recommendation:** Increase setpoint by 1°F
+
+                  **Current:** {{ states('number.cx50_heating_setpoint_c') }}°C ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
+
+                  **Suggested:** {{ (states('number.cx50_heating_setpoint_c') | float + 0.5) | round(1) }}°C ({{ ((states('number.cx50_heating_setpoint_c') | float + 0.5) * 1.8 + 32) | round(1) }}°F)
+
+                  **Reason:** Demand has been {{ states('sensor.radiant_system_demand_level') }} for extended period
+
+                  Zones calling: {{ states('sensor.radiant_zones_calling') }}
+                  Flow rate: {{ states('sensor.hvac_buffer_tank_flow_rate') }} gal/min
+                  Outdoor temp: {{ states('sensor.heat_pump_ambient_temperature') }}°F
+                notification_id: supply_temp_recommendation
             - action: logbook.log
               data:
                 name: Supply Temp Optimization
                 message: >
-                  🔼 Increased setpoint by 0.5°C to {{ (states('number.cx50_heating_setpoint_c') | float + 0.5) | round(1) }}°C
-                  ({{ ((states('number.cx50_heating_setpoint_c') | float + 0.5) * 1.8 + 32) | round(1) }}°F)
-                  - Demand was {{ states('sensor.radiant_system_demand_level') }} for extended period
+                  📋 RECOMMENDATION: Increase setpoint by 0.5°C - Demand {{ states('sensor.radiant_system_demand_level') }} for extended period
                 entity_id: number.cx50_heating_setpoint_c
 
-      # Default: No change needed
+      # Default: No recommendation needed
       default:
         - action: logbook.log
           data:
             name: Supply Temp Optimization
             message: >
-              ➡️ No adjustment - Demand: {{ states('sensor.radiant_system_demand_level') }},
+              ✓ No change recommended - Demand: {{ states('sensor.radiant_system_demand_level') }},
               Setpoint: {{ states('number.cx50_heating_setpoint_c') }}°C
-              ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
             entity_id: number.cx50_heating_setpoint_c
 
   mode: single
