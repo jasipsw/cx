@@ -335,31 +335,37 @@
 
 # ------------------------------------------------------------------------
 # Heat Pump Cycle Tracking (History Stats)
-# Tracks runtime duration for current cycle and daily totals
+# DEPRECATED: These sensors have been replaced by template sensors in
+# sensors/template/heat_pump_cycle_sensors.yaml
+#
+# These definitions are commented out to prevent unique_id conflicts
+# which caused _2 duplicate entities to be created.
+#
+# DO NOT UNCOMMENT - Use the template sensor versions instead.
 # ------------------------------------------------------------------------
-- platform: history_stats
-  name: "Heat Pump Current Cycle Duration"
-  unique_id: heat_pump_current_cycle_duration
-  entity_id: binary_sensor.heat_pump_running
-  state: "on"
-  type: time
-  start: >
-    {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
-       if is_state('binary_sensor.heat_pump_running', 'on')
-       else as_timestamp(now()) }}
-  end: "{{ now() }}"
-
-- platform: history_stats
-  name: "Heat Pump Current Cycle Duration Minutes"
-  unique_id: heat_pump_current_cycle_duration_minutes
-  entity_id: binary_sensor.heat_pump_running
-  state: "on"
-  type: time
-  start: >
-    {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
-       if is_state('binary_sensor.heat_pump_running', 'on')
-       else as_timestamp(now()) }}
-  end: "{{ now() }}"
+# - platform: history_stats
+#   name: "Heat Pump Current Cycle Duration"
+#   unique_id: heat_pump_current_cycle_duration
+#   entity_id: binary_sensor.heat_pump_running
+#   state: "on"
+#   type: time
+#   start: >
+#     {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
+#        if is_state('binary_sensor.heat_pump_running', 'on')
+#        else as_timestamp(now()) }}
+#   end: "{{ now() }}"
+#
+# - platform: history_stats
+#   name: "Heat Pump Current Cycle Duration Minutes"
+#   unique_id: heat_pump_current_cycle_duration_minutes
+#   entity_id: binary_sensor.heat_pump_running
+#   state: "on"
+#   type: time
+#   start: >
+#     {{ as_timestamp(states.binary_sensor.heat_pump_running.last_changed)
+#        if is_state('binary_sensor.heat_pump_running', 'on')
+#        else as_timestamp(now()) }}
+#   end: "{{ now() }}"
 
 - platform: history_stats
   name: "Heat Pump Off Time Duration"

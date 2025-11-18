@@ -118,6 +118,7 @@
     unique_id: heat_pump_last_run_energy_input
     unit_of_measurement: "kWh"
     device_class: energy
+    state_class: measurement
     icon: mdi:lightning-bolt
     state: >
       {% set end_energy = states('sensor.heat_pump_input_power_interval_kwh') | float(0) %}
@@ -128,6 +129,7 @@
     unique_id: heat_pump_last_run_energy_output
     unit_of_measurement: "kWh"
     device_class: energy
+    state_class: measurement
     icon: mdi:fire
     state: >
       {% set end_energy = states('sensor.heat_pump_output_power_interval_kwh') | float(0) %}
