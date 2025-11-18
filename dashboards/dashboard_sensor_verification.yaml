@@ -343,6 +343,37 @@ views:
               - `buffer_tank_energy_input_hourly/daily/monthly` - Buffer tank energy (NEW)
               - `dhw_tank_energy_input_hourly/daily/monthly` - DHW tank energy (NEW)
 
+          # ALL INTEGRATION SENSORS DIAGNOSTIC
+          - type: markdown
+            title: ∫ All Integration Sensors (Diagnostic)
+            grid_options:
+              columns: full
+            content: |
+              ## All Integration/Accumulation Sensors in System
+              **This shows ALL sensors that accumulate power into energy (state_class: total):**
+
+              | Friendly Name | Entity ID | Current Value | Unit | Source Sensor | Method | Status |
+              |---------------|-----------|---------------|------|---------------|--------|--------|
+              {%- for entity in states.sensor %}
+                {%- if state_attr(entity.entity_id, 'state_class') == 'total' %}
+              | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ state_attr(entity.entity_id, 'source') if state_attr(entity.entity_id, 'source') else '-' }} | {{ state_attr(entity.entity_id, 'integration_method') if state_attr(entity.entity_id, 'integration_method') else '-' }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                {%- endif %}
+              {%- endfor %}
+
+              **Purpose:** Verify all integration sensors are created and accumulating correctly
+
+              **How Integration Works:**
+              - Takes instantaneous power measurement (W)
+              - Integrates over time using Riemann sum (usually "left" method)
+              - Produces accumulated energy (kWh)
+              - Feeds into utility meters for hourly/daily/monthly tracking
+
+              **Key Integration Sensors to Check:**
+              - `heat_pump_input_power_interval_kwh` - Accumulates electrical power → energy
+              - `heat_pump_output_power_interval_kwh` - Accumulates thermal power → energy
+              - `buffer_tank_energy_input` - **NEW** Accumulates buffer thermal power
+              - `dhw_tank_energy_input` - **NEW** Accumulates DHW thermal power
+
 
           # G2 VALVE & DHW SYSTEM STATUS
           - type: markdown
