@@ -952,3 +952,137 @@
             notification_id: duplicate_entity_detector
 
   mode: single
+
+# ============================================================================
+# ADAPTIVE SUPPLY TEMPERATURE OPTIMIZATION
+# ============================================================================
+
+- id: 'adaptive_supply_temp_optimization'
+  alias: Adaptive Supply Temperature Optimization
+  description: >
+    Automatically adjusts CX50 heating setpoint based on zone demand.
+    Reduces setpoint when demand is low (improves COP), increases when demand is high.
+  triggers:
+    # Check every 30 minutes
+    - platform: time_pattern
+      minutes: "/30"
+
+  conditions:
+    # Must be enabled
+    - condition: state
+      entity_id: input_boolean.enable_supply_temp_optimization
+      state: "on"
+
+    # Heat pump must not be in DHW mode
+    - condition: template
+      value_template: >
+        {{ states('sensor.heat_pump_operating_mode') not in ['DHW', 'Heat + DHW', 'HEAT + DHW'] }}
+
+  actions:
+    - choose:
+        # DECREASE setpoint when demand is low
+        - conditions:
+            - condition: state
+              entity_id: sensor.radiant_system_demand_level
+              state: "Low"
+              for:
+                minutes: "{{ states('input_number.supply_temp_adjustment_delay') | int(30) }}"
+            # Verify we're above minimum limit
+            - condition: template
+              value_template: >
+                {% set current_c = states('number.cx50_heating_setpoint_c') | float(30) %}
+                {% set min_f = states('input_number.supply_temp_min_limit') | float(78) %}
+                {% set min_c = (min_f - 32) / 1.8 %}
+                {{ current_c > (min_c + 0.5) }}
+          sequence:
+            # Decrease setpoint by 0.5°C (~1°F)
+            - action: number.set_value
+              target:
+                entity_id: number.cx50_heating_setpoint_c
+              data:
+                value: >
+                  {% set current = states('number.cx50_heating_setpoint_c') | float(30) %}
+                  {{ (current - 0.5) | round(1) }}
+            # Log the change
+            - action: logbook.log
+              data:
+                name: Supply Temp Optimization
+                message: >
+                  🔽 Decreased setpoint by 0.5°C to {{ (states('number.cx50_heating_setpoint_c') | float - 0.5) | round(1) }}°C
+                  ({{ ((states('number.cx50_heating_setpoint_c') | float - 0.5) * 1.8 + 32) | round(1) }}°F)
+                  - Demand was Low for {{ states('input_number.supply_temp_adjustment_delay') }} min
+                entity_id: number.cx50_heating_setpoint_c
+
+        # INCREASE setpoint when demand is high
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: sensor.radiant_system_demand_level
+                  state: "High"
+                  for:
+                    minutes: "{{ states('input_number.supply_temp_adjustment_delay') | int(30) }}"
+                - condition: state
+                  entity_id: sensor.radiant_system_demand_level
+                  state: "Very High"
+                  for:
+                    minutes: "{{ (states('input_number.supply_temp_adjustment_delay') | int(30) / 2) | int }}"
+            # Verify we're below maximum limit
+            - condition: template
+              value_template: >
+                {% set current_c = states('number.cx50_heating_setpoint_c') | float(30) %}
+                {% set max_f = states('input_number.supply_temp_max_limit') | float(105) %}
+                {% set max_c = (max_f - 32) / 1.8 %}
+                {{ current_c < (max_c - 0.5) }}
+          sequence:
+            # Increase setpoint by 0.5°C (~1°F)
+            - action: number.set_value
+              target:
+                entity_id: number.cx50_heating_setpoint_c
+              data:
+                value: >
+                  {% set current = states('number.cx50_heating_setpoint_c') | float(30) %}
+                  {{ (current + 0.5) | round(1) }}
+            # Log the change
+            - action: logbook.log
+              data:
+                name: Supply Temp Optimization
+                message: >
+                  🔼 Increased setpoint by 0.5°C to {{ (states('number.cx50_heating_setpoint_c') | float + 0.5) | round(1) }}°C
+                  ({{ ((states('number.cx50_heating_setpoint_c') | float + 0.5) * 1.8 + 32) | round(1) }}°F)
+                  - Demand was {{ states('sensor.radiant_system_demand_level') }} for extended period
+                entity_id: number.cx50_heating_setpoint_c
+
+      # Default: No change needed
+      default:
+        - action: logbook.log
+          data:
+            name: Supply Temp Optimization
+            message: >
+              ➡️ No adjustment - Demand: {{ states('sensor.radiant_system_demand_level') }},
+              Setpoint: {{ states('number.cx50_heating_setpoint_c') }}°C
+              ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
+            entity_id: number.cx50_heating_setpoint_c
+
+  mode: single
+
+# Log when optimization is enabled/disabled
+- id: 'log_supply_temp_optimization_toggle'
+  alias: "Log: Supply Temp Optimization Toggle"
+  description: Log when supply temp optimization is enabled or disabled
+  triggers:
+    - platform: state
+      entity_id: input_boolean.enable_supply_temp_optimization
+  actions:
+    - action: logbook.log
+      data:
+        name: Supply Temp Optimization
+        message: >
+          {% if is_state('input_boolean.enable_supply_temp_optimization', 'on') %}
+            ✅ ENABLED - Automatic setpoint adjustment active
+            (Limits: {{ states('input_number.supply_temp_min_limit') }}°F - {{ states('input_number.supply_temp_max_limit') }}°F)
+          {% else %}
+            ⏸️ DISABLED - Manual control only
+          {% endif %}
+        entity_id: input_boolean.enable_supply_temp_optimization
+  mode: single
