@@ -308,7 +308,37 @@ views:
               - entity: sensor.heat_pump_last_cycle_cop
                 name: Last Cycle COP
                 icon: mdi:history
+              - entity: sensor.heat_pump_hourly_cop
+                name: Current Hour COP
+                icon: mdi:chart-bar
 
+      # Hourly COP Column Chart
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: Hourly COP (Last 24 Hours)
+          show_states: true
+          colorize_states: true
+        graph_span: 24h
+        span:
+          end: hour
+        yaxis:
+          - min: 0
+            max: ~6
+            decimals: 1
+        series:
+          - entity: sensor.heat_pump_hourly_cop
+            name: COP
+            type: column
+            color: '#4CAF50'
+            group_by:
+              func: last
+              duration: 1h
+            show:
+              legend_value: false
+
+      - type: horizontal-stack
+        cards:
           - type: entities
             title: Temperature Monitoring
             entities:

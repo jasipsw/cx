@@ -180,3 +180,30 @@
         {# If we can't get valid standby power, preserve previous value #}
         {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
       {% endif %}
+
+# ------------------------------------------------------------------------
+# Heat Pump Hourly COP
+# Calculates COP from hourly utility meters (thermal output / electrical input)
+# Updates continuously throughout the hour as meters accumulate
+# Use 'last' grouping in charts to get end-of-hour COP values
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Heat Pump Hourly COP"
+    unique_id: heat_pump_hourly_cop
+    state_class: measurement
+    icon: mdi:gauge
+    state: >
+      {% set output = states('sensor.hp_thermal_energy_output_hourly') | float(0) %}
+      {% set input = states('sensor.hp_electrical_energy_hourly') | float(0) %}
+
+      {% if input > 0.01 %}
+        {{ (output / input) | round(2) }}
+      {% else %}
+        {# No input yet this hour, preserve previous value or return 0 #}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}
+    attributes:
+      thermal_output_kwh: >
+        {{ states('sensor.hp_thermal_energy_output_hourly') | float(0) | round(3) }}
+      electrical_input_kwh: >
+        {{ states('sensor.hp_electrical_energy_hourly') | float(0) | round(3) }}
