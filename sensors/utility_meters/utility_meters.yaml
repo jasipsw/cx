@@ -133,11 +133,23 @@ heat_pump_thermal_energy_hourly_btu:
   unique_id: "heat_pump_thermal_energy_hourly_btu"
   cycle: hourly
 
+hvac_thermal_energy_used_hourly:
+  source: sensor.hvac_thermal_energy_used
+  name: HVAC Thermal Energy Used (Hourly)
+  unique_id: hvac_thermal_energy_used_hourly
+  cycle: hourly
+
 hvac_thermal_energy_used_daily:
   source: sensor.hvac_thermal_energy_used
   name: HVAC Thermal Energy Used (Daily)
   unique_id: hvac_thermal_energy_used_daily
   cycle: daily
+
+hvac_thermal_energy_used_monthly:
+  source: sensor.hvac_thermal_energy_used
+  name: HVAC Thermal Energy Used (Monthly)
+  unique_id: hvac_thermal_energy_used_monthly
+  cycle: monthly
 
 hvac_hp_thermal_energy_produced_daily:
   source: sensor.hp_heating_thermal_energy_kwh

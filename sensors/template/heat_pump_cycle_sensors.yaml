@@ -255,3 +255,141 @@
         {{ states('sensor.hp_thermal_energy_output_monthly') | float(0) | round(3) }}
       electrical_input_kwh: >
         {{ states('sensor.hp_electrical_energy_monthly') | float(0) | round(3) }}
+
+# ------------------------------------------------------------------------
+# Distribution Efficiency Sensors
+# Compares HVAC energy delivered to house vs HP thermal output
+# Efficiency = HVAC Delivered / HP Output * 100%
+# Difference represents buffer tank losses, piping losses, DHW diversion
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Distribution Efficiency Hourly"
+    unique_id: distribution_efficiency_hourly
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:percent
+    state: >
+      {% set hvac = states('sensor.hvac_thermal_energy_used_hourly') | float(0) %}
+      {% set hp = states('sensor.hp_thermal_energy_output_hourly') | float(0) %}
+
+      {% if hp > 0.01 %}
+        {{ ((hvac / hp) * 100) | round(1) }}
+      {% else %}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}
+    attributes:
+      hvac_delivered_kwh: >
+        {{ states('sensor.hvac_thermal_energy_used_hourly') | float(0) | round(3) }}
+      hp_output_kwh: >
+        {{ states('sensor.hp_thermal_energy_output_hourly') | float(0) | round(3) }}
+
+- sensor:
+  - name: "Distribution Efficiency Daily"
+    unique_id: distribution_efficiency_daily
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:percent
+    state: >
+      {% set hvac = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
+      {% set hp = states('sensor.hp_thermal_energy_output_daily') | float(0) %}
+
+      {% if hp > 0.01 %}
+        {{ ((hvac / hp) * 100) | round(1) }}
+      {% else %}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}
+    attributes:
+      hvac_delivered_kwh: >
+        {{ states('sensor.hvac_thermal_energy_used_daily') | float(0) | round(3) }}
+      hp_output_kwh: >
+        {{ states('sensor.hp_thermal_energy_output_daily') | float(0) | round(3) }}
+
+- sensor:
+  - name: "Distribution Efficiency Monthly"
+    unique_id: distribution_efficiency_monthly
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:percent
+    state: >
+      {% set hvac = states('sensor.hvac_thermal_energy_used_monthly') | float(0) %}
+      {% set hp = states('sensor.hp_thermal_energy_output_monthly') | float(0) %}
+
+      {% if hp > 0.01 %}
+        {{ ((hvac / hp) * 100) | round(1) }}
+      {% else %}
+        {{ this.state if this.state not in ['unknown', 'unavailable', 'none'] else 0 }}
+      {% endif %}
+    attributes:
+      hvac_delivered_kwh: >
+        {{ states('sensor.hvac_thermal_energy_used_monthly') | float(0) | round(3) }}
+      hp_output_kwh: >
+        {{ states('sensor.hp_thermal_energy_output_monthly') | float(0) | round(3) }}
+
+# ------------------------------------------------------------------------
+# System Loss Sensors
+# Tracks energy lost between HP output and HVAC delivery
+# Loss = HP Output - HVAC Delivered
+# Includes: buffer tank losses, piping losses, DHW diversion
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "System Thermal Loss Hourly"
+    unique_id: system_thermal_loss_hourly
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: measurement
+    icon: mdi:thermometer-minus
+    state: >
+      {% set hvac = states('sensor.hvac_thermal_energy_used_hourly') | float(0) %}
+      {% set hp = states('sensor.hp_thermal_energy_output_hourly') | float(0) %}
+      {{ (hp - hvac) | round(3) }}
+    attributes:
+      loss_percentage: >
+        {% set hvac = states('sensor.hvac_thermal_energy_used_hourly') | float(0) %}
+        {% set hp = states('sensor.hp_thermal_energy_output_hourly') | float(0) %}
+        {% if hp > 0.01 %}
+          {{ (((hp - hvac) / hp) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+- sensor:
+  - name: "System Thermal Loss Daily"
+    unique_id: system_thermal_loss_daily
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: measurement
+    icon: mdi:thermometer-minus
+    state: >
+      {% set hvac = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
+      {% set hp = states('sensor.hp_thermal_energy_output_daily') | float(0) %}
+      {{ (hp - hvac) | round(3) }}
+    attributes:
+      loss_percentage: >
+        {% set hvac = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
+        {% set hp = states('sensor.hp_thermal_energy_output_daily') | float(0) %}
+        {% if hp > 0.01 %}
+          {{ (((hp - hvac) / hp) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+- sensor:
+  - name: "System Thermal Loss Monthly"
+    unique_id: system_thermal_loss_monthly
+    unit_of_measurement: "kWh"
+    device_class: energy
+    state_class: measurement
+    icon: mdi:thermometer-minus
+    state: >
+      {% set hvac = states('sensor.hvac_thermal_energy_used_monthly') | float(0) %}
+      {% set hp = states('sensor.hp_thermal_energy_output_monthly') | float(0) %}
+      {{ (hp - hvac) | round(3) }}
+    attributes:
+      loss_percentage: >
+        {% set hvac = states('sensor.hvac_thermal_energy_used_monthly') | float(0) %}
+        {% set hp = states('sensor.hp_thermal_energy_output_monthly') | float(0) %}
+        {% if hp > 0.01 %}
+          {{ (((hp - hvac) / hp) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
