@@ -343,6 +343,38 @@ views:
             show:
               legend_value: false
 
+      # Energy Balance Column Chart - HP Output vs HVAC Delivered
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: Energy Balance (Last 24 Hours)
+          show_states: true
+          colorize_states: true
+        graph_span: 24h
+        span:
+          end: hour
+        yaxis:
+          - min: 0
+            decimals: 2
+            apex_config:
+              title:
+                text: "kWh"
+        series:
+          - entity: sensor.hp_thermal_energy_output_hourly
+            name: HP Output
+            type: column
+            color: '#4CAF50'
+            group_by:
+              func: last
+              duration: 1h
+          - entity: sensor.hvac_thermal_energy_used_hourly
+            name: HVAC Delivered
+            type: column
+            color: '#2196F3'
+            group_by:
+              func: last
+              duration: 1h
+
       - type: horizontal-stack
         cards:
           - type: entities
