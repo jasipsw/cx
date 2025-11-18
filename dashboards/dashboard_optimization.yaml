@@ -311,6 +311,12 @@ views:
               - entity: sensor.heat_pump_hourly_cop
                 name: Current Hour COP
                 icon: mdi:chart-bar
+              - entity: sensor.heat_pump_daily_cop
+                name: Today's COP
+                icon: mdi:calendar-today
+              - entity: sensor.heat_pump_monthly_cop
+                name: This Month's COP
+                icon: mdi:calendar-month
 
       # Hourly COP Column Chart
       - type: custom:apexcharts-card
