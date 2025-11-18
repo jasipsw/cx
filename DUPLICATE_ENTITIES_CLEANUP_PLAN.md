@@ -1,11 +1,23 @@
 # Duplicate Entities Cleanup Plan
 
 Generated: 2025-11-18
-Total Duplicates Found: **186 entities**
+Updated: 2025-11-18 (Improved detection regex to exclude false positives)
+
+## Detection Logic Update
+
+**Improved Regex Pattern:** `(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$`
+
+This pattern matches true HA duplicates while excluding false positives:
+- ✅ Matches: `buffer_supply_from_heat_pump_2` (duplicate suffix)
+- ❌ Excludes: `inverter_482332040587` (serial number)
+- ❌ Excludes: `airgradient_pm2_5` (PM2.5 measurement type)
+- ❌ Excludes: `switch_0` (intentional index)
+
+**Note:** The initial detection found 186 entities, but many were false positives (serial numbers, measurement types). After applying the improved regex, the actual duplicate count will be much lower.
 
 ## Executive Summary
 
-Home Assistant has created 186 duplicate entities with `_2`, `_3`, `_4`, etc. suffixes. These are categorized into:
+Home Assistant creates duplicate entities with `_2`, `_3`, `_4`, etc. suffixes when there are `unique_id` or `entity_id` conflicts. These are categorized into:
 
 - **61 Unavailable Entities** - Safe to delete immediately
 - **125 Active Entities** - Require investigation before deletion
@@ -383,3 +395,30 @@ To prevent future duplicates:
 | Thermal Comfort | 0 | 17 | 17 |
 | Misc | 4 | 31 | 35 |
 | **TOTAL** | **61** | **125** | **186** |
+
+---
+
+## False Positives Removed (2025-11-18 Update)
+
+The following entities were initially detected but are **NOT duplicates** (removed from detection):
+
+### Serial Numbers:
+- `sensor.inverter_482332040587` through `sensor.inverter_482334045995` (19 Enphase inverters)
+  - The trailing numbers are serial numbers, not duplicate suffixes
+
+### Measurement Types:
+- `sensor.airgradient_pm2_5` - PM2.5 particle size measurement
+- `sensor.airgradient_pm0_3` - PM0.3 particle size measurement
+
+### Intentional Indices:
+- `switch.shellyplus1_c4d8d5543fc0_switch_0` - Switch index 0
+- All entities ending in `_0` (HA duplicates start at `_2`)
+
+### Long Device IDs:
+- `sensor.shellyplus1_048308d6a208_temperature_2/3/4/5/6` - May be device IDs, not duplicates
+  - Need to verify if these are multi-sensor devices or actual duplicates
+
+**Detection Method:** Updated regex from `.*_[234567890]+$` to `(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$`
+- Uses negative lookbehind `(?<!\\d)` to ensure the digit is not part of a longer number
+- Only matches single or double digit suffixes (2-99)
+- Excludes serial numbers and measurement type numbering

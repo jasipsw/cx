@@ -892,7 +892,9 @@
           value_template: >
             {%- set duplicates = namespace(found=false) %}
             {%- for entity in states %}
-              {%- if entity.entity_id | regex_match('.*_[234567890]+$') %}
+              {# Match _2 through _9 or _10 through _99, but NOT if preceded by a digit #}
+              {# This excludes serial numbers (e.g., _482332040587) and measurement types (e.g., pm2_5) #}
+              {%- if entity.entity_id | regex_match('(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$') %}
                 {%- set duplicates.found = true %}
               {%- endif %}
             {%- endfor %}
@@ -915,8 +917,8 @@
               **Duplicates found:**
 
               {%- for entity in states %}
-                {%- if entity.entity_id | regex_match('.*_[234567890]+$') %}
-                  {%- set original = entity.entity_id | regex_replace('_[234567890]+$', '') %}
+                {%- if entity.entity_id | regex_match('(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$') %}
+                  {%- set original = entity.entity_id | regex_replace('(?<!\\d)_[2-9]$|(?<!\\d)_[1-9][0-9]$', '') %}
 
               - **{{ entity.domain }}.{{ entity.entity_id.split('.')[1] }}**
                 - Status: {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (' + entity.state + ')' }}
