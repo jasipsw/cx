@@ -1,0 +1,236 @@
+# Supply Temperature Optimization Sensors
+# These sensors help find the optimal supply water temperature to maximize COP
+# while maintaining comfortable room temperatures across all zones.
+#
+# Key principle: Lower supply temp = Higher COP = Lower energy cost
+# But: Too low = zones can't keep up = cold rooms
+#
+# Optimal point: Minimum supply temp where zones cycle on/off periodically
+# (not running continuously) and rooms maintain setpoints.
+
+# ------------------------------------------------------------------------
+# Zones Calling Count
+# How many zones are currently demanding heat
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Radiant Zones Calling"
+    unique_id: radiant_zones_calling
+    unit_of_measurement: "zones"
+    state_class: measurement
+    icon: mdi:home-thermometer
+    state: >
+      {% set zones = [
+        is_state('binary_sensor.master_suite_radiant', 'on'),
+        is_state('binary_sensor.main_floor_radiant', 'on'),
+        is_state('binary_sensor.front_bedroom_radiant', 'on'),
+        is_state('binary_sensor.office_radiant', 'on'),
+        is_state('binary_sensor.family_room_radiant', 'on'),
+        is_state('binary_sensor.bedroom_floor_radiant', 'on')
+      ] %}
+      {{ zones | select('true') | list | count }}
+    attributes:
+      master_suite: >
+        {{ is_state('binary_sensor.master_suite_radiant', 'on') }}
+      main_floor: >
+        {{ is_state('binary_sensor.main_floor_radiant', 'on') }}
+      front_bedroom: >
+        {{ is_state('binary_sensor.front_bedroom_radiant', 'on') }}
+      office: >
+        {{ is_state('binary_sensor.office_radiant', 'on') }}
+      family_room: >
+        {{ is_state('binary_sensor.family_room_radiant', 'on') }}
+      guest_bedroom: >
+        {{ is_state('binary_sensor.bedroom_floor_radiant', 'on') }}
+
+# ------------------------------------------------------------------------
+# System Demand Level
+# Categorizes current heating demand based on zones and flow
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Radiant System Demand Level"
+    unique_id: radiant_system_demand_level
+    icon: mdi:gauge
+    state: >
+      {% set zones = states('sensor.radiant_zones_calling') | int(0) %}
+      {% set flow = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
+
+      {% if zones == 0 %}
+        Idle
+      {% elif zones <= 1 and flow < 5 %}
+        Low
+      {% elif zones <= 3 and flow < 12 %}
+        Medium
+      {% elif zones <= 4 and flow < 18 %}
+        High
+      {% else %}
+        Very High
+      {% endif %}
+    attributes:
+      zones_calling: >
+        {{ states('sensor.radiant_zones_calling') | int(0) }}
+      flow_rate_lpm: >
+        {{ states('sensor.hvac_buffer_tank_flow_rate') | float(0) | round(1) }}
+      flow_rate_gpm: >
+        {{ (states('sensor.hvac_buffer_tank_flow_rate') | float(0) * 0.264172) | round(1) }}
+
+# ------------------------------------------------------------------------
+# Supply Temperature Headroom Indicator
+# Shows if current supply temp has room to decrease
+# Based on: low zones calling + low flow = headroom exists
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Supply Temp Headroom"
+    unique_id: supply_temp_headroom
+    icon: mdi:thermometer-chevron-down
+    state: >
+      {% set demand = states('sensor.radiant_system_demand_level') %}
+      {% set outdoor = states('sensor.heat_pump_ambient_temperature') | float(32) %}
+
+      {% if demand == 'Idle' %}
+        High (system satisfied)
+      {% elif demand == 'Low' %}
+        Moderate (can try reducing)
+      {% elif demand == 'Medium' %}
+        Low (near optimal)
+      {% elif demand in ['High', 'Very High'] %}
+        None (increase if needed)
+      {% else %}
+        Unknown
+      {% endif %}
+    attributes:
+      current_supply_temp: >
+        {{ states('sensor.buffer_supply_to_hvac_load') | float(0) | round(1) }}
+      outdoor_temp: >
+        {{ states('sensor.heat_pump_ambient_temperature') | float(0) | round(1) }}
+      recommendation: >
+        {% set demand = states('sensor.radiant_system_demand_level') %}
+        {% set supply = states('sensor.buffer_supply_to_hvac_load') | float(85) %}
+
+        {% if demand == 'Idle' %}
+          Consider reducing supply temp by 3-5°F
+        {% elif demand == 'Low' %}
+          Can try reducing supply temp by 1-2°F
+        {% elif demand == 'Medium' %}
+          Supply temp appears optimal
+        {% elif demand in ['High', 'Very High'] %}
+          {% if supply < 95 %}
+            Consider increasing supply temp if rooms aren't reaching setpoint
+          {% else %}
+            At max recommended supply temp
+          {% endif %}
+        {% else %}
+          Insufficient data
+        {% endif %}
+
+# ------------------------------------------------------------------------
+# Outdoor Reset Suggested Supply Temp
+# Basic outdoor reset curve - can be refined based on actual data
+# This is a starting point; actual optimal temps depend on house characteristics
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Outdoor Reset Supply Temp"
+    unique_id: outdoor_reset_supply_temp
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:thermometer-auto
+    state: >
+      {% set outdoor = states('sensor.heat_pump_ambient_temperature') | float(32) %}
+
+      {# Linear interpolation between design points #}
+      {# Outdoor: -10°F → Supply: 110°F #}
+      {# Outdoor:  70°F → Supply:  75°F #}
+      {# Slope = (75 - 110) / (70 - (-10)) = -35/80 = -0.4375 #}
+
+      {% set slope = -0.4375 %}
+      {% set intercept = 110 + (slope * 10) %}  {# = 110 - 4.375 = 105.625 at 0°F #}
+
+      {% set suggested = intercept + (slope * outdoor) %}
+
+      {# Clamp to reasonable range #}
+      {% if suggested > 110 %}
+        110
+      {% elif suggested < 75 %}
+        75
+      {% else %}
+        {{ suggested | round(0) }}
+      {% endif %}
+    attributes:
+      outdoor_temp: >
+        {{ states('sensor.heat_pump_ambient_temperature') | float(0) | round(1) }}
+      curve_type: "Linear reset"
+      design_points: "-10°F→110°F, 70°F→75°F"
+
+# ------------------------------------------------------------------------
+# Supply Temp vs Reset Curve Comparison
+# Shows how current supply compares to outdoor reset suggestion
+# Positive = running hotter than needed, Negative = running cooler
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "Supply Temp Delta from Reset"
+    unique_id: supply_temp_delta_from_reset
+    unit_of_measurement: "°F"
+    state_class: measurement
+    icon: mdi:delta
+    state: >
+      {% set actual = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
+      {% set suggested = states('sensor.outdoor_reset_supply_temp') | float(0) %}
+
+      {% if actual > 0 and suggested > 0 %}
+        {{ (actual - suggested) | round(1) }}
+      {% else %}
+        0
+      {% endif %}
+    attributes:
+      actual_supply: >
+        {{ states('sensor.buffer_supply_to_hvac_load') | float(0) | round(1) }}
+      suggested_supply: >
+        {{ states('sensor.outdoor_reset_supply_temp') | float(0) | round(0) }}
+      interpretation: >
+        {% set delta = this.state | float(0) %}
+        {% if delta > 5 %}
+          Running {{ delta | abs | round(0) }}°F hotter than reset curve - potential COP improvement
+        {% elif delta < -5 %}
+          Running {{ delta | abs | round(0) }}°F cooler than reset curve - verify zones satisfied
+        {% else %}
+          Within ±5°F of reset curve - good match
+        {% endif %}
+
+# ------------------------------------------------------------------------
+# Average Flow Rate (1 Hour)
+# Smoothed flow rate to reduce noise for optimization decisions
+# ------------------------------------------------------------------------
+- sensor:
+  - name: "HVAC Flow Rate 1hr Average"
+    unique_id: hvac_flow_rate_1hr_average
+    unit_of_measurement: "LPM"
+    state_class: measurement
+    icon: mdi:water-pump
+    state: >
+      {{ states('sensor.hvac_buffer_tank_flow_rate') | float(0) | round(1) }}
+    # Note: For true averaging, consider using a statistics integration sensor
+    # This is a placeholder that shows current flow
+    # TODO: Add statistics sensor for actual 1hr average
+
+# ------------------------------------------------------------------------
+# Max Zones Calling (Today)
+# Tracks the maximum number of zones that called simultaneously today
+# Helps understand peak demand periods
+# ------------------------------------------------------------------------
+- trigger:
+  - platform: state
+    entity_id: sensor.radiant_zones_calling
+  sensor:
+  - name: "Max Zones Calling Today"
+    unique_id: max_zones_calling_today
+    unit_of_measurement: "zones"
+    state_class: measurement
+    icon: mdi:arrow-up-bold
+    state: >
+      {% set current = states('sensor.radiant_zones_calling') | int(0) %}
+      {% set previous_max = this.state | int(0) %}
+
+      {% if current > previous_max %}
+        {{ current }}
+      {% else %}
+        {{ previous_max }}
+      {% endif %}
