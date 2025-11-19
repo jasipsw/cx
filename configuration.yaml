@@ -4,10 +4,10 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
-light:
-  - platform: decora_wifi
-    username: !secret my_leviton_username
-    password: !secret my_leviton_password
+# light:
+#   - platform: decora_wifi
+#     username: !secret my_leviton_username
+#     password: !secret my_leviton_password
     
 # Enable Python scripts
 python_script:

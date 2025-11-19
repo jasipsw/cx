@@ -318,180 +318,212 @@ views:
 
               **Purpose:** Verify Shelly integration sensor names match our configuration
 
-          # DHW SYSTEM STATUS
+          # ALL UTILITY METERS DIAGNOSTIC
           - type: markdown
-            title: 🚿 DHW System Status (Domestic Hot Water)
+            title: 📊 All Utility Meters (Diagnostic)
             grid_options:
               columns: full
             content: |
-              ## DHW Mode Detection
-              **Current Operating Mode:** `{{ states('sensor.heat_pump_operating_mode') }}`
-              - In DHW Mode: {{ '✅ Yes' if 'DHW' in states('sensor.heat_pump_operating_mode') else '❌ No' }}
+              ## All Utility Meters in System
+              **This shows ALL utility meters and energy tracking sensors (state_class: total_increasing):**
 
-              ## G2 Valve Position (Heat Routing) - **TREND-BASED DETECTION**
-              | Sensor | Value | Status |
-              |--------|-------|--------|
+              | Friendly Name | Entity ID | Current Value | Unit | Source | Last Reset | Status |
+              |---------------|-----------|---------------|------|--------|------------|--------|
+              {%- for entity in states.sensor %}
+                {%- if state_attr(entity.entity_id, 'state_class') == 'total_increasing' %}
+              | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ state_attr(entity.entity_id, 'source') if state_attr(entity.entity_id, 'source') else '-' }} | {{ state_attr(entity.entity_id, 'last_reset')[:19] if state_attr(entity.entity_id, 'last_reset') else '-' }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                {%- endif %}
+              {%- endfor %}
+
+              **Purpose:** Verify all utility meters are created and tracking correctly
+
+              **Key Utility Meters to Check:**
+              - `hp_electrical_energy_hourly/daily/monthly` - HP electrical input
+              - `hp_thermal_energy_output_hourly/daily/monthly` - HP thermal output
+              - `buffer_tank_energy_input_hourly/daily/monthly` - Buffer tank energy (NEW)
+              - `dhw_tank_energy_input_hourly/daily/monthly` - DHW tank energy (NEW)
+
+          # ALL INTEGRATION SENSORS DIAGNOSTIC
+          - type: markdown
+            title: ∫ All Integration Sensors (Diagnostic)
+            grid_options:
+              columns: full
+            content: |
+              ## All Integration/Accumulation Sensors in System
+              **This shows ALL sensors that accumulate power into energy (state_class: total):**
+
+              | Friendly Name | Entity ID | Current Value | Unit | Source Sensor | Method | Status |
+              |---------------|-----------|---------------|------|---------------|--------|--------|
+              {%- for entity in states.sensor %}
+                {%- if state_attr(entity.entity_id, 'state_class') == 'total' %}
+              | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ state_attr(entity.entity_id, 'source') if state_attr(entity.entity_id, 'source') else '-' }} | {{ state_attr(entity.entity_id, 'integration_method') if state_attr(entity.entity_id, 'integration_method') else '-' }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                {%- endif %}
+              {%- endfor %}
+
+              **Purpose:** Verify all integration sensors are created and accumulating correctly
+
+              **How Integration Works:**
+              - Takes instantaneous power measurement (W)
+              - Integrates over time using Riemann sum (usually "left" method)
+              - Produces accumulated energy (kWh)
+              - Feeds into utility meters for hourly/daily/monthly tracking
+
+              **Key Integration Sensors to Check:**
+              - `heat_pump_input_power_interval_kwh` - Accumulates electrical power → energy
+              - `heat_pump_output_power_interval_kwh` - Accumulates thermal power → energy
+              - `buffer_tank_energy_input` - **NEW** Accumulates buffer thermal power
+              - `dhw_tank_energy_input` - **NEW** Accumulates DHW thermal power
+
+          # DUPLICATE ENTITY DETECTOR
+          - type: markdown
+            title: ⚠️ Duplicate Entity Detector (Finds _2, _3, _4 suffixes)
+            grid_options:
+              columns: full
+            content: |
+              ## Duplicate/Conflicted Entities Detection
+              **Home Assistant adds _2, _3, etc. suffixes when there's an entity_id or unique_id conflict.**
+              **These usually indicate configuration problems and should be investigated.**
+
+              {# Find true duplicates: entities ending in _2 through _99 where the original also exists #}
+              {# This excludes serial numbers (e.g., inverter_482332040587) and measurement types (e.g., pm2_5) #}
+              {%- set duplicates = namespace(found=false) %}
+              {%- for entity in states %}
+                {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
+                  {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
+                  {%- if states[original] is defined %}
+                    {%- set duplicates.found = true %}
+                  {%- endif %}
+                {%- endif %}
+              {%- endfor %}
+
+              {%- if duplicates.found %}
+              ### ⚠️ DUPLICATES FOUND - ACTION REQUIRED
+
+              | Domain | Entity ID | Friendly Name | Current State | Status | Original Entity | Original State |
+              |--------|-----------|---------------|---------------|--------|-----------------|----------------|
+              {%- for entity in states %}
+                {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
+                  {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
+                  {%- if states[original] is defined %}
+              | {{ entity.domain }} | `{{ entity.entity_id }}` | {{ entity.name }} | {{ entity.state }} | {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active' }} | `{{ original }}` | {{ states[original].state }} |
+                  {%- endif %}
+                {%- endif %}
+              {%- endfor %}
+
+              ### What This Means
+
+              **Why duplicates are created:**
+              1. **Unique ID conflict** - Two sensor definitions have the same unique_id
+              2. **Entity ID conflict** - Integration tried to create entity that already exists
+              3. **Renamed sensor** - Old entity still in registry after YAML rename
+              4. **Integration conflict** - Multiple integrations trying to create same entity
+
+              **What to do:**
+              1. Check if the "Likely Original" entity exists and is working
+              2. If original is working, the duplicate can be safely deleted from entity registry
+              3. If original doesn't exist, investigate YAML configuration for conflicts
+              4. Delete duplicates via: Settings → Devices & Services → Entities → (search for entity) → Delete
+
+              **Common causes in your system:**
+              - `buffer_supply_from_heat_pump_2` - Likely conflict between YAML definition and existing entity
+              - Check shelly_buffer_tank_sensors.yaml for unique_id mismatches
+
+              {%- else %}
+
+              ### ✅ NO DUPLICATES FOUND
+
+              All entities have clean names with no _2, _3, etc. suffixes.
+              This indicates no current entity_id or unique_id conflicts.
+
+              {%- endif %}
+
+              **Pro Tip:** If you see duplicates appearing after config changes, it usually means:
+              - Your YAML is trying to create an entity that already exists
+              - Check entity registry vs your template/platform definitions
+              - Make sure unique_id matches what Home Assistant expects
+
+
+          # G2 VALVE & DHW SYSTEM STATUS
+          - type: markdown
+            title: 🔀 G2 Valve Position Detection (Delta-T Correlation)
+            grid_options:
+              columns: full
+            content: |
+              ## Detection Method: Temperature Correlation
+              The G2 diverter valve routes heat pump output to either **Buffer Tank** (heating) or **DHW Tank** (hot water).
+
+              **Method:** Compare HP outlet temperature with buffer and DHW supply temperatures.
+              **Rule:** Whichever supply line is closest to HP outlet is currently receiving flow.
+
+              ## Current System Status
+              | Item | Value | Status |
+              |------|-------|--------|
+              | HP Running | {{ states('binary_sensor.heat_pump_running') }} | {{ '✅ Active' if is_state('binary_sensor.heat_pump_running', 'on') else '⏸️ Idle' }} |
+              | Operating Mode | {{ states('sensor.heat_pump_operating_mode') }} | Modbus |
               | **G2 Valve Position** | **{{ states('sensor.g2_valve_position') }}** | {{ '✅' if states('sensor.g2_valve_position') not in ['unknown', 'unavailable', 'Unknown'] else '❌' }} |
-              | G2 DHW Mode Active | {{ states('binary_sensor.g2_valve_dhw_mode') }} | {{ '✅' if states('binary_sensor.g2_valve_dhw_mode') not in ['unknown', 'unavailable'] else '❌' }} |
+              | G2 DHW Mode | {{ states('binary_sensor.g2_valve_dhw_mode') }} | Binary sensor |
 
-              ## Active Heating Detection (Trend Sensors)
-              | Tank | Trend Sensor | Status | Meaning |
-              |------|--------------|--------|---------|
-              | **DHW Tank** | `binary_sensor.dhw_tank_heating_trend` | {{ states('binary_sensor.dhw_tank_heating_trend') }} | {{ '🔥 DHW heating NOW' if is_state('binary_sensor.dhw_tank_heating_trend', 'on') else '⏸️ Not heating' }} |
-              | **Buffer Tank** | `binary_sensor.buffer_tank_heating_trend` | {{ states('binary_sensor.buffer_tank_heating_trend') }} | {{ '🔥 Buffer heating NOW' if is_state('binary_sensor.buffer_tank_heating_trend', 'on') else '⏸️ Not heating' }} |
+              ## Temperature Correlation Analysis
+              {% set hp_outlet = state_attr('sensor.g2_valve_position', 'hp_outlet_temp') | float(0) %}
+              {% set buffer_supply = state_attr('sensor.g2_valve_position', 'buffer_supply_temp') | float(0) %}
+              {% set dhw_supply = state_attr('sensor.g2_valve_position', 'dhw_supply_temp') | float(0) %}
+              {% set buffer_diff = state_attr('sensor.g2_valve_position', 'buffer_temp_diff') | float(0) %}
+              {% set dhw_diff = state_attr('sensor.g2_valve_position', 'dhw_temp_diff') | float(0) %}
 
-              **How it works:** Trend sensors detect when tank temperature is **actively rising** (≥0.1°F/min over 5min window)
+              | Measurement | Temperature | Temp Diff from HP Outlet | Match |
+              |-------------|-------------|--------------------------|-------|
+              | **HP Outlet** | **{{ hp_outlet }}°F** | - | Heat source |
+              | Buffer Supply | {{ buffer_supply }}°F | {{ buffer_diff }}°F | {{ '✅ MATCH' if buffer_diff < dhw_diff and buffer_diff < 10 else '➖' }} |
+              | DHW Supply | {{ dhw_supply }}°F | {{ dhw_diff }}°F | {{ '✅ MATCH' if dhw_diff < buffer_diff and dhw_diff < 10 else '➖' }} |
 
-              ## Current Tank Temperatures
-              | Tank | Current Temp | Status |
-              |------|--------------|--------|
-              | DHW Tank | {{ states('sensor.dhw_tank_temperature') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature') not in ['unknown', 'unavailable'] else '❌' }} |
-              | Buffer Tank | {{ states('sensor.buffer_tank_temperature') }}°F | {{ '✅' if states('sensor.buffer_tank_temperature') not in ['unknown', 'unavailable'] else '❌' }} |
+              **Decision:** {{ '🔥 **Buffer Tank**' if buffer_diff < dhw_diff and buffer_diff < 10 else '🚿 **DHW Tank**' if dhw_diff < buffer_diff and dhw_diff < 10 else '❓ **Unknown**' }}
 
-              ## G2 Valve Logic (Simplified)
-              {% set dhw_trend = is_state('binary_sensor.dhw_tank_heating_trend', 'on') %}
-              {% set buf_trend = is_state('binary_sensor.buffer_tank_heating_trend', 'on') %}
-              {% set valve_pos = states('sensor.g2_valve_position') %}
-              {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
+              **Why this works:**
+              - Active flow path stays close to HP outlet temp (accounting for pipe losses)
+              - Inactive path cools down to ambient/tank temperature
+              - Works during idle, defrost, and differential cooling scenarios
+              - No time windows needed - updates instantly
 
-              **Current Detection:**
-              {% if not hp_running %}
-              - ⏸️ **Heat Pump OFF** → G2 valve in default position: **{{ valve_pos }}**
-              - Valve allows flow between HP and buffer tank
-              - Natural circulation or circulator pump keeps water flowing
-              {% elif dhw_trend and hp_running %}
-              - 🔥 **DHW Tank actively heating** → G2 valve = DHW Tank
-              - DHW temperature rising {{ states('sensor.dhw_tank_temperature') }}°F
-              {% elif buf_trend and hp_running %}
-              - 🔥 **Buffer Tank actively heating** → G2 valve = Buffer Tank
-              - Buffer temperature rising {{ states('sensor.buffer_tank_temperature') }}°F
-              {% elif hp_running %}
-              - ⏳ **HP Running - waiting for trend detection**
-              - Current position: {{ valve_pos }}
-              - Position will update within 3 minutes once heating trend detected
-              {% else %}
-              - ⏸️ **No active heating** → Position: {{ valve_pos }}
-              {% endif %}
+              ## Tank Temperatures
+              | Tank | Current Temp | Supply from HP | Return to HP | Delta-T |
+              |------|--------------|----------------|--------------|---------|
+              | Buffer | {{ states('sensor.buffer_tank_temperature') }}°F | {{ states('sensor.supply_from_heat_pump') }}°F | {{ states('sensor.buffer_return_to_heat_pump') }}°F | {{ (states('sensor.supply_from_heat_pump') | float(0) - states('sensor.buffer_return_to_heat_pump') | float(0)) | round(2) }}°F |
+              | DHW | {{ states('sensor.dhw_tank_temperature') }}°F | {{ states('sensor.dhw_supply_from_heat_pump') }}°F | {{ states('sensor.dhw_return_to_heat_pump') }}°F | {{ (states('sensor.dhw_supply_from_heat_pump') | float(0) - states('sensor.dhw_return_to_heat_pump') | float(0)) | round(2) }}°F |
 
-              ## DHW Tank Sensors
+              ## DHW System Sensors
               | Sensor | Value | Status |
               |--------|-------|--------|
-              | DHW Tank Temp | {{ states('sensor.dhw_tank_temperature') }}°F | {{ '✅' if states('sensor.dhw_tank_temperature') not in ['unknown', 'unavailable'] else '❌ Missing' }} |
               | DHW Supply (to house) | {{ states('sensor.dhw_hot_water_out') }}°F | {{ '✅' if states('sensor.dhw_hot_water_out') not in ['unknown', 'unavailable'] else '⚠️' }} |
               | DHW Cold Water In | {{ states('sensor.dhw_cold_water_in') }}°F | {{ '✅' if states('sensor.dhw_cold_water_in') not in ['unknown', 'unavailable'] else '⚠️' }} |
 
-          # G2 VALVE DETAILED LOGIC
-          - type: markdown
-            title: 🔀 G2 Valve Detection - Trend-Based Logic (NEW)
-            grid_options:
-              columns: full
-            content: |
-              ## Detection Method: Temperature Trend Analysis
-              The G2 diverter valve routes heat pump output to either:
-              - **Buffer Tank** (space heating via radiant floors/AHUs)
-              - **DHW Tank** (domestic hot water)
 
-              **NEW APPROACH:** We use **trend sensors** to monitor supply temperatures from the heat pump.
-              This directly detects which line is receiving heat flow from the G2 valve.
+              ## Supply Temperatures
+              | Sensor | Value | Status |
+              |--------|-------|--------|
+              | Heat Pump Outlet Temperature (Heat Pump Internal Sensor)  | {{ states('sensor.heat_pump_outlet_temperature') }}°F | {{ '✅' if states('sensor.heat_pump_outlet_temperature') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | Main Supply From Heat Pump (Mecahanical Room)  | {{ states('sensor.main_supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.main_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | Buffer Tank Supply From Heat Pump (Mecahanical Room)  | {{ states('sensor.supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.main_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '⚠️' }} |
+              | DHW Tank Supply From Heat Pump  (Mecahanical Room)  | {{ states('sensor.dhw_supply_from_heat_pump') }}°F | {{ '✅' if states('sensor.dhw_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '⚠️' }} |
 
-              ## Step 1: Trend Sensor Configuration
-              | Trend Sensor | Monitors | Sample Window | Min Rise Rate | Purpose |
-              |--------------|----------|---------------|---------------|---------|
-              | `dhw_tank_heating_trend` | `sensor.dhw_supply_from_heat_pump` | 3 minutes | 0.2°F/min | Detect G2 to DHW |
-              | `buffer_tank_heating_trend` | `sensor.buffer_supply_from_heat_pump` | 3 minutes | 0.2°F/min | Detect G2 to buffer |
+              detection_method: "Delta-T Correlation"
 
-              **Trend sensor turns ON when:** Supply temperature rising at ≥ 0.2°F/min over 3-minute window
-              **Monitors supply lines = direct detection of where heat is flowing**
-
-              ## Step 2: Current Trend Status
-              {% set dhw_trend = states('binary_sensor.dhw_tank_heating_trend') %}
-              {% set buf_trend = states('binary_sensor.buffer_tank_heating_trend') %}
-              {% set dhw_supply = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
-              {% set buf_supply = states('sensor.buffer_supply_from_heat_pump') | float(0) %}
-              {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
-
-              | Supply Line | Temp | Trend State | Heating? | Valid? |
-              |-------------|------|-------------|----------|--------|
-              | DHW Supply from HP | {{ dhw_supply }}°F | {{ dhw_trend }} | {{ '✅ YES' if dhw_trend == 'on' else '❌ NO' }} | {{ '✅' if hp_running else '⚠️ HP Off' }} |
-              | Buffer Supply from HP | {{ buf_supply }}°F | {{ buf_trend }} | {{ '✅ YES' if buf_trend == 'on' else '❌ NO' }} | {{ '✅' if hp_running else '⚠️ HP Off' }} |
-
-              **Note:** Monitoring supply lines provides faster, more accurate G2 valve detection than monitoring tank temperatures.
-
-              ## Step 3: G2 Valve Position (Trigger-Based with HP State Check)
-              **How the valve position sensor works:**
-              1. **ONLY reports heating modes when HP is running**
-              2. Shows **"Idle"** when HP is off (not latching to old state)
-              3. Waits for either trend sensor to turn ON while HP running
-              4. Updates position to the heating tank
-              5. Resets to "Idle" when HP stops or both trends off
-
-              **Triggers:**
-              - DHW trend → ON (+ HP running): Set position = "DHW Tank"
-              - Buffer trend → ON (+ HP running): Set position = "Buffer Tank"
-              - HP stops running: Set position = "Idle"
-              - Both trends → OFF: Set position = "Idle"
-              - HP starts: Check which trend is active (or use modbus mode if no trend)
-              - Home Assistant restart: Check HP state and active trends
-
-              ## Step 4: Current Valve State
-              | Sensor | Value | Last Updated |
-              |--------|-------|--------------|
-              | **G2 Valve Position** | **{{ states('sensor.g2_valve_position') }}** | {{ as_timestamp(states.sensor.g2_valve_position.last_updated) | timestamp_custom('%H:%M:%S') if states.sensor.g2_valve_position else 'Never' }} |
-              | G2 DHW Mode (Binary) | {{ states('binary_sensor.g2_valve_dhw_mode') }} | For automations |
-              | Last Valve Switch | {{ states('sensor.g2_valve_last_switch') }} | Timestamp |
-
-              ## Step 5: Validation
+              ## Detection Status
               {% set valve_pos = states('sensor.g2_valve_position') %}
               {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
-              {% set operating_mode = states('sensor.heat_pump_operating_mode') %}
 
-              **Consistency Checks:**
-              | Check | Status | Details |
-              |-------|--------|---------|
-              | Heat Pump Running | {{ '✅' if hp_running else '⏸️ Off' }} | {{ states('binary_sensor.heat_pump_running') }} |
-              | Operating Mode | {{ operating_mode }} | Modbus reported mode |
-              | Valve Position | {{ valve_pos }} | Trend-detected position |
-              | DHW Trend Active | {{ '🔥 YES' if dhw_trend == 'on' else '❌ NO' }} | Temperature rising |
-              | Buffer Trend Active | {{ '🔥 YES' if buf_trend == 'on' else '❌ NO' }} | Temperature rising |
-
-              **Expected vs Actual:**
               {% if not hp_running %}
-              - ⏸️ **Heat pump OFF** - valve position: "{{ valve_pos }}"
-              - G2 valve in default/rest position allowing flow between HP and buffer tank
-              - This enables natural circulation and keeps water flowing
-              - {{ '✅ Correct' if 'HP Off' in valve_pos else '⚠️ Should show HP Off' }}
-              {% elif 'DHW Tank' in valve_pos and hp_running %}
-              - 🔥 **HP Running - DHW Mode Active**
-              - Valve directing heat to DHW tank
-              - Modbus mode: {{ operating_mode }}
-              - {{ '✅ Match' if 'DHW' in operating_mode else '⚠️ Mode mismatch (trend detection is more accurate)' }}
-              {% elif 'Buffer Tank' in valve_pos and hp_running %}
-              - 🔥 **HP Running - Heating Mode Active**
-              - Valve directing heat to buffer tank for space heating
-              - Modbus mode: {{ operating_mode }}
-              - {{ '✅ Match' if 'DHW' not in operating_mode else '⚠️ Mode mismatch (trend detection is more accurate)' }}
+              - ⏸️ **Heat Pump OFF** → Position: {{ valve_pos }}
+              {% elif 'Buffer Tank' in valve_pos %}
+              - 🔥 **Heating Mode** → G2 directing to buffer tank (space heating)
+              - Buffer temp diff: {{ buffer_diff }}°F (closest to HP outlet)
+              {% elif 'DHW Tank' in valve_pos %}
+              - 🚿 **DHW Mode** → G2 directing to DHW tank (hot water)
+              - DHW temp diff: {{ dhw_diff }}°F (closest to HP outlet)
               {% else %}
-              - ⚠️ **Unexpected state:** HP={{ 'ON' if hp_running else 'OFF' }}, Position="{{ valve_pos }}"
+              - ❓ **Unknown** → Cannot determine position (temp differences > 10°F threshold)
               {% endif %}
 
-              ## Why Trend-Based is Better
-              | Old Method (Delta-T) | New Method (Trend) |
-              |---------------------|-------------------|
-              | ❌ Ambiguous when ΔT between 0.5-1.0°F | ✅ Clear ON/OFF signal |
-              | ❌ Noise from fluctuations | ✅ 5-min window filters noise |
-              | ❌ Guesses when uncertain | ✅ Latches to last heating event |
-              | ❌ Requires both temps stable | ✅ Detects **change** over time |
-
-              **Issues Found:**
-              {% if states('sensor.g2_valve_position') in ['unknown', 'unavailable'] %}
-              - ❌ G2 position sensor not initialized - needs HA restart
-              {% endif %}
-              {% if dhw_trend in ['unknown', 'unavailable'] %}
-              - ❌ DHW trend sensor not working - check sensor.dhw_tank_temperature
-              {% endif %}
-              {% if buf_trend in ['unknown', 'unavailable'] %}
-              - ❌ Buffer trend sensor not working - check sensor.buffer_tank_temperature
-              {% endif %}
+              **Future Enhancement:** Add temperature sensor immediately downstream of G2 valve for instant detection (~10s vs ~3min lag)
 
           # RADIANT ZONE STATUS
           - type: markdown
@@ -877,34 +909,36 @@ views:
             grid_options:
               columns: full
             content: |
-              ## G2 Diverter Valve (Heat Routing)
+              ## G2 Diverter Valve (Heat Routing - Delta-T Correlation)
               **Purpose:** Detects whether G2 valve is directing heat pump output to buffer tank (heating) or DHW tank
 
               | Sensor | Value | Detection Method |
               |--------|-------|------------------|
-              | G2 Valve Position | {{ states('sensor.g2_valve_position') }} | Temperature rise analysis |
+              | G2 Valve Position | {{ states('sensor.g2_valve_position') }} | Delta-T correlation |
               | G2 DHW Mode Active | {{ states('binary_sensor.g2_valve_dhw_mode') }} | Binary state |
 
-              ## Detection Logic (When HP Running)
-              | Condition | Value | Indicates |
-              |-----------|-------|-----------|
-              | Compressor Running | {{ states('sensor.cx50_compressor_frequency') }}Hz | HP active |
-              | Buffer Supply Temp | {{ states('sensor.supply_from_heat_pump') }}°F | - |
-              | Buffer Return Temp | {{ states('sensor.buffer_return_to_heat_pump') }}°F | - |
-              | Buffer Delta T | {{ (states('sensor.supply_from_heat_pump') | float(0) - states('sensor.buffer_return_to_heat_pump') | float(0)) | round(2) }}°F | {{ '✅ Heating Buffer' if (states('sensor.supply_from_heat_pump') | float(0) - states('sensor.buffer_return_to_heat_pump') | float(0)) > 1.0 else '⚠️ Not heating buffer' }} |
-              | HP Outlet Temp | {{ states('sensor.heat_pump_outlet_temperature') }}°F | Heat pump output (sensor.heat_pump_outlet_temperature_) |
+              ## Temperature Correlation (When HP Running)
+              {% set hp_outlet = state_attr('sensor.g2_valve_position', 'hp_outlet_temp') | float(0) %}
+              {% set buffer_diff = state_attr('sensor.g2_valve_position', 'buffer_temp_diff') | float(0) %}
+              {% set dhw_diff = state_attr('sensor.g2_valve_position', 'dhw_temp_diff') | float(0) %}
 
-              **Logic:**
-              - Buffer ΔT > 1.0°F + HP running → **G2 to Buffer Tank (Heating)**
-              - Buffer ΔT < 0.5°F + HP running → **G2 to DHW Tank (DHW Mode)**
+              | Temperature | Value | Temp Diff from HP Outlet |
+              |-------------|-------|--------------------------|
+              | HP Outlet | {{ hp_outlet }}°F | - (heat source) |
+              | Buffer Supply | {{ states('sensor.supply_from_heat_pump') }}°F | {{ buffer_diff }}°F {{ '✅' if buffer_diff < dhw_diff and buffer_diff < 10 else '' }} |
+              | DHW Supply | {{ states('sensor.dhw_supply_from_heat_pump') }}°F | {{ dhw_diff }}°F {{ '✅' if dhw_diff < buffer_diff and dhw_diff < 10 else '' }} |
 
-              **Why This Matters:**
-              - Modbus operating mode may not reflect actual G2 valve position
-              - Temperature-based detection shows where heat is ACTUALLY going
-              - Helps explain low distribution efficiency during DHW cycles
-              - Improves accuracy of heating vs DHW COP calculations
+              **Detection Rule:** Whichever supply line (buffer or DHW) is closest to HP outlet temp is receiving flow
 
-              **Data Flow:** HP Running + Buffer Temps → G2 Position → Mode Classification
+              **Current Decision:** {{ '🔥 Buffer Tank' if buffer_diff < dhw_diff and buffer_diff < 10 else '🚿 DHW Tank' if dhw_diff < buffer_diff and dhw_diff < 10 else '❓ Unknown' }}
+
+              **Why This Method:**
+              - Works during idle periods, defrost cycles, differential cooling
+              - No time windows or trend detection needed
+              - Updates instantly when temps change
+              - Simple, robust logic
+
+              **Data Flow:** HP Outlet Temp → Compare with Buffer/DHW Supply Temps → Closest Match = Active Path
 
           # CARD 5.6: ENERGY BALANCE TRACKING (NEW - 2025-11-17)
           - type: markdown
@@ -935,10 +969,10 @@ views:
               ## Thermal Power Sensors (Instantaneous - Watts)
               | Sensor | Value | G2 Position | Status |
               |--------|-------|-------------|--------|
-              | **HP Thermal Output** | {{ states('sensor.heat_pump_thermal_power_output') }}W ({{ (states('sensor.heat_pump_thermal_power_output') \| float(0) / 1000) \| round(2) }}kW) | - | {{ '✅ Producing' if states('sensor.heat_pump_thermal_power_output') \| float(0) > 1000 else '⏸️ Standby' }} |
-              | **Buffer Tank Input** | {{ states('sensor.buffer_tank_thermal_power_input') }}W ({{ (states('sensor.buffer_tank_thermal_power_input') \| float(0) / 1000) \| round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.buffer_tank_thermal_power_input') \| float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'Buffer Tank' else '⚠️ Should be receiving') }} |
-              | **DHW Tank Input** | {{ states('sensor.dhw_tank_thermal_power_input') }}W ({{ (states('sensor.dhw_tank_thermal_power_input') \| float(0) / 1000) \| round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.dhw_tank_thermal_power_input') \| float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'DHW Tank' else '⚠️ Should be receiving') }} |
-              | **HVAC Load Output** | {{ states('sensor.hvac_thermal_power_used') }}W ({{ (states('sensor.hvac_thermal_power_used') \| float(0) / 1000) \| round(2) }}kW) | - | {{ '✅ Delivering' if states('sensor.hvac_thermal_power_used') \| float(0) > 100 else '⏸️ No demand' }} |
+              | **HP Thermal Output** | {{ states('sensor.heat_pump_thermal_power_output') }}W ({{ (states('sensor.heat_pump_thermal_power_output') | float(0) / 1000) | round(2) }}kW) | - | {{ '✅ Producing' if states('sensor.heat_pump_thermal_power_output') | float(0) > 1000 else '⏸️ Standby' }} |
+              | **Buffer Tank Input** | {{ states('sensor.buffer_tank_thermal_power_input') }}W ({{ (states('sensor.buffer_tank_thermal_power_input') | float(0) / 1000) | round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.buffer_tank_thermal_power_input') | float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'Buffer Tank' else '⚠️ Should be receiving') }} |
+              | **DHW Tank Input** | {{ states('sensor.dhw_tank_thermal_power_input') }}W ({{ (states('sensor.dhw_tank_thermal_power_input') | float(0) / 1000) | round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.dhw_tank_thermal_power_input') | float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'DHW Tank' else '⚠️ Should be receiving') }} |
+              | **HVAC Load Output** | {{ states('sensor.hvac_thermal_power_used') }}W ({{ (states('sensor.hvac_thermal_power_used') | float(0) / 1000) | round(2) }}kW) | - | {{ '✅ Delivering' if states('sensor.hvac_thermal_power_used') | float(0) > 100 else '⏸️ No demand' }} |
 
               **Expected Behavior:**
               - When G2 → Buffer: Buffer Input > 0, DHW Input = 0
@@ -990,14 +1024,14 @@ views:
 
               | Metric | Calculation | Value | Status |
               |--------|-------------|-------|--------|
-              | **HP Thermal Output** | Integration sensor | {{ hp_out \| round(2) }} kWh | {{ '✅' if hp_out > 0 else '⏸️ Not running yet' }} |
-              | **Total Tank Input** | Buffer + DHW | {{ total_tank_in \| round(2) }} kWh | {{ '✅' if total_tank_in > 0 else '⏸️ Not running yet' }} |
-              | **Piping Loss** | HP Out - Tank In | {{ piping_loss \| round(2) }} kWh ({{ piping_loss_pct \| round(1) }}%) | {{ '✅ <10%' if piping_loss_pct < 10 and hp_out > 0 else ('⚠️ High losses' if piping_loss_pct >= 10 else '⏸️ Waiting for data') }} |
-              | **Buffer Input** | Integration sensor | {{ buf_in \| round(2) }} kWh | {{ '✅' if buf_in > 0 else '⏸️' }} |
-              | **DHW Input** | Integration sensor | {{ dhw_in \| round(2) }} kWh | {{ '✅' if dhw_in > 0 else '⏸️' }} |
-              | **HVAC Load** | Integration sensor | {{ hvac_out \| round(2) }} kWh | {{ '✅' if hvac_out > 0 else '⏸️' }} |
-              | **Distribution Efficiency** | HVAC / Buffer × 100 | {{ dist_eff \| round(1) }}% | {{ '✅ Good' if 70 < dist_eff < 150 and buf_in > 0.1 else ('⚠️ Check sensors' if buf_in > 0.1 else '⏸️ Waiting for data') }} |
-              | **Daily COP** | HP Out / HP Elec | {{ system_cop \| round(2) }} | {{ '✅ Good' if 2 < system_cop < 6 and hp_elec > 0.1 else ('⚠️ Check range' if hp_elec > 0.1 else '⏸️ Waiting for data') }} |
+              | **HP Thermal Output** | Integration sensor | {{ hp_out | round(2) }} kWh | {{ '✅' if hp_out > 0 else '⏸️ Not running yet' }} |
+              | **Total Tank Input** | Buffer + DHW | {{ total_tank_in | round(2) }} kWh | {{ '✅' if total_tank_in > 0 else '⏸️ Not running yet' }} |
+              | **Piping Loss** | HP Out - Tank In | {{ piping_loss | round(2) }} kWh ({{ piping_loss_pct | round(1) }}%) | {{ '✅ <10%' if piping_loss_pct < 10 and hp_out > 0 else ('⚠️ High losses' if piping_loss_pct >= 10 else '⏸️ Waiting for data') }} |
+              | **Buffer Input** | Integration sensor | {{ buf_in | round(2) }} kWh | {{ '✅' if buf_in > 0 else '⏸️' }} |
+              | **DHW Input** | Integration sensor | {{ dhw_in | round(2) }} kWh | {{ '✅' if dhw_in > 0 else '⏸️' }} |
+              | **HVAC Load** | Integration sensor | {{ hvac_out | round(2) }} kWh | {{ '✅' if hvac_out > 0 else '⏸️' }} |
+              | **Distribution Efficiency** | HVAC / Buffer × 100 | {{ dist_eff | round(1) }}% | {{ '✅ Good' if 70 < dist_eff < 150 and buf_in > 0.1 else ('⚠️ Check sensors' if buf_in > 0.1 else '⏸️ Waiting for data') }} |
+              | **Daily COP** | HP Out / HP Elec | {{ system_cop | round(2) }} | {{ '✅ Good' if 2 < system_cop < 6 and hp_elec > 0.1 else ('⚠️ Check range' if hp_elec > 0.1 else '⏸️ Waiting for data') }} |
 
               **Notes:**
               - Piping losses should be <10% (well-insulated system)
@@ -1029,6 +1063,150 @@ views:
               | Last Cycle Short | {{ states('binary_sensor.heat_pump_last_cycle_was_short') }} | Last < 300s |
 
               **Data Flow:** Operating Mode → Filter Power Sensors → COP Tracking
+
+          - type: markdown
+            title: 🧪 Unit Conversion Filter Presence Check
+            content: |
+              ## Filter Integration Status
+
+              - l_per_min: **{{ 10 | l_per_min("GPM") | default("❌ l_per_min filter missing (Install from HACS)", true) }}**
+              - gpm: **{{ 10 | gpm("L/min") | default("❌ gpm filter missing (Install from HACS)", true) }}**
+              - celsius: **{{ 75 | celsius("F") | default("❌ celsius filter missing (Install from HACS)", true) }}**
+              - fahrenheit: **{{ 21 | fahrenheit("C") | default("❌ fahrenheit filter missing (Install from HACS)", true) }}**
+              - kilowatts: **{{ 1500 | kilowatts("W") | default("❌ kilowatts filter missing (Install from HACS)", true) }}**
+              - watts: **{{ 1.5 | watts("kW") | default("❌ watts filter missing (Install from HACS)", true) }}**
+              - btu: **{{ 10000 | btu("J") | default("❌ btu filter missing (Install from HACS)", true) }}**
+              - wh: **{{ 2.5 | wh("kWh") | default("❌ wh filter missing (Install from HACS)", true) }}**
+
+              ---
+              {% if 10 | l_per_min("GPM") is string and 'missing' in (10 | l_per_min("GPM") | default("")) %}
+              ❌ Some filters are not available. Please ensure the unit_conversions integration is installed and enabled from HACS.
+              {% else %}
+              ✅ All filters appear to be installed and present!
+              {% endif %}
+            grid_options:
+              columns: full
+
+
+          - type: markdown
+            grid_options:
+              columns: full
+            title: 🧪 Unit Conversion Test Panel (Sensors & Constants)
+            content: |
+              ## Live Filter Tests – Real Sensors
+
+              ### Flow Conversion (Real Sensor)
+              - **Pump Flow (GPM):**  
+                Raw: **{{ states('sensor.cx50_pump_flow_gpm') }} GPM**  
+                GPM → L/min:  
+                ```
+                {{ states('sensor.cx50_pump_flow_gpm') | l_per_min(states_attr('sensor.cx50_pump_flow_gpm', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.cx50_pump_flow_gpm') | l_per_min(states_attr('sensor.cx50_pump_flow_gpm', 'unit_of_measurement')) }}**
+              - **Pump Flow (L/min):**  
+                Raw: **{{ states('sensor.cx50_pump_flow_lpm') }} L/min**  
+                L/min → GPM:  
+                ```
+                {{ states('sensor.cx50_pump_flow_lpm') | gpm(states_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.cx50_pump_flow_lpm') | gpm(states_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement')) }}**
+
+              ### Flow Conversion (Constants)
+              - **10 GPM → L/min:**  
+                ```
+                {{ 10 | l_per_min("GPM") }}
+                ```
+                = **{{ 10 | l_per_min("GPM") }}**
+              - **10 L/min → GPM:**  
+                ```
+                {{ 10 | gpm("L/min") }}
+                ```
+                = **{{ 10 | gpm("L/min") }}**
+
+              ---
+
+              ### Temperature Conversion (Real Sensor)
+              - **Outlet Temp:**  
+                Raw: **{{ states('sensor.cx50_outlet_temp') }}°{{ state_attr('sensor.cx50_outlet_temp', 'unit_of_measurement') }}**  
+                °F → °C:  
+                ```
+                {{ states('sensor.cx50_outlet_temp') | celsius(states_attr('sensor.cx50_outlet_temp', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.cx50_outlet_temp') | celsius(states_attr('sensor.cx50_outlet_temp', 'unit_of_measurement')) }}**
+
+              ### Temperature Conversion (Constants)
+              - **75°F → °C:**  
+                ```
+                {{ 75 | celsius("F") }}
+                ```
+                = **{{ 75 | celsius("F") }}**
+              - **21°C → °F:**  
+                ```
+                {{ 21 | fahrenheit("C") }}
+                ```
+                = **{{ 21 | fahrenheit("C") }}**
+
+              ---
+
+              ### Power Conversion (Real Sensor)
+              - **HP Thermal Power Output:**  
+                Raw: **{{ states('sensor.heat_pump_thermal_power_output') }} {{ state_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement') }}**  
+                W → kW:  
+                ```
+                {{ states('sensor.heat_pump_thermal_power_output') | kilowatts(states_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.heat_pump_thermal_power_output') | kilowatts(states_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement')) }}**
+
+              ### Power Conversion (Constants)
+              - **1500 W → kW:**  
+                ```
+                {{ 1500 | kilowatts("W") }}
+                ```
+                = **{{ 1500 | kilowatts("W") }}**
+              - **1.2 kW → W:**  
+                ```
+                {{ 1.2 | watts("kW") }}
+                ```
+                = **{{ 1.2 | watts("kW") }}**
+              - **1 HP → W:**  
+                ```
+                {{ 1 | watts("hp") }}
+                ```
+                = **{{ 1 | watts("hp") }}**
+
+              ---
+
+              ### Energy Conversion (Real Sensor)
+              - **HP Output Interval Energy:**  
+                Raw: **{{ states('sensor.heat_pump_output_power_interval_kwh') }} {{ state_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement') }}**  
+                kWh → Wh:  
+                ```
+                {{ states('sensor.heat_pump_output_power_interval_kwh') | wh(states_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.heat_pump_output_power_interval_kwh') | wh(states_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement')) }}**
+
+              ### Energy Conversion (Constants)
+              - **3600000 J → kWh:**  
+                ```
+                {{ 3600000 | kwh("J") }}
+                ```
+                = **{{ 3600000 | kwh("J") }}**
+              - **2.5 kWh → Wh:**  
+                ```
+                {{ 2.5 | wh("kWh") }}
+                ```
+                = **{{ 2.5 | wh("kWh") }}**
+              - **5000 cal → J:**  
+                ```
+                {{ 5000 | joules("cal") }}
+                ```
+                = **{{ 5000 | joules("cal") }}**
+              - **10000 J → BTU:**  
+                ```
+                {{ 10000 | btu("J") }}
+                ```
+                = **{{ 10000 | btu("J") }}**
+
           # OVERVIEW CARD
           - type: markdown
             title: 📋 Sensor Verification Overview

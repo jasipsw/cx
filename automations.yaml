@@ -866,3 +866,272 @@
           COP {{ states('sensor.heat_pump_last_cycle_cop') }}
           ({{ states('sensor.heat_pump_operating_mode') }} mode)
         entity_id: binary_sensor.heat_pump_running
+
+# ============================================================================
+# DUPLICATE ENTITY DETECTOR
+# ============================================================================
+
+- id: 'duplicate_entity_detector_notification'
+  alias: Duplicate Entity Detector - Notification
+  description: Automatically detect and notify about duplicate entities (_2, _3, etc.) created by Home Assistant
+  triggers:
+    # Check on Home Assistant startup
+    - platform: homeassistant
+      event: start
+
+    # Check every hour to catch duplicates created during runtime
+    - platform: time_pattern
+      hours: "/1"
+
+  conditions: []
+
+  actions:
+    # Check if any duplicate entities exist
+    - if:
+        - condition: template
+          value_template: >
+            {%- set duplicates = namespace(found=false) %}
+            {%- for entity in states %}
+              {# Match entities ending in _2 through _99 #}
+              {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
+                {# Get the presumed original entity name by removing the suffix #}
+                {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
+                {# Check if the original entity exists #}
+                {%- if states[original] is defined %}
+                  {# Compare friendly names - true duplicates have identical names #}
+                  {%- set original_name = state_attr(original, 'friendly_name') | default('') %}
+                  {%- set entity_name = entity.name | default('') %}
+                  {%- if original_name == entity_name %}
+                    {%- set duplicates.found = true %}
+                  {%- endif %}
+                {%- endif %}
+              {%- endif %}
+            {%- endfor %}
+            {{ duplicates.found }}
+      then:
+        # Send persistent notification with duplicate entity list
+        - action: persistent_notification.create
+          data:
+            title: "⚠️ Duplicate Entities Detected"
+            notification_id: duplicate_entity_detector
+            message: >
+              **Home Assistant has created duplicate entities with `_2`, `_3`, etc. suffixes.**
+
+              This usually happens when:
+              - `unique_id` changed in YAML
+              - `entity_id` conflicts with existing entity
+              - HA restart with config changes
+
+
+              **Duplicates found:**
+
+              {%- for entity in states %}
+                {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
+                  {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
+                  {# Only show if the original entity exists #}
+                  {%- if states[original] is defined %}
+                    {# Compare friendly names - true duplicates have identical names #}
+                    {%- set original_name = state_attr(original, 'friendly_name') | default('') %}
+                    {%- set entity_name = entity.name | default('') %}
+                    {%- if original_name == entity_name %}
+
+              - **{{ entity.entity_id }}**
+                - Status: {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (' + entity.state + ')' }}
+                - Friendly Name: {{ entity.name }}
+                - Original Entity: `{{ original }}` ({{ '✅ exists' if states[original].state not in ['unknown', 'unavailable'] else '⚠️ unavailable' }})
+                    {%- endif %}
+                  {%- endif %}
+                {%- endif %}
+              {%- endfor %}
+
+
+              **How to fix:**
+
+              1. Go to **Settings → Devices & Services → Entities**
+              2. Search for entities ending in `_2`, `_3`, etc.
+              3. Click on each duplicate entity
+              4. Click **Delete** (if unavailable/unwanted)
+              5. Restart Home Assistant to recreate correctly
+
+
+              **Alternatively**, check the **Sensor Verification Dashboard** for a detailed table.
+      else:
+        # Clear the notification if no duplicates found
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: duplicate_entity_detector
+
+  mode: single
+
+# ============================================================================
+# ADAPTIVE SUPPLY TEMPERATURE OPTIMIZATION
+# ============================================================================
+
+- id: 'supply_temp_optimization_recommendations'
+  alias: Supply Temperature Optimization Recommendations
+  description: >
+    Analyzes zone demand and sends recommendations for CX50 setpoint changes.
+    User reviews and manually applies changes to account for radiant floor thermal lag.
+  triggers:
+    # Check every 6 hours
+    - platform: time_pattern
+      hours: "/6"
+
+  conditions:
+    # Must be enabled
+    - condition: state
+      entity_id: input_boolean.enable_supply_temp_optimization
+      state: "on"
+
+    # Heat pump must not be in DHW mode
+    - condition: template
+      value_template: >
+        {{ states('sensor.heat_pump_operating_mode') not in ['DHW', 'Heat + DHW', 'HEAT + DHW'] }}
+
+  actions:
+    - choose:
+        # RECOMMEND DECREASE when demand has been low
+        - conditions:
+            - condition: state
+              entity_id: sensor.radiant_system_demand_level
+              state: "Low"
+              for:
+                hours: 4
+            # Verify we're above minimum limit
+            - condition: template
+              value_template: >
+                {% set current_c = states('number.cx50_heating_setpoint_c') | float(30) %}
+                {% set min_f = states('input_number.supply_temp_min_limit') | float(78) %}
+                {% set min_c = (min_f - 32) / 1.8 %}
+                {{ current_c > (min_c + 0.5) }}
+          sequence:
+            - action: persistent_notification.create
+              data:
+                title: "Supply Temp Recommendation: Decrease"
+                message: >
+                  **Recommendation:** Decrease setpoint by 1°F
+
+                  **Current:** {{ states('number.cx50_heating_setpoint_c') }}°C ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
+
+                  **Suggested:** {{ (states('number.cx50_heating_setpoint_c') | float - 0.5) | round(1) }}°C ({{ ((states('number.cx50_heating_setpoint_c') | float - 0.5) * 1.8 + 32) | round(1) }}°F)
+
+                  **Reason:** Demand has been Low for 4+ hours
+
+                  Zones calling: {{ states('sensor.radiant_zones_calling') }}
+                  Flow rate: {{ states('sensor.hvac_buffer_tank_flow_rate') }} gal/min
+                  Outdoor temp: {{ states('sensor.heat_pump_ambient_temperature') }}°F
+                notification_id: supply_temp_recommendation
+            - action: logbook.log
+              data:
+                name: Supply Temp Optimization
+                message: >
+                  📋 RECOMMENDATION: Decrease setpoint by 0.5°C - Demand Low for 4+ hours
+                entity_id: number.cx50_heating_setpoint_c
+
+        # RECOMMEND INCREASE when demand has been high
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: sensor.radiant_system_demand_level
+                  state: "High"
+                  for:
+                    hours: 4
+                - condition: state
+                  entity_id: sensor.radiant_system_demand_level
+                  state: "Very High"
+                  for:
+                    hours: 2
+            # Verify we're below maximum limit
+            - condition: template
+              value_template: >
+                {% set current_c = states('number.cx50_heating_setpoint_c') | float(30) %}
+                {% set max_f = states('input_number.supply_temp_max_limit') | float(105) %}
+                {% set max_c = (max_f - 32) / 1.8 %}
+                {{ current_c < (max_c - 0.5) }}
+          sequence:
+            - action: persistent_notification.create
+              data:
+                title: "Supply Temp Recommendation: Increase"
+                message: >
+                  **Recommendation:** Increase setpoint by 1°F
+
+                  **Current:** {{ states('number.cx50_heating_setpoint_c') }}°C ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
+
+                  **Suggested:** {{ (states('number.cx50_heating_setpoint_c') | float + 0.5) | round(1) }}°C ({{ ((states('number.cx50_heating_setpoint_c') | float + 0.5) * 1.8 + 32) | round(1) }}°F)
+
+                  **Reason:** Demand has been {{ states('sensor.radiant_system_demand_level') }} for extended period
+
+                  Zones calling: {{ states('sensor.radiant_zones_calling') }}
+                  Flow rate: {{ states('sensor.hvac_buffer_tank_flow_rate') }} gal/min
+                  Outdoor temp: {{ states('sensor.heat_pump_ambient_temperature') }}°F
+                notification_id: supply_temp_recommendation
+            - action: logbook.log
+              data:
+                name: Supply Temp Optimization
+                message: >
+                  📋 RECOMMENDATION: Increase setpoint by 0.5°C - Demand {{ states('sensor.radiant_system_demand_level') }} for extended period
+                entity_id: number.cx50_heating_setpoint_c
+
+      # Default: No recommendation needed
+      default:
+        - action: logbook.log
+          data:
+            name: Supply Temp Optimization
+            message: >
+              ✓ No change recommended - Demand: {{ states('sensor.radiant_system_demand_level') }},
+              Setpoint: {{ states('number.cx50_heating_setpoint_c') }}°C
+            entity_id: number.cx50_heating_setpoint_c
+
+  mode: single
+
+# Log when optimization is enabled/disabled
+- id: 'log_supply_temp_optimization_toggle'
+  alias: "Log: Supply Temp Optimization Toggle"
+  description: Log when supply temp optimization is enabled or disabled
+  triggers:
+    - platform: state
+      entity_id: input_boolean.enable_supply_temp_optimization
+  actions:
+    - action: logbook.log
+      data:
+        name: Supply Temp Optimization
+        message: >
+          {% if is_state('input_boolean.enable_supply_temp_optimization', 'on') %}
+            ✅ ENABLED - Automatic setpoint adjustment active
+            (Limits: {{ states('input_number.supply_temp_min_limit') }}°F - {{ states('input_number.supply_temp_max_limit') }}°F)
+          {% else %}
+            ⏸️ DISABLED - Manual control only
+          {% endif %}
+        entity_id: input_boolean.enable_supply_temp_optimization
+  mode: single
+
+# One-time reminder - can be deleted after it runs
+- id: 'reminder_llm_optimization_20251119'
+  alias: "Reminder: Consider AI/LLM for Optimization"
+  description: One-time reminder to consider AI/LLM features for thermal optimization
+  triggers:
+    - platform: time
+      at: "09:00:00"
+  conditions:
+    - condition: template
+      value_template: "{{ now().date() == strptime('2025-11-19', '%Y-%m-%d').date() }}"
+  actions:
+    - action: persistent_notification.create
+      data:
+        title: "Reminder: AI/LLM for Optimization"
+        message: >
+          Consider whether HA's AI/LLM integrations would be useful for thermal optimization.
+
+          Options to explore:
+          - Daily analysis reports via conversation.process
+          - Anomaly detection for unusual patterns
+          - Weather-aware recommendations
+
+          Setup required: OpenAI, Anthropic, or Ollama integration
+        notification_id: llm_optimization_reminder
+    - action: notify.mobile_app_pixel_8_pro
+      data:
+        title: "Reminder: AI/LLM for Optimization"
+        message: "Consider AI/LLM features for thermal optimization analysis"
+  mode: single

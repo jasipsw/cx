@@ -43,3 +43,10 @@ test_hp_running:
 test_g2_valve:
   name: Test G2 Valve (DHW Mode)
   icon: mdi:valve
+
+# Enable automatic supply temperature optimization
+# When on, HA will adjust CX50 setpoint based on zone demand
+enable_supply_temp_optimization:
+  name: Enable Supply Temp Optimization
+  initial: false
+  icon: mdi:thermometer-auto
