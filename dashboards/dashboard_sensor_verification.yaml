@@ -969,10 +969,10 @@ views:
               ## Thermal Power Sensors (Instantaneous - Watts)
               | Sensor | Value | G2 Position | Status |
               |--------|-------|-------------|--------|
-              | **HP Thermal Output** | {{ states('sensor.heat_pump_thermal_power_output') }}W ({{ (states('sensor.heat_pump_thermal_power_output') \| float(0) / 1000) \| round(2) }}kW) | - | {{ '✅ Producing' if states('sensor.heat_pump_thermal_power_output') \| float(0) > 1000 else '⏸️ Standby' }} |
-              | **Buffer Tank Input** | {{ states('sensor.buffer_tank_thermal_power_input') }}W ({{ (states('sensor.buffer_tank_thermal_power_input') \| float(0) / 1000) \| round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.buffer_tank_thermal_power_input') \| float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'Buffer Tank' else '⚠️ Should be receiving') }} |
-              | **DHW Tank Input** | {{ states('sensor.dhw_tank_thermal_power_input') }}W ({{ (states('sensor.dhw_tank_thermal_power_input') \| float(0) / 1000) \| round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.dhw_tank_thermal_power_input') \| float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'DHW Tank' else '⚠️ Should be receiving') }} |
-              | **HVAC Load Output** | {{ states('sensor.hvac_thermal_power_used') }}W ({{ (states('sensor.hvac_thermal_power_used') \| float(0) / 1000) \| round(2) }}kW) | - | {{ '✅ Delivering' if states('sensor.hvac_thermal_power_used') \| float(0) > 100 else '⏸️ No demand' }} |
+              | **HP Thermal Output** | {{ states('sensor.heat_pump_thermal_power_output') }}W ({{ (states('sensor.heat_pump_thermal_power_output') | float(0) / 1000) | round(2) }}kW) | - | {{ '✅ Producing' if states('sensor.heat_pump_thermal_power_output') | float(0) > 1000 else '⏸️ Standby' }} |
+              | **Buffer Tank Input** | {{ states('sensor.buffer_tank_thermal_power_input') }}W ({{ (states('sensor.buffer_tank_thermal_power_input') | float(0) / 1000) | round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.buffer_tank_thermal_power_input') | float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'Buffer Tank' else '⚠️ Should be receiving') }} |
+              | **DHW Tank Input** | {{ states('sensor.dhw_tank_thermal_power_input') }}W ({{ (states('sensor.dhw_tank_thermal_power_input') | float(0) / 1000) | round(2) }}kW) | {{ states('sensor.g2_valve_position') }} | {{ '✅ Receiving' if states('sensor.dhw_tank_thermal_power_input') | float(0) > 100 else ('⏸️ Idle' if states('sensor.g2_valve_position') != 'DHW Tank' else '⚠️ Should be receiving') }} |
+              | **HVAC Load Output** | {{ states('sensor.hvac_thermal_power_used') }}W ({{ (states('sensor.hvac_thermal_power_used') | float(0) / 1000) | round(2) }}kW) | - | {{ '✅ Delivering' if states('sensor.hvac_thermal_power_used') | float(0) > 100 else '⏸️ No demand' }} |
 
               **Expected Behavior:**
               - When G2 → Buffer: Buffer Input > 0, DHW Input = 0
@@ -1024,14 +1024,14 @@ views:
 
               | Metric | Calculation | Value | Status |
               |--------|-------------|-------|--------|
-              | **HP Thermal Output** | Integration sensor | {{ hp_out \| round(2) }} kWh | {{ '✅' if hp_out > 0 else '⏸️ Not running yet' }} |
-              | **Total Tank Input** | Buffer + DHW | {{ total_tank_in \| round(2) }} kWh | {{ '✅' if total_tank_in > 0 else '⏸️ Not running yet' }} |
-              | **Piping Loss** | HP Out - Tank In | {{ piping_loss \| round(2) }} kWh ({{ piping_loss_pct \| round(1) }}%) | {{ '✅ <10%' if piping_loss_pct < 10 and hp_out > 0 else ('⚠️ High losses' if piping_loss_pct >= 10 else '⏸️ Waiting for data') }} |
-              | **Buffer Input** | Integration sensor | {{ buf_in \| round(2) }} kWh | {{ '✅' if buf_in > 0 else '⏸️' }} |
-              | **DHW Input** | Integration sensor | {{ dhw_in \| round(2) }} kWh | {{ '✅' if dhw_in > 0 else '⏸️' }} |
-              | **HVAC Load** | Integration sensor | {{ hvac_out \| round(2) }} kWh | {{ '✅' if hvac_out > 0 else '⏸️' }} |
-              | **Distribution Efficiency** | HVAC / Buffer × 100 | {{ dist_eff \| round(1) }}% | {{ '✅ Good' if 70 < dist_eff < 150 and buf_in > 0.1 else ('⚠️ Check sensors' if buf_in > 0.1 else '⏸️ Waiting for data') }} |
-              | **Daily COP** | HP Out / HP Elec | {{ system_cop \| round(2) }} | {{ '✅ Good' if 2 < system_cop < 6 and hp_elec > 0.1 else ('⚠️ Check range' if hp_elec > 0.1 else '⏸️ Waiting for data') }} |
+              | **HP Thermal Output** | Integration sensor | {{ hp_out | round(2) }} kWh | {{ '✅' if hp_out > 0 else '⏸️ Not running yet' }} |
+              | **Total Tank Input** | Buffer + DHW | {{ total_tank_in | round(2) }} kWh | {{ '✅' if total_tank_in > 0 else '⏸️ Not running yet' }} |
+              | **Piping Loss** | HP Out - Tank In | {{ piping_loss | round(2) }} kWh ({{ piping_loss_pct | round(1) }}%) | {{ '✅ <10%' if piping_loss_pct < 10 and hp_out > 0 else ('⚠️ High losses' if piping_loss_pct >= 10 else '⏸️ Waiting for data') }} |
+              | **Buffer Input** | Integration sensor | {{ buf_in | round(2) }} kWh | {{ '✅' if buf_in > 0 else '⏸️' }} |
+              | **DHW Input** | Integration sensor | {{ dhw_in | round(2) }} kWh | {{ '✅' if dhw_in > 0 else '⏸️' }} |
+              | **HVAC Load** | Integration sensor | {{ hvac_out | round(2) }} kWh | {{ '✅' if hvac_out > 0 else '⏸️' }} |
+              | **Distribution Efficiency** | HVAC / Buffer × 100 | {{ dist_eff | round(1) }}% | {{ '✅ Good' if 70 < dist_eff < 150 and buf_in > 0.1 else ('⚠️ Check sensors' if buf_in > 0.1 else '⏸️ Waiting for data') }} |
+              | **Daily COP** | HP Out / HP Elec | {{ system_cop | round(2) }} | {{ '✅ Good' if 2 < system_cop < 6 and hp_elec > 0.1 else ('⚠️ Check range' if hp_elec > 0.1 else '⏸️ Waiting for data') }} |
 
               **Notes:**
               - Piping losses should be <10% (well-insulated system)
@@ -1063,6 +1063,150 @@ views:
               | Last Cycle Short | {{ states('binary_sensor.heat_pump_last_cycle_was_short') }} | Last < 300s |
 
               **Data Flow:** Operating Mode → Filter Power Sensors → COP Tracking
+
+          - type: markdown
+            title: 🧪 Unit Conversion Filter Presence Check
+            content: |
+              ## Filter Integration Status
+
+              - l_per_min: **{{ 10 | l_per_min("GPM") | default("❌ l_per_min filter missing (Install from HACS)", true) }}**
+              - gpm: **{{ 10 | gpm("L/min") | default("❌ gpm filter missing (Install from HACS)", true) }}**
+              - celsius: **{{ 75 | celsius("F") | default("❌ celsius filter missing (Install from HACS)", true) }}**
+              - fahrenheit: **{{ 21 | fahrenheit("C") | default("❌ fahrenheit filter missing (Install from HACS)", true) }}**
+              - kilowatts: **{{ 1500 | kilowatts("W") | default("❌ kilowatts filter missing (Install from HACS)", true) }}**
+              - watts: **{{ 1.5 | watts("kW") | default("❌ watts filter missing (Install from HACS)", true) }}**
+              - btu: **{{ 10000 | btu("J") | default("❌ btu filter missing (Install from HACS)", true) }}**
+              - wh: **{{ 2.5 | wh("kWh") | default("❌ wh filter missing (Install from HACS)", true) }}**
+
+              ---
+              {% if 10 | l_per_min("GPM") is string and 'missing' in (10 | l_per_min("GPM") | default("")) %}
+              ❌ Some filters are not available. Please ensure the unit_conversions integration is installed and enabled from HACS.
+              {% else %}
+              ✅ All filters appear to be installed and present!
+              {% endif %}
+            grid_options:
+              columns: full
+
+
+          - type: markdown
+            grid_options:
+              columns: full
+            title: 🧪 Unit Conversion Test Panel (Sensors & Constants)
+            content: |
+              ## Live Filter Tests – Real Sensors
+
+              ### Flow Conversion (Real Sensor)
+              - **Pump Flow (GPM):**  
+                Raw: **{{ states('sensor.cx50_pump_flow_gpm') }} GPM**  
+                GPM → L/min:  
+                ```
+                {{ states('sensor.cx50_pump_flow_gpm') | l_per_min(states_attr('sensor.cx50_pump_flow_gpm', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.cx50_pump_flow_gpm') | l_per_min(states_attr('sensor.cx50_pump_flow_gpm', 'unit_of_measurement')) }}**
+              - **Pump Flow (L/min):**  
+                Raw: **{{ states('sensor.cx50_pump_flow_lpm') }} L/min**  
+                L/min → GPM:  
+                ```
+                {{ states('sensor.cx50_pump_flow_lpm') | gpm(states_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.cx50_pump_flow_lpm') | gpm(states_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement')) }}**
+
+              ### Flow Conversion (Constants)
+              - **10 GPM → L/min:**  
+                ```
+                {{ 10 | l_per_min("GPM") }}
+                ```
+                = **{{ 10 | l_per_min("GPM") }}**
+              - **10 L/min → GPM:**  
+                ```
+                {{ 10 | gpm("L/min") }}
+                ```
+                = **{{ 10 | gpm("L/min") }}**
+
+              ---
+
+              ### Temperature Conversion (Real Sensor)
+              - **Outlet Temp:**  
+                Raw: **{{ states('sensor.cx50_outlet_temp') }}°{{ state_attr('sensor.cx50_outlet_temp', 'unit_of_measurement') }}**  
+                °F → °C:  
+                ```
+                {{ states('sensor.cx50_outlet_temp') | celsius(states_attr('sensor.cx50_outlet_temp', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.cx50_outlet_temp') | celsius(states_attr('sensor.cx50_outlet_temp', 'unit_of_measurement')) }}**
+
+              ### Temperature Conversion (Constants)
+              - **75°F → °C:**  
+                ```
+                {{ 75 | celsius("F") }}
+                ```
+                = **{{ 75 | celsius("F") }}**
+              - **21°C → °F:**  
+                ```
+                {{ 21 | fahrenheit("C") }}
+                ```
+                = **{{ 21 | fahrenheit("C") }}**
+
+              ---
+
+              ### Power Conversion (Real Sensor)
+              - **HP Thermal Power Output:**  
+                Raw: **{{ states('sensor.heat_pump_thermal_power_output') }} {{ state_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement') }}**  
+                W → kW:  
+                ```
+                {{ states('sensor.heat_pump_thermal_power_output') | kilowatts(states_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.heat_pump_thermal_power_output') | kilowatts(states_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement')) }}**
+
+              ### Power Conversion (Constants)
+              - **1500 W → kW:**  
+                ```
+                {{ 1500 | kilowatts("W") }}
+                ```
+                = **{{ 1500 | kilowatts("W") }}**
+              - **1.2 kW → W:**  
+                ```
+                {{ 1.2 | watts("kW") }}
+                ```
+                = **{{ 1.2 | watts("kW") }}**
+              - **1 HP → W:**  
+                ```
+                {{ 1 | watts("hp") }}
+                ```
+                = **{{ 1 | watts("hp") }}**
+
+              ---
+
+              ### Energy Conversion (Real Sensor)
+              - **HP Output Interval Energy:**  
+                Raw: **{{ states('sensor.heat_pump_output_power_interval_kwh') }} {{ state_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement') }}**  
+                kWh → Wh:  
+                ```
+                {{ states('sensor.heat_pump_output_power_interval_kwh') | wh(states_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement')) }}
+                ```
+                = **{{ states('sensor.heat_pump_output_power_interval_kwh') | wh(states_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement')) }}**
+
+              ### Energy Conversion (Constants)
+              - **3600000 J → kWh:**  
+                ```
+                {{ 3600000 | kwh("J") }}
+                ```
+                = **{{ 3600000 | kwh("J") }}**
+              - **2.5 kWh → Wh:**  
+                ```
+                {{ 2.5 | wh("kWh") }}
+                ```
+                = **{{ 2.5 | wh("kWh") }}**
+              - **5000 cal → J:**  
+                ```
+                {{ 5000 | joules("cal") }}
+                ```
+                = **{{ 5000 | joules("cal") }}**
+              - **10000 J → BTU:**  
+                ```
+                {{ 10000 | btu("J") }}
+                ```
+                = **{{ 10000 | btu("J") }}**
+
           # OVERVIEW CARD
           - type: markdown
             title: 📋 Sensor Verification Overview

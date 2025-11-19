@@ -94,7 +94,7 @@
     - name: "Heat Pump Run Start Energy Input"
       unique_id: heat_pump_run_start_energy_input
       unit_of_measurement: "kWh"
-      state_class: total_increasing
+      state_class: measurement
       device_class: energy
       state: >
         {{ states('sensor.heat_pump_input_power_interval_kwh') | float(0) }}
@@ -102,7 +102,7 @@
     - name: "Heat Pump Run Start Energy Output"
       unique_id: heat_pump_run_start_energy_output
       unit_of_measurement: "kWh"
-      state_class: total_increasing
+      state_class: measurement
       device_class: energy
       state: >
         {{ states('sensor.heat_pump_output_power_interval_kwh') | float(0) }}
