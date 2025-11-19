@@ -1,13 +1,24 @@
+{# ============================================================================
+   IMPORT ALL MACROS - Copy this line to your YAML templates:
+   
+   {% from 'init.jinja' import C, F, LPM, GPM %}
+   
+   Available macros:
+   - C, F: Temperature conversions (Celsius, Fahrenheit)
+   - LPM: Converts flow entity to liters per minute
+   - GPM: Converts flow entity to gallons per minute
+   ============================================================================ #}
+
 {# Temperature Conversion Macros for Home Assistant
 
    These macros provide reusable temperature conversion functions
    that can be used throughout your sensor templates.
 
    Usage in sensor templates:
-   {% from 'init.jinja' import celsius, fahrenheit %}
+   {% from 'init.jinja' import C, F %}
 
-   {{ celsius('sensor.some_temp_sensor') }}
-   {{ fahrenheit('sensor.some_temp_sensor') }}
+   {{ C('sensor.some_temp_sensor') }}
+   {{ F('sensor.some_temp_sensor') }}
 
    Key features:
    - Returns 'none' for unavailable/unknown sensors (safer than returning 0)
@@ -26,11 +37,11 @@
      Temperature value in Celsius (float), or none if sensor unavailable
 
    Example:
-     {% from 'init.jinja' import celsius %}
-     {{ celsius('sensor.outdoor_temperature') }}
-     {{ celsius('sensor.some_sensor', 'F') }}  {# Assume F if unit missing #}
+     {% from 'init.jinja' import C %}
+     {{ C('sensor.outdoor_temperature') }}
+     {{ C('sensor.some_sensor', 'F') }}  {# Assume F if unit missing #}
 #}
-{% macro celsius(entity_id, default_unit_if_missing='C') %}
+{% macro C(entity_id, default_unit_if_missing='C') %}
   {% set state = states(entity_id) %}
   {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
     {{ none }}
@@ -61,11 +72,11 @@
      Temperature value in Fahrenheit (float), or none if sensor unavailable
 
    Example:
-     {% from 'init.jinja' import fahrenheit %}
-     {{ fahrenheit('sensor.outdoor_temperature') }}
-     {{ fahrenheit('sensor.some_sensor', 'F') }}  {# Assume F if unit missing #}
+     {% from 'init.jinja' import F %}
+     {{ F('sensor.outdoor_temperature') }}
+     {{ F('sensor.some_sensor', 'F') }}  {# Assume F if unit missing #}
 #}
-{% macro fahrenheit(entity_id, default_unit_if_missing='C') %}
+{% macro F(entity_id, default_unit_if_missing='C') %}
   {% set state = states(entity_id) %}
   {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
     {{ none }}
@@ -79,6 +90,76 @@
         {{ value }}
       {% elif from_unit in ['C', 'CELSIUS'] %}
         {{ value * 9 / 5 + 32 }}
+      {% else %}
+        {{ value }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{# Convert flow sensor value to Liters per Minute
+
+   Args:
+     entity_id: Entity ID of the flow sensor (string)
+     default_unit_if_missing: Unit to assume if sensor has no unit attribute (default: 'L/MIN')
+
+   Returns:
+     Flow value in Liters per Minute (float), or none if sensor unavailable
+
+   Example:
+     {% from 'init.jinja' import LPM %}
+     {{ LPM('sensor.pump_flow_rate') }}
+     {{ LPM('sensor.some_sensor', 'GPM') }}  {# Assume GPM if unit missing #}
+#}
+{% macro LPM(entity_id, default_unit_if_missing='L/MIN') %}
+  {% set state = states(entity_id) %}
+  {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
+    {{ none }}
+  {% else %}
+    {% set value = state | float(default=none) %}
+    {% if value is none %}
+      {{ none }}
+    {% else %}
+      {% set from_unit = (state_attr(entity_id, 'unit_of_measurement') or default_unit_if_missing) | upper | replace('/','') | replace(' ','') | trim %}
+      {% if from_unit in ['LMIN', 'LPM'] %}
+        {{ value }}
+      {% elif from_unit == 'GPM' %}
+        {{ value * 3.78541 }}
+      {% else %}
+        {{ value }}
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{# Convert flow sensor value to Gallons per Minute
+
+   Args:
+     entity_id: Entity ID of the flow sensor (string)
+     default_unit_if_missing: Unit to assume if sensor has no unit attribute (default: 'L/MIN')
+
+   Returns:
+     Flow value in Gallons per Minute (float), or none if sensor unavailable
+
+   Example:
+     {% from 'init.jinja' import GPM %}
+     {{ GPM('sensor.pump_flow_rate') }}
+     {{ GPM('sensor.some_sensor', 'GPM') }}  {# Assume GPM if unit missing #}
+#}
+{% macro GPM(entity_id, default_unit_if_missing='L/MIN') %}
+  {% set state = states(entity_id) %}
+  {% if state in ['unavailable', 'unknown', 'none', ''] or state is none %}
+    {{ none }}
+  {% else %}
+    {% set value = state | float(default=none) %}
+    {% if value is none %}
+      {{ none }}
+    {% else %}
+      {% set from_unit = (state_attr(entity_id, 'unit_of_measurement') or default_unit_if_missing) | upper | replace('/','') | replace(' ','') | trim %}
+      {% if from_unit == 'GPM' %}
+        {{ value }}
+      {% elif from_unit in ['LMIN', 'LPM'] %}
+        {{ value * 0.264172 }}
       {% else %}
         {{ value }}
       {% endif %}
