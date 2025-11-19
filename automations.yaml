@@ -896,9 +896,14 @@
               {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
                 {# Get the presumed original entity name by removing the suffix #}
                 {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
-                {# Check if the original entity exists - if so, this is a true duplicate #}
+                {# Check if the original entity exists #}
                 {%- if states[original] is defined %}
-                  {%- set duplicates.found = true %}
+                  {# Compare friendly names - true duplicates have identical names #}
+                  {%- set original_name = state_attr(original, 'friendly_name') | default('') %}
+                  {%- set entity_name = entity.name | default('') %}
+                  {%- if original_name == entity_name %}
+                    {%- set duplicates.found = true %}
+                  {%- endif %}
                 {%- endif %}
               {%- endif %}
             {%- endfor %}
@@ -923,13 +928,18 @@
               {%- for entity in states %}
                 {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
                   {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
-                  {# Only show if the original entity exists - this is a true duplicate #}
+                  {# Only show if the original entity exists #}
                   {%- if states[original] is defined %}
+                    {# Compare friendly names - true duplicates have identical names #}
+                    {%- set original_name = state_attr(original, 'friendly_name') | default('') %}
+                    {%- set entity_name = entity.name | default('') %}
+                    {%- if original_name == entity_name %}
 
-              - **{{ entity.domain }}.{{ entity.entity_id.split('.')[1] }}**
+              - **{{ entity.entity_id }}**
                 - Status: {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (' + entity.state + ')' }}
                 - Friendly Name: {{ entity.name }}
                 - Original Entity: `{{ original }}` ({{ '✅ exists' if states[original].state not in ['unknown', 'unavailable'] else '⚠️ unavailable' }})
+                    {%- endif %}
                   {%- endif %}
                 {%- endif %}
               {%- endfor %}
