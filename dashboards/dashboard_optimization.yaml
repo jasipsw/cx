@@ -375,6 +375,16 @@ views:
               func: last
               duration: 1h
 
+      # Energy Balance Data Table
+      - type: markdown
+        title: Energy Balance Summary
+        content: >
+          | Period | HP Output (kWh) | HVAC Delivered (kWh) | Efficiency |
+          |--------|-----------------|----------------------|------------|
+          | Current Hour | {{ states('sensor.hp_thermal_energy_output_hourly') | float(0) | round(2) }} | {{ states('sensor.hvac_thermal_energy_used_hourly') | float(0) | round(2) }} | {{ states('sensor.distribution_efficiency_hourly') | default('--') }}% |
+          | Today | {{ states('sensor.hp_thermal_energy_output_daily') | float(0) | round(2) }} | {{ states('sensor.hvac_thermal_energy_used_daily') | float(0) | round(2) }} | {{ states('sensor.distribution_efficiency_daily') | default('--') }}% |
+          | This Month | {{ states('sensor.hp_thermal_energy_output_monthly') | float(0) | round(2) }} | {{ states('sensor.hvac_thermal_energy_used_monthly') | float(0) | round(2) }} | {{ states('sensor.distribution_efficiency_monthly') | default('--') }}% |
+
       - type: horizontal-stack
         cards:
           - type: entities
