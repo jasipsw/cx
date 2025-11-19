@@ -1069,25 +1069,42 @@ views:
             content: |
               ## Filter Integration Status
 
-              - l_per_min: **{{ 10 | l_per_min("GPM") | default("❌ l_per_min filter missing (Install from HACS)", true) }}**
-              - gpm: **{{ 10 | gpm("L/min") | default("❌ gpm filter missing (Install from HACS)", true) }}**
-              - celsius: **{{ 75 | celsius("F") | default("❌ celsius filter missing (Install from HACS)", true) }}**
-              - fahrenheit: **{{ 21 | fahrenheit("C") | default("❌ fahrenheit filter missing (Install from HACS)", true) }}**
-              - kilowatts: **{{ 1500 | kilowatts("W") | default("❌ kilowatts filter missing (Install from HACS)", true) }}**
-              - watts: **{{ 1.5 | watts("kW") | default("❌ watts filter missing (Install from HACS)", true) }}**
-              - btu: **{{ 10000 | btu("J") | default("❌ btu filter missing (Install from HACS)", true) }}**
-              - wh: **{{ 2.5 | wh("kWh") | default("❌ wh filter missing (Install from HACS)", true) }}**
+              ### Flow Conversions
+              - l_per_min (10 GPM): **{{ 10 | l_per_min("GPM") | default("❌ MISSING", true) | round(2) }}** L/min (expected: 37.85)
+              - gpm (10 L/min): **{{ 10 | gpm("L/min") | default("❌ MISSING", true) | round(2) }}** GPM (expected: 2.64)
+
+              ### Temperature Conversions
+              - celsius (32°F): **{{ 32 | celsius("F") | default("❌ MISSING", true) | round(1) }}**°C (expected: 0.0)
+              - fahrenheit (0°C): **{{ 0 | fahrenheit("C") | default("❌ MISSING", true) | round(1) }}**°F (expected: 32.0)
+              - kelvin (0°C): **{{ 0 | kelvin("C") | default("❌ MISSING", true) | round(2) }}** K (expected: 273.15)
+
+              ### Power Conversions
+              - watts (5 kW): **{{ 5 | watts("kW") | default("❌ MISSING", true) }}** W (expected: 5000.0)
+              - kilowatts (1500 W): **{{ 1500 | kilowatts("W") | default("❌ MISSING", true) | round(1) }}** kW (expected: 1.5)
+
+              ### Energy Conversions (Short Names)
+              - wh (1 kWh): **{{ 1 | wh("kWh") | default("❌ MISSING", true) }}** Wh (expected: 1000.0)
+              - kwh (1000 Wh): **{{ 1000 | kwh("Wh") | default("❌ MISSING", true) | round(1) }}** kWh (expected: 1.0)
+              - joules (1 kWh): **{{ 1 | joules("kWh") | default("❌ MISSING", true) }}** J (expected: 3600000.0)
+              - btu (1055.06 J): **{{ 1055.06 | btu("J") | default("❌ MISSING", true) | round(1) }}** BTU (expected: 1.0)
+
+              ### Bidirectional BTU Conversions
+              - 3412.14 BTU → kWh: **{{ 3412.14 | kwh("BTU") | default("❌ MISSING", true) | round(2) }}** kWh (expected: 1.0)
+              - 1 kWh → BTU: **{{ 1 | btu("kWh") | default("❌ MISSING", true) | round(2) }}** BTU (expected: 3412.14)
 
               ---
-              {% if 10 | l_per_min("GPM") is string and 'missing' in (10 | l_per_min("GPM") | default("")) %}
-              ❌ Some filters are not available. Please ensure the unit_conversions integration is installed and enabled from HACS.
+              {% set test_result = 10 | l_per_min("GPM") | default(none) %}
+              {% if test_result is none %}
+              ❌ **Filters NOT loaded!** Please ensure:
+              1. Unit conversions integration is installed
+              2. `unit_conversions:` is in configuration.yaml
+              3. Home Assistant has been restarted
               {% else %}
-              ✅ All filters appear to be installed and present!
+              ✅ **All filters appear to be installed and working!**
               {% endif %}
             grid_options:
               columns: full
-
-
+              
           - type: markdown
             grid_options:
               columns: full
@@ -1206,6 +1223,15 @@ views:
                 {{ 10000 | btu("J") }}
                 ```
                 = **{{ 10000 | btu("J") }}**
+
+                - **1055.06 J → BTU:**  
+                = **{{ 1055.06 | btu("J") | round(2) }}** BTU
+
+                - **3412.14 BTU → kWh:**  
+                = **{{ 3412.14 | kwh("BTU") | round(2) }}** kWh
+                - **1 kWh → BTU:**  
+                {{ 1 | btu("kWh") }}
+                = **{{ 1 | btu("kWh") | round(2) }}** BTU
 
           # OVERVIEW CARD
           - type: markdown
