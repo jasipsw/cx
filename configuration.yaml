@@ -12,6 +12,9 @@ default_config:
 # Enable Python scripts
 python_script:
 
+# Enable custom unit conversions
+unit_conversions:
+
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
