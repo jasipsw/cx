@@ -265,8 +265,8 @@
     #   {{ flow_ok and t_sup_ok and t_ret_ok and cp_ok and rho_ok }}
       
     state: >-
-        {% set result_kw = states('input_number.hvac_thermal_power_used') | float(0) %}
-        {{ result_kw / 1000.0 | round(2) }}
+      {% set thermal_power_w = states('sensor.hvac_thermal_power_used') | float(0) %}
+      {{ (thermal_power_w / 1000.0) | round(2) }}
 
 #      {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
 #      {% set t_sup_f = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
