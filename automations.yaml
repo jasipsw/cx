@@ -344,14 +344,15 @@
     data:
       message: Charge Complete
   mode: single
-- id: 'cx_optimization_phase_1'
+- id: cx_optimization_phase_1
   alias: CX Optimization Phase 1 - Buffer Differential 18°F
-  description: Implement Phase 1 - Increase buffer differential from 10°F to 18°F by adjusting heating setpoint
+  description: Implement Phase 1 - Increase buffer differential from 10°F to 18°F
+    by adjusting heating setpoint
   triggers:
   - trigger: state
     entity_id:
     - input_select.optimization_phase
-    to: "Phase 1: Buffer Differential 18°F"
+    to: 'Phase 1: Buffer Differential 18°F'
   conditions: []
   actions:
   - action: number.set_value
@@ -367,17 +368,18 @@
   - action: notify.notify
     metadata: {}
     data:
-      message: "Phase 1 activated: Buffer differential target set to 18°F, supply temp 90°F. Monitor cycle duration for improvements."
+      message: 'Phase 1 activated: Buffer differential target set to 18°F, supply
+        temp 90°F. Monitor cycle duration for improvements.'
       title: CX50 Optimization Phase 1 Active
   mode: single
-- id: 'cx_optimization_phase_2'
+- id: cx_optimization_phase_2
   alias: CX Optimization Phase 2 - Supply Temp 85°F
   description: Implement Phase 2 - Lower supply temperature from 90°F to 85°F (29.4°C)
   triggers:
   - trigger: state
     entity_id:
     - input_select.optimization_phase
-    to: "Phase 2: Supply Temp 85°F"
+    to: 'Phase 2: Supply Temp 85°F'
   conditions: []
   actions:
   - action: number.set_value
@@ -393,17 +395,19 @@
   - action: notify.notify
     metadata: {}
     data:
-      message: "Phase 2 activated: Supply temperature lowered to 85°F (29.4°C). Monitor COP improvements."
+      message: 'Phase 2 activated: Supply temperature lowered to 85°F (29.4°C). Monitor
+        COP improvements.'
       title: CX50 Optimization Phase 2 Active
   mode: single
-- id: 'cx_optimization_phase_3'
+- id: cx_optimization_phase_3
   alias: CX Optimization Phase 3 - Supply Temp 82°F (Target)
-  description: Implement Phase 3 - Fine-tune to 82°F (27.8°C) targeting manufacturer specifications
+  description: Implement Phase 3 - Fine-tune to 82°F (27.8°C) targeting manufacturer
+    specifications
   triggers:
   - trigger: state
     entity_id:
     - input_select.optimization_phase
-    to: "Phase 3: Supply Temp 82°F (Target)"
+    to: 'Phase 3: Supply Temp 82°F (Target)'
   conditions: []
   actions:
   - action: number.set_value
@@ -419,45 +423,45 @@
   - action: notify.notify
     metadata: {}
     data:
-      message: "Phase 3 activated: Supply temperature optimized to 82°F (27.8°C). Target COP: 4.55. Monitor performance closely."
+      message: 'Phase 3 activated: Supply temperature optimized to 82°F (27.8°C).
+        Target COP: 4.55. Monitor performance closely.'
       title: CX50 Optimization Phase 3 Active
   mode: single
-- id: 'cx_short_cycle_alert'
+- id: cx_short_cycle_alert
   alias: CX Short Cycle Alert
   description: Alert when heat pump short cycles (runtime < 10 minutes)
   triggers:
   - trigger: state
     entity_id:
     - binary_sensor.heat_pump_running
-    from: "on"
-    to: "off"
+    from: 'on'
+    to: 'off'
   conditions:
-  # Check cycle was actually short but not too short (filter out initialization)
   - condition: template
-    value_template: "{{ states('sensor.heat_pump_current_cycle_duration') | float(0) < 600 and states('sensor.heat_pump_current_cycle_duration') | float(0) > 30 }}"
-
-  # Alerts must be enabled
+    value_template: '{{ states(''sensor.heat_pump_current_cycle_duration'') | float(0)
+      < 600 and states(''sensor.heat_pump_current_cycle_duration'') | float(0) > 30
+      }}'
   - condition: state
     entity_id: input_boolean.enable_short_cycle_alerts
-    state: "on"
-
-  # Filter out sensor initialization: Previous state must have been valid (not unknown/unavailable)
+    state: 'on'
   - condition: template
-    value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable', 'none'] }}"
-
-  # Filter out restarts: Sensor must have been in previous state for at least 10 seconds
+    value_template: '{{ trigger.from_state.state not in [''unknown'', ''unavailable'',
+      ''none''] }}'
   - condition: template
-    value_template: >
-      {{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) > 10 }}
+    value_template: '{{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed))
+      > 10 }}
 
+      '
   actions:
   - action: notify.notify
     metadata: {}
     data:
-      message: "Heat pump short cycled: {{ (states('sensor.heat_pump_current_cycle_duration') | float(0) / 60) | round(1) }} minutes runtime. Target: {{ states('input_number.minimum_runtime_target') }} minutes."
+      message: 'Heat pump short cycled: {{ (states(''sensor.heat_pump_current_cycle_duration'')
+        | float(0) / 60) | round(1) }} minutes runtime. Target: {{ states(''input_number.minimum_runtime_target'')
+        }} minutes.'
       title: CX50 Short Cycle Detected
   mode: single
-- id: 'cx_target_cop_achieved'
+- id: cx_target_cop_achieved
   alias: CX Target COP Achieved Alert
   description: Alert when heat pump achieves target COP
   triggers:
@@ -472,666 +476,579 @@
   conditions:
   - condition: state
     entity_id: input_boolean.enable_cop_optimization
-    state: "on"
+    state: 'on'
   actions:
   - action: notify.notify
     metadata: {}
     data:
-      message: "Excellent! Heat pump COP reached {{ states('sensor.heat_pump_cop') }} - at or above manufacturer's 4.55 rating!"
+      message: Excellent! Heat pump COP reached {{ states('sensor.heat_pump_cop')
+        }} - at or above manufacturer's 4.55 rating!
       title: CX50 Target COP Achieved!
   mode: single
-# Heat Pump Event Logging Automations
-# These automations create custom logbook entries for important heat pump events
-# to aid in debugging and performance tracking
-
-# ============================================================================
-# CYCLE EVENTS
-# ============================================================================
-
 - id: log_heat_pump_standby_power_loss
-  alias: "Log: Heat Pump Standby Power Loss"
+  alias: 'Log: Heat Pump Standby Power Loss'
   description: Log standby power consumption before heat pump starts
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      from: "off"
-      to: "on"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: 'off'
+    to: 'on'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Standby
-        message: >
-          ⚡ Standby power loss: {{ states('sensor.heat_pump_last_standby_power') | float(0) }}W
-          (consumed while heat pump was idle)
-        entity_id: binary_sensor.heat_pump_running
+  - service: logbook.log
+    data:
+      name: Heat Pump Standby
+      message: '⚡ Standby power loss: {{ states(''sensor.heat_pump_last_standby_power'')
+        | float(0) }}W (consumed while heat pump was idle)
 
+        '
+      entity_id: binary_sensor.heat_pump_running
 - id: log_heat_pump_cycle_started
-  alias: "Log: Heat Pump Cycle Started"
+  alias: 'Log: Heat Pump Cycle Started'
   description: Log when heat pump starts a new cycle
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      from: "off"
-      to: "on"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: 'off'
+    to: 'on'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump
-        message: >
-          🟢 Cycle started in {{ states('sensor.heat_pump_operating_mode') }} mode
-          (Power: {{ states('sensor.heat_pump_electrical_power_input') }}W)
-        entity_id: binary_sensor.heat_pump_running
-
+  - service: logbook.log
+    data:
+      name: Heat Pump
+      message: "\U0001F7E2 Cycle started in {{ states('sensor.heat_pump_operating_mode')
+        }} mode (Power: {{ states('sensor.heat_pump_electrical_power_input') }}W)\n"
+      entity_id: binary_sensor.heat_pump_running
 - id: log_heat_pump_cycle_completed
-  alias: "Log: Heat Pump Cycle Completed"
+  alias: 'Log: Heat Pump Cycle Completed'
   description: Log cycle completion with performance stats
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      from: "on"
-      to: "off"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: 'on'
+    to: 'off'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump
-        message: >
-          ⚫ Cycle completed: {{ (states('sensor.heat_pump_last_cycle_duration') | float / 60) | round(1) }} min,
-          COP {{ states('sensor.heat_pump_last_cycle_cop') }},
-          Mode: {{ states('sensor.heat_pump_operating_mode') }}
-        entity_id: binary_sensor.heat_pump_running
+  - service: logbook.log
+    data:
+      name: Heat Pump
+      message: '⚫ Cycle completed: {{ (states(''sensor.heat_pump_last_cycle_duration'')
+        | float / 60) | round(1) }} min, COP {{ states(''sensor.heat_pump_last_cycle_cop'')
+        }}, Mode: {{ states(''sensor.heat_pump_operating_mode'') }}
 
-# ============================================================================
-# SHORT CYCLE WARNING
-# ============================================================================
-
+        '
+      entity_id: binary_sensor.heat_pump_running
 - id: log_heat_pump_short_cycle
-  alias: "Log: Heat Pump Short Cycle Warning"
+  alias: 'Log: Heat Pump Short Cycle Warning'
   description: Log warning when a short cycle is detected
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_last_cycle_was_short
-      to: "on"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_last_cycle_was_short
+    to: 'on'
   condition:
-    # Filter out sensor initialization: Previous state must have been valid
-    - condition: template
-      value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable', 'none'] }}"
+  - condition: template
+    value_template: '{{ trigger.from_state.state not in [''unknown'', ''unavailable'',
+      ''none''] }}'
+  - condition: template
+    value_template: '{{ states(''sensor.heat_pump_last_cycle_duration'') | float(0)
+      > 30 }}'
+  - condition: template
+    value_template: '{{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed))
+      > 10 }}
 
-    # Ensure cycle duration is meaningful (> 30 seconds, filters out initialization glitches)
-    - condition: template
-      value_template: "{{ states('sensor.heat_pump_last_cycle_duration') | float(0) > 30 }}"
-
-    # Filter out restarts: Sensor must have been in previous state for at least 10 seconds
-    - condition: template
-      value_template: >
-        {{ (as_timestamp(now()) - as_timestamp(trigger.from_state.last_changed)) > 10 }}
+      '
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Short Cycle
-        message: >
-          ⚠️ Short cycle detected: {{ (states('sensor.heat_pump_last_cycle_duration') | float / 60) | round(1) }} minutes
-          (Target: {{ states('input_number.minimum_runtime_target') }} min)
-        entity_id: binary_sensor.heat_pump_last_cycle_was_short
+  - service: logbook.log
+    data:
+      name: Heat Pump Short Cycle
+      message: '⚠️ Short cycle detected: {{ (states(''sensor.heat_pump_last_cycle_duration'')
+        | float / 60) | round(1) }} minutes (Target: {{ states(''input_number.minimum_runtime_target'')
+        }} min)
 
-# ============================================================================
-# MODE CHANGES
-# ============================================================================
-
+        '
+      entity_id: binary_sensor.heat_pump_last_cycle_was_short
 - id: log_heat_pump_mode_change
-  alias: "Log: Heat Pump Mode Change"
+  alias: 'Log: Heat Pump Mode Change'
   description: Log when operating mode changes
   trigger:
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
   condition:
-    - condition: template
-      value_template: "{{ trigger.from_state.state != trigger.to_state.state }}"
-    - condition: template
-      value_template: "{{ trigger.from_state.state not in ['unknown', 'unavailable'] }}"
+  - condition: template
+    value_template: '{{ trigger.from_state.state != trigger.to_state.state }}'
+  - condition: template
+    value_template: '{{ trigger.from_state.state not in [''unknown'', ''unavailable'']
+      }}'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Mode
-        message: "🔄 Changed from {{ trigger.from_state.state }} to {{ trigger.to_state.state }}"
-        entity_id: sensor.heat_pump_operating_mode
-
-# ============================================================================
-# PHASE TRANSITIONS
-# ============================================================================
-
+  - service: logbook.log
+    data:
+      name: Heat Pump Mode
+      message: "\U0001F504 Changed from {{ trigger.from_state.state }} to {{ trigger.to_state.state
+        }}"
+      entity_id: sensor.heat_pump_operating_mode
 - id: log_heat_pump_entered_steady_state
-  alias: "Log: Heat Pump Entered Steady State"
+  alias: 'Log: Heat Pump Entered Steady State'
   description: Log when heat pump enters steady state operation
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_steady_state
-      to: "on"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_steady_state
+    to: 'on'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Phase
-        message: >
-          ✅ Entered steady state
-          ({{ states('sensor.heat_pump_current_cycle_duration_minutes') | round(1) }} min runtime,
-          COP {{ states('sensor.heat_pump_cop') }})
-        entity_id: binary_sensor.heat_pump_steady_state
+  - service: logbook.log
+    data:
+      name: Heat Pump Phase
+      message: '✅ Entered steady state ({{ states(''sensor.heat_pump_current_cycle_duration_minutes'')
+        | round(1) }} min runtime, COP {{ states(''sensor.heat_pump_cop'') }})
 
+        '
+      entity_id: binary_sensor.heat_pump_steady_state
 - id: log_heat_pump_exited_steady_state
-  alias: "Log: Heat Pump Exited Steady State"
+  alias: 'Log: Heat Pump Exited Steady State'
   description: Log when heat pump exits steady state
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_steady_state
-      from: "on"
-      to: "off"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_steady_state
+    from: 'on'
+    to: 'off'
   condition:
-    - condition: state
-      entity_id: binary_sensor.heat_pump_running
-      state: "on"
+  - condition: state
+    entity_id: binary_sensor.heat_pump_running
+    state: 'on'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Phase
-        message: "⏸️ Exited steady state (cycle ending soon)"
-        entity_id: binary_sensor.heat_pump_steady_state
-
-# ============================================================================
-# PERFORMANCE EVENTS
-# ============================================================================
-
+  - service: logbook.log
+    data:
+      name: Heat Pump Phase
+      message: ⏸️ Exited steady state (cycle ending soon)
+      entity_id: binary_sensor.heat_pump_steady_state
 - id: log_heat_pump_cop_excellent
-  alias: "Log: Heat Pump Excellent COP"
+  alias: 'Log: Heat Pump Excellent COP'
   description: Log when COP exceeds 4.0 (excellent performance)
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.heat_pump_cop
-      above: 4.0
+  - platform: numeric_state
+    entity_id: sensor.heat_pump_cop
+    above: 4.0
   condition:
-    - condition: state
-      entity_id: binary_sensor.heat_pump_running
-      state: "on"
+  - condition: state
+    entity_id: binary_sensor.heat_pump_running
+    state: 'on'
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Performance
-        message: >
-          ⭐ Excellent COP: {{ states('sensor.heat_pump_cop') }}
-          ({{ states('sensor.heat_pump_operating_mode') }} mode,
-          {{ states('sensor.heat_pump_current_cycle_duration_minutes') | round(1) }} min runtime)
-        entity_id: sensor.heat_pump_cop
+  - service: logbook.log
+    data:
+      name: Heat Pump Performance
+      message: '⭐ Excellent COP: {{ states(''sensor.heat_pump_cop'') }} ({{ states(''sensor.heat_pump_operating_mode'')
+        }} mode, {{ states(''sensor.heat_pump_current_cycle_duration_minutes'') |
+        round(1) }} min runtime)
 
+        '
+      entity_id: sensor.heat_pump_cop
 - id: log_heat_pump_cop_poor
-  alias: "Log: Heat Pump Poor COP"
+  alias: 'Log: Heat Pump Poor COP'
   description: Log when COP drops below 2.0 (poor performance)
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.heat_pump_cop
-      below: 2.0
+  - platform: numeric_state
+    entity_id: sensor.heat_pump_cop
+    below: 2.0
   condition:
-    - condition: state
-      entity_id: binary_sensor.heat_pump_running
-      state: "on"
-    - condition: numeric_state
-      entity_id: sensor.heat_pump_current_cycle_duration
-      above: 60  # Only log if running > 1 minute (avoid startup transients)
+  - condition: state
+    entity_id: binary_sensor.heat_pump_running
+    state: 'on'
+  - condition: numeric_state
+    entity_id: sensor.heat_pump_current_cycle_duration
+    above: 60
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump Performance
-        message: >
-          ⚠️ Low COP: {{ states('sensor.heat_pump_cop') }}
-          ({{ states('sensor.heat_pump_operating_mode') }} mode,
-          Ambient: {{ states('sensor.heat_pump_ambient_temperature') }}°F)
-        entity_id: sensor.heat_pump_cop
+  - service: logbook.log
+    data:
+      name: Heat Pump Performance
+      message: '⚠️ Low COP: {{ states(''sensor.heat_pump_cop'') }} ({{ states(''sensor.heat_pump_operating_mode'')
+        }} mode, Ambient: {{ states(''sensor.heat_pump_ambient_temperature'') }}°F)
 
-# ============================================================================
-# SENSOR INITIALIZATION TRACKING
-# ============================================================================
-
+        '
+      entity_id: sensor.heat_pump_cop
 - id: log_cx_output_power_initialized
-  alias: "Log: CX Output Power Interval Initialized"
+  alias: 'Log: CX Output Power Interval Initialized'
   description: Log when the thermal energy integration sensor initializes
   trigger:
-    - platform: state
-      entity_id: sensor.cx_output_power_interval
-      from: "unknown"
+  - platform: state
+    entity_id: sensor.cx_output_power_interval
+    from: unknown
   condition:
-    - condition: template
-      value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+  - condition: template
+    value_template: '{{ trigger.to_state.state not in [''unknown'', ''unavailable'']
+      }}'
   action:
-    - service: logbook.log
-      data:
-        name: Sensor Initialization
-        message: >
-          ✅ CX Output Power Interval initialized at {{ trigger.to_state.state }} kWh
-          (thermal energy tracking now active)
-        entity_id: sensor.cx_output_power_interval
+  - service: logbook.log
+    data:
+      name: Sensor Initialization
+      message: '✅ CX Output Power Interval initialized at {{ trigger.to_state.state
+        }} kWh (thermal energy tracking now active)
 
-# Manual reset instructions for CX Output Power Interval integration sensor
-# NOTE: integration.reset service not available in this HA version
-# Run this from Settings → Automations → [This automation] → Run
+        '
+      entity_id: sensor.cx_output_power_interval
 - id: reset_cx_output_power_interval
-  alias: "Reset CX Output Power Interval Sensor - Instructions"
-  description: Shows instructions to manually reset the thermal energy integration sensor
-  trigger: []  # Manual trigger only
+  alias: Reset CX Output Power Interval Sensor - Instructions
+  description: Shows instructions to manually reset the thermal energy integration
+    sensor
+  trigger: []
   condition: []
   action:
-    - service: persistent_notification.create
-      data:
-        title: "Reset CX Output Power Interval Sensor"
-        message: >
-          **Current Value:** {{ states('sensor.cx_output_power_interval') }} kWh
+  - service: persistent_notification.create
+    data:
+      title: Reset CX Output Power Interval Sensor
+      message: '**Current Value:** {{ states(''sensor.cx_output_power_interval'')
+        }} kWh
 
 
-          **To reset this sensor to 0:**
+        **To reset this sensor to 0:**
 
-          1. Go to **Developer Tools → States**
+        1. Go to **Developer Tools → States**
 
-          2. Find entity: `sensor.cx_output_power_interval`
+        2. Find entity: `sensor.cx_output_power_interval`
 
-          3. Click on it
+        3. Click on it
 
-          4. Under "Set State", enter: `0`
+        4. Under "Set State", enter: `0`
 
-          5. Click **Set State**
-
-
-          The sensor will continue accumulating from 0 going forward.
+        5. Click **Set State**
 
 
-          *(The integration.reset service is not available in your Home Assistant version)*
-        notification_id: cx_output_reset_instructions
+        The sensor will continue accumulating from 0 going forward.
+
+
+        *(The integration.reset service is not available in your Home Assistant version)*
+
+        '
+      notification_id: cx_output_reset_instructions
   mode: single
-
 - id: log_cycle_duration_sensor_initialized
-  alias: "Log: Cycle Duration Sensor Initialized"
+  alias: 'Log: Cycle Duration Sensor Initialized'
   description: Log when cycle duration sensor starts working
   trigger:
-    - platform: state
-      entity_id: sensor.heat_pump_current_cycle_duration
-      from: "unavailable"
+  - platform: state
+    entity_id: sensor.heat_pump_current_cycle_duration
+    from: unavailable
   condition:
-    - condition: template
-      value_template: "{{ trigger.to_state.state not in ['unknown', 'unavailable'] }}"
+  - condition: template
+    value_template: '{{ trigger.to_state.state not in [''unknown'', ''unavailable'']
+      }}'
   action:
-    - service: logbook.log
-      data:
-        name: Sensor Initialization
-        message: "✅ Cycle duration sensor initialized (value: {{ trigger.to_state.state }}s)"
-        entity_id: sensor.heat_pump_current_cycle_duration
-
-# ============================================================================
-# DISTRIBUTION EFFICIENCY ALERTS
-# ============================================================================
-
+  - service: logbook.log
+    data:
+      name: Sensor Initialization
+      message: '✅ Cycle duration sensor initialized (value: {{ trigger.to_state.state
+        }}s)'
+      entity_id: sensor.heat_pump_current_cycle_duration
 - id: log_distribution_efficiency_critical
-  alias: "Log: Distribution Efficiency Critical"
+  alias: 'Log: Distribution Efficiency Critical'
   description: Log when distribution efficiency is critically low (not in DHW mode)
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.system_distribution_efficiency
-      below: 50
+  - platform: numeric_state
+    entity_id: sensor.system_distribution_efficiency
+    below: 50
   condition:
-    - condition: state
-      entity_id: binary_sensor.heat_pump_running
-      state: "on"
-    - condition: template
-      value_template: "{{ states('sensor.heat_pump_operating_mode') not in ['Heat + DHW', 'HEAT + DHW', 'DHW'] }}"
-    - condition: numeric_state
-      entity_id: sensor.heat_pump_thermal_power_output
-      above: 1000  # Only if producing > 1kW
+  - condition: state
+    entity_id: binary_sensor.heat_pump_running
+    state: 'on'
+  - condition: template
+    value_template: '{{ states(''sensor.heat_pump_operating_mode'') not in [''Heat
+      + DHW'', ''HEAT + DHW'', ''DHW''] }}'
+  - condition: numeric_state
+    entity_id: sensor.heat_pump_thermal_power_output
+    above: 1000
   action:
-    - service: logbook.log
-      data:
-        name: Distribution Efficiency
-        message: >
-          🚨 Critical efficiency: {{ states('sensor.system_distribution_efficiency') }}%
-          (HP Output: {{ (states('sensor.heat_pump_thermal_power_output') | float / 1000) | round(1) }}kW,
-          HVAC Load: {{ (states('sensor.hvac_thermal_power_used') | float / 1000) | round(1) }}kW)
-        entity_id: sensor.system_distribution_efficiency
-
-# ============================================================================
-# DHW MODE TRACKING
-# ============================================================================
-
+  - service: logbook.log
+    data:
+      name: Distribution Efficiency
+      message: "\U0001F6A8 Critical efficiency: {{ states('sensor.system_distribution_efficiency')
+        }}% (HP Output: {{ (states('sensor.heat_pump_thermal_power_output') | float
+        / 1000) | round(1) }}kW, HVAC Load: {{ (states('sensor.hvac_thermal_power_used')
+        | float / 1000) | round(1) }}kW)\n"
+      entity_id: sensor.system_distribution_efficiency
 - id: log_heat_pump_dhw_mode_entered
-  alias: "Log: Heat Pump Entered DHW Mode"
+  alias: 'Log: Heat Pump Entered DHW Mode'
   description: Log when heat pump enters any DHW mode with context about COP impact
   trigger:
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
-      to: "DHW"
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
-      to: "Heat + DHW"
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
-      to: "HEAT + DHW"
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
+    to: DHW
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
+    to: Heat + DHW
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
+    to: HEAT + DHW
   condition:
-    - condition: template
-      value_template: >
-        {{ trigger.from_state.state not in ['DHW', 'Heat + DHW', 'HEAT + DHW', 'unknown', 'unavailable'] }}
-  action:
-    - service: logbook.log
-      data:
-        name: Heat Pump DHW
-        message: >
-          🚿 Entered {{ trigger.to_state.state }} mode
-          (Note: Distribution efficiency will be low - energy goes to hot water tank)
-        entity_id: sensor.heat_pump_operating_mode
+  - condition: template
+    value_template: '{{ trigger.from_state.state not in [''DHW'', ''Heat + DHW'',
+      ''HEAT + DHW'', ''unknown'', ''unavailable''] }}
 
+      '
+  action:
+  - service: logbook.log
+    data:
+      name: Heat Pump DHW
+      message: "\U0001F6BF Entered {{ trigger.to_state.state }} mode (Note: Distribution
+        efficiency will be low - energy goes to hot water tank)\n"
+      entity_id: sensor.heat_pump_operating_mode
 - id: log_heat_pump_dhw_mode_exited
-  alias: "Log: Heat Pump Exited DHW Mode"
+  alias: 'Log: Heat Pump Exited DHW Mode'
   description: Log when heat pump exits DHW mode back to pure heating
   trigger:
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
-      from: "DHW"
-      to: "Heat"
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
-      from: "Heat + DHW"
-      to: "Heat"
-    - platform: state
-      entity_id: sensor.heat_pump_operating_mode
-      from: "HEAT + DHW"
-      to: "Heat"
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
+    from: DHW
+    to: Heat
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
+    from: Heat + DHW
+    to: Heat
+  - platform: state
+    entity_id: sensor.heat_pump_operating_mode
+    from: HEAT + DHW
+    to: Heat
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump DHW
-        message: >
-          🏠 Exited DHW mode → {{ trigger.to_state.state }}
-          (Space heating only - distribution efficiency should improve)
-        entity_id: sensor.heat_pump_operating_mode
-
+  - service: logbook.log
+    data:
+      name: Heat Pump DHW
+      message: "\U0001F3E0 Exited DHW mode → {{ trigger.to_state.state }} (Space heating
+        only - distribution efficiency should improve)\n"
+      entity_id: sensor.heat_pump_operating_mode
 - id: log_heat_pump_dhw_cycle_completed
-  alias: "Log: Heat Pump DHW Cycle Completed"
+  alias: 'Log: Heat Pump DHW Cycle Completed'
   description: Log DHW cycle completion with specific DHW COP
   trigger:
-    - platform: state
-      entity_id: binary_sensor.heat_pump_running
-      from: "on"
-      to: "off"
+  - platform: state
+    entity_id: binary_sensor.heat_pump_running
+    from: 'on'
+    to: 'off'
   condition:
-    - condition: template
-      value_template: >
-        {{ states('sensor.heat_pump_operating_mode') in ['DHW', 'Heat + DHW', 'HEAT + DHW'] }}
+  - condition: template
+    value_template: '{{ states(''sensor.heat_pump_operating_mode'') in [''DHW'', ''Heat
+      + DHW'', ''HEAT + DHW''] }}
+
+      '
   action:
-    - service: logbook.log
-      data:
-        name: Heat Pump DHW Cycle
-        message: >
-          🚿 DHW cycle completed: {{ (states('sensor.heat_pump_last_cycle_duration') | float / 60) | round(1) }} min,
-          COP {{ states('sensor.heat_pump_last_cycle_cop') }}
-          ({{ states('sensor.heat_pump_operating_mode') }} mode)
-        entity_id: binary_sensor.heat_pump_running
-
-# ============================================================================
-# DUPLICATE ENTITY DETECTOR
-# ============================================================================
-
-- id: 'duplicate_entity_detector_notification'
+  - service: logbook.log
+    data:
+      name: Heat Pump DHW Cycle
+      message: "\U0001F6BF DHW cycle completed: {{ (states('sensor.heat_pump_last_cycle_duration')
+        | float / 60) | round(1) }} min, COP {{ states('sensor.heat_pump_last_cycle_cop')
+        }} ({{ states('sensor.heat_pump_operating_mode') }} mode)\n"
+      entity_id: binary_sensor.heat_pump_running
+- id: duplicate_entity_detector_notification
   alias: Duplicate Entity Detector - Notification
-  description: Automatically detect and notify about duplicate entities (_2, _3, etc.) created by Home Assistant
+  description: Automatically detect and notify about duplicate entities (_2, _3, etc.)
+    created by Home Assistant. Checks only sensors and binary_sensors.
   triggers:
-    # Check on Home Assistant startup
-    - platform: homeassistant
-      event: start
-
-    # Check every hour to catch duplicates created during runtime
-    - platform: time_pattern
-      hours: "/1"
-
+  - event: start
+    trigger: homeassistant
+  - hours: /1
+    trigger: time_pattern
   conditions: []
-
   actions:
-    # Check if any duplicate entities exist
-    - if:
-        - condition: template
-          value_template: >
-            {%- set duplicates = namespace(found=false) %}
-            {%- for entity in states %}
-              {# Match entities ending in _2 through _99 #}
-              {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
-                {# Get the presumed original entity name by removing the suffix #}
-                {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
-                {# Check if the original entity exists #}
-                {%- if states[original] is defined %}
-                  {# Compare friendly names - true duplicates have identical names #}
-                  {%- set original_name = state_attr(original, 'friendly_name') | default('') %}
-                  {%- set entity_name = entity.name | default('') %}
-                  {%- if original_name == entity_name %}
-                    {%- set duplicates.found = true %}
-                  {%- endif %}
-                {%- endif %}
-              {%- endif %}
-            {%- endfor %}
-            {{ duplicates.found }}
-      then:
-        # Send persistent notification with duplicate entity list
-        - action: persistent_notification.create
-          data:
-            title: "⚠️ Duplicate Entities Detected"
-            notification_id: duplicate_entity_detector
-            message: >
-              **Home Assistant has created duplicate entities with `_2`, `_3`, etc. suffixes.**
-
-              This usually happens when:
-              - `unique_id` changed in YAML
-              - `entity_id` conflicts with existing entity
-              - HA restart with config changes
-
-
-              **Duplicates found:**
-
-              {%- for entity in states %}
-                {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}
-                  {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$', '') %}
-                  {# Only show if the original entity exists #}
-                  {%- if states[original] is defined %}
-                    {# Compare friendly names - true duplicates have identical names #}
-                    {%- set original_name = state_attr(original, 'friendly_name') | default('') %}
-                    {%- set entity_name = entity.name | default('') %}
-                    {%- if original_name == entity_name %}
-
-              - **{{ entity.entity_id }}**
-                - Status: {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable'] else '⚠️ Active (' + entity.state + ')' }}
-                - Friendly Name: {{ entity.name }}
-                - Original Entity: `{{ original }}` ({{ '✅ exists' if states[original].state not in ['unknown', 'unavailable'] else '⚠️ unavailable' }})
-                    {%- endif %}
-                  {%- endif %}
-                {%- endif %}
-              {%- endfor %}
-
-
-              **How to fix:**
-
-              1. Go to **Settings → Devices & Services → Entities**
-              2. Search for entities ending in `_2`, `_3`, etc.
-              3. Click on each duplicate entity
-              4. Click **Delete** (if unavailable/unwanted)
-              5. Restart Home Assistant to recreate correctly
-
-
-              **Alternatively**, check the **Sensor Verification Dashboard** for a detailed table.
-      else:
-        # Clear the notification if no duplicates found
-        - action: persistent_notification.dismiss
-          data:
-            notification_id: duplicate_entity_detector
-
-  mode: single
-
-# ============================================================================
-# ADAPTIVE SUPPLY TEMPERATURE OPTIMIZATION
-# ============================================================================
-
-- id: 'supply_temp_optimization_recommendations'
-  alias: Supply Temperature Optimization Recommendations
-  description: >
-    Analyzes zone demand and sends recommendations for CX50 setpoint changes.
-    User reviews and manually applies changes to account for radiant floor thermal lag.
-  triggers:
-    # Check every 6 hours
-    - platform: time_pattern
-      hours: "/6"
-
-  conditions:
-    # Must be enabled
-    - condition: state
-      entity_id: input_boolean.enable_supply_temp_optimization
-      state: "on"
-
-    # Heat pump must not be in DHW mode
+  - if:
     - condition: template
-      value_template: >
-        {{ states('sensor.heat_pump_operating_mode') not in ['DHW', 'Heat + DHW', 'HEAT + DHW'] }}
-
-  actions:
-    - choose:
-        # RECOMMEND DECREASE when demand has been low
-        - conditions:
-            - condition: state
-              entity_id: sensor.radiant_system_demand_level
-              state: "Low"
-              for:
-                hours: 4
-            # Verify we're above minimum limit
-            - condition: template
-              value_template: >
-                {% set current_c = states('number.cx50_heating_setpoint_c') | float(30) %}
-                {% set min_f = states('input_number.supply_temp_min_limit') | float(78) %}
-                {% set min_c = (min_f - 32) / 1.8 %}
-                {{ current_c > (min_c + 0.5) }}
-          sequence:
-            - action: persistent_notification.create
-              data:
-                title: "Supply Temp Recommendation: Decrease"
-                message: >
-                  **Recommendation:** Decrease setpoint by 1°F
-
-                  **Current:** {{ states('number.cx50_heating_setpoint_c') }}°C ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
-
-                  **Suggested:** {{ (states('number.cx50_heating_setpoint_c') | float - 0.5) | round(1) }}°C ({{ ((states('number.cx50_heating_setpoint_c') | float - 0.5) * 1.8 + 32) | round(1) }}°F)
-
-                  **Reason:** Demand has been Low for 4+ hours
-
-                  Zones calling: {{ states('sensor.radiant_zones_calling') }}
-                  Flow rate: {{ states('sensor.hvac_buffer_tank_flow_rate') }} gal/min
-                  Outdoor temp: {{ states('sensor.heat_pump_ambient_temperature') }}°F
-                notification_id: supply_temp_recommendation
-            - action: logbook.log
-              data:
-                name: Supply Temp Optimization
-                message: >
-                  📋 RECOMMENDATION: Decrease setpoint by 0.5°C - Demand Low for 4+ hours
-                entity_id: number.cx50_heating_setpoint_c
-
-        # RECOMMEND INCREASE when demand has been high
-        - conditions:
-            - condition: or
-              conditions:
-                - condition: state
-                  entity_id: sensor.radiant_system_demand_level
-                  state: "High"
-                  for:
-                    hours: 4
-                - condition: state
-                  entity_id: sensor.radiant_system_demand_level
-                  state: "Very High"
-                  for:
-                    hours: 2
-            # Verify we're below maximum limit
-            - condition: template
-              value_template: >
-                {% set current_c = states('number.cx50_heating_setpoint_c') | float(30) %}
-                {% set max_f = states('input_number.supply_temp_max_limit') | float(105) %}
-                {% set max_c = (max_f - 32) / 1.8 %}
-                {{ current_c < (max_c - 0.5) }}
-          sequence:
-            - action: persistent_notification.create
-              data:
-                title: "Supply Temp Recommendation: Increase"
-                message: >
-                  **Recommendation:** Increase setpoint by 1°F
-
-                  **Current:** {{ states('number.cx50_heating_setpoint_c') }}°C ({{ (states('number.cx50_heating_setpoint_c') | float * 1.8 + 32) | round(1) }}°F)
-
-                  **Suggested:** {{ (states('number.cx50_heating_setpoint_c') | float + 0.5) | round(1) }}°C ({{ ((states('number.cx50_heating_setpoint_c') | float + 0.5) * 1.8 + 32) | round(1) }}°F)
-
-                  **Reason:** Demand has been {{ states('sensor.radiant_system_demand_level') }} for extended period
-
-                  Zones calling: {{ states('sensor.radiant_zones_calling') }}
-                  Flow rate: {{ states('sensor.hvac_buffer_tank_flow_rate') }} gal/min
-                  Outdoor temp: {{ states('sensor.heat_pump_ambient_temperature') }}°F
-                notification_id: supply_temp_recommendation
-            - action: logbook.log
-              data:
-                name: Supply Temp Optimization
-                message: >
-                  📋 RECOMMENDATION: Increase setpoint by 0.5°C - Demand {{ states('sensor.radiant_system_demand_level') }} for extended period
-                entity_id: number.cx50_heating_setpoint_c
-
-      # Default: No recommendation needed
-      default:
-        - action: logbook.log
-          data:
-            name: Supply Temp Optimization
-            message: >
-              ✓ No change recommended - Demand: {{ states('sensor.radiant_system_demand_level') }},
-              Setpoint: {{ states('number.cx50_heating_setpoint_c') }}°C
-            entity_id: number.cx50_heating_setpoint_c
-
+      value_template: "{%- set duplicates = namespace(found=false) %}\n{# OPTIMIZED:
+        Only loop through sensors and binary_sensors #} {%- for entity in (states.sensor
+        | list + states.binary_sensor | list) %}\n  {# Match entities ending in _2
+        through _99 #}\n  {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$')
+        %}\n    {# Get the presumed original entity name by removing the suffix #}\n
+        \   {%- set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$',
+        '') %}\n    {# Check if the original entity exists #}\n    {%- if states[original]
+        is defined %}\n      {# Compare friendly names - true duplicates have identical
+        names #}\n      {%- set original_name = state_attr(original, 'friendly_name')
+        | default('') %}\n      {%- set entity_name = entity.name | default('') %}\n
+        \     {%- if original_name == entity_name %}\n        {%- set duplicates.found
+        = true %}\n      {%- endif %}\n    {%- endif %}\n  {%- endif %}\n{%- endfor
+        %} {{ duplicates.found }}"
+    then:
+    - action: persistent_notification.create
+      data:
+        title: ⚠️ Duplicate Entities Detected
+        notification_id: duplicate_entity_detector
+        message: "**Home Assistant has created duplicate entities with `_2`, `_3`,
+          etc. suffixes.**\nThis usually happens when: - `unique_id` changed in YAML
+          - `entity_id` conflicts with existing entity - HA restart with config changes\n**Duplicates
+          found:**\n{# OPTIMIZED: Only loop through sensors and binary_sensors #}
+          {%- for entity in (states.sensor | list + states.binary_sensor | list) %}\n
+          \ {%- if entity.entity_id | regex_match('.*_([2-9]|[1-9][0-9])$') %}\n    {%-
+          set original = entity.entity_id | regex_replace('_([2-9]|[1-9][0-9])$',
+          '') %}\n    {# Only show if the original entity exists #}\n    {%- if states[original]
+          is defined %}\n      {# Compare friendly names - true duplicates have identical
+          names #}\n      {%- set original_name = state_attr(original, 'friendly_name')
+          | default('') %}\n      {%- set entity_name = entity.name | default('')
+          %}\n      {%- if original_name == entity_name %}\n\n- **{{ entity.entity_id
+          }}**\n  - Status: {{ '❌ Unavailable' if entity.state in ['unknown', 'unavailable']
+          else '⚠️ Active (' + entity.state + ')' }}\n  - Friendly Name: {{ entity.name
+          }}\n  - Original Entity: `{{ original }}` ({{ '✅ exists' if states[original].state
+          not in ['unknown', 'unavailable'] else '⚠️ unavailable' }})\n      {%- endif
+          %}\n    {%- endif %}\n  {%- endif %}\n{%- endfor %}\n**How to fix:**\n1.
+          Go to **Settings → Devices & Services → Entities** 2. Search for entities
+          ending in `_2`, `_3`, etc. 3. Click on each duplicate entity 4. Click **Delete**
+          (if unavailable/unwanted) 5. Restart Home Assistant to recreate correctly\n**Alternatively**,
+          check the **Sensor Verification Dashboard** for a detailed table.\n"
+    else:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: duplicate_entity_detector
   mode: single
+- id: supply_temp_optimization_recommendations
+  alias: Supply Temperature Optimization Recommendations
+  description: 'Analyzes zone demand and sends recommendations for CX50 setpoint changes.
+    User reviews and manually applies changes to account for radiant floor thermal
+    lag.
 
-# Log when optimization is enabled/disabled
-- id: 'log_supply_temp_optimization_toggle'
-  alias: "Log: Supply Temp Optimization Toggle"
-  description: Log when supply temp optimization is enabled or disabled
+    '
   triggers:
-    - platform: state
-      entity_id: input_boolean.enable_supply_temp_optimization
+  - platform: time_pattern
+    hours: /6
+  conditions:
+  - condition: state
+    entity_id: input_boolean.enable_supply_temp_optimization
+    state: 'on'
+  - condition: template
+    value_template: '{{ states(''sensor.heat_pump_operating_mode'') not in [''DHW'',
+      ''Heat + DHW'', ''HEAT + DHW''] }}
+
+      '
   actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.radiant_system_demand_level
+        state: Low
+        for:
+          hours: 4
+      - condition: template
+        value_template: '{% set current_c = states(''number.cx50_heating_setpoint_c'')
+          | float(30) %} {% set min_f = states(''input_number.supply_temp_min_limit'')
+          | float(78) %} {% set min_c = (min_f - 32) / 1.8 %} {{ current_c > (min_c
+          + 0.5) }}
+
+          '
+      sequence:
+      - action: persistent_notification.create
+        data:
+          title: 'Supply Temp Recommendation: Decrease'
+          message: '**Recommendation:** Decrease setpoint by 1°F
+
+            **Current:** {{ states(''number.cx50_heating_setpoint_c'') }}°C ({{ (states(''number.cx50_heating_setpoint_c'')
+            | float * 1.8 + 32) | round(1) }}°F)
+
+            **Suggested:** {{ (states(''number.cx50_heating_setpoint_c'') | float
+            - 0.5) | round(1) }}°C ({{ ((states(''number.cx50_heating_setpoint_c'')
+            | float - 0.5) * 1.8 + 32) | round(1) }}°F)
+
+            **Reason:** Demand has been Low for 4+ hours
+
+            Zones calling: {{ states(''sensor.radiant_zones_calling'') }} Flow rate:
+            {{ states(''sensor.hvac_buffer_tank_flow_rate'') }} gal/min Outdoor temp:
+            {{ states(''sensor.heat_pump_ambient_temperature'') }}°F
+
+            '
+          notification_id: supply_temp_recommendation
+      - action: logbook.log
+        data:
+          name: Supply Temp Optimization
+          message: "\U0001F4CB RECOMMENDATION: Decrease setpoint by 0.5°C - Demand
+            Low for 4+ hours\n"
+          entity_id: number.cx50_heating_setpoint_c
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: sensor.radiant_system_demand_level
+          state: High
+          for:
+            hours: 4
+        - condition: state
+          entity_id: sensor.radiant_system_demand_level
+          state: Very High
+          for:
+            hours: 2
+      - condition: template
+        value_template: '{% set current_c = states(''number.cx50_heating_setpoint_c'')
+          | float(30) %} {% set max_f = states(''input_number.supply_temp_max_limit'')
+          | float(105) %} {% set max_c = (max_f - 32) / 1.8 %} {{ current_c < (max_c
+          - 0.5) }}
+
+          '
+      sequence:
+      - action: persistent_notification.create
+        data:
+          title: 'Supply Temp Recommendation: Increase'
+          message: '**Recommendation:** Increase setpoint by 1°F
+
+            **Current:** {{ states(''number.cx50_heating_setpoint_c'') }}°C ({{ (states(''number.cx50_heating_setpoint_c'')
+            | float * 1.8 + 32) | round(1) }}°F)
+
+            **Suggested:** {{ (states(''number.cx50_heating_setpoint_c'') | float
+            + 0.5) | round(1) }}°C ({{ ((states(''number.cx50_heating_setpoint_c'')
+            | float + 0.5) * 1.8 + 32) | round(1) }}°F)
+
+            **Reason:** Demand has been {{ states(''sensor.radiant_system_demand_level'')
+            }} for extended period
+
+            Zones calling: {{ states(''sensor.radiant_zones_calling'') }} Flow rate:
+            {{ states(''sensor.hvac_buffer_tank_flow_rate'') }} gal/min Outdoor temp:
+            {{ states(''sensor.heat_pump_ambient_temperature'') }}°F
+
+            '
+          notification_id: supply_temp_recommendation
+      - action: logbook.log
+        data:
+          name: Supply Temp Optimization
+          message: "\U0001F4CB RECOMMENDATION: Increase setpoint by 0.5°C - Demand
+            {{ states('sensor.radiant_system_demand_level') }} for extended period\n"
+          entity_id: number.cx50_heating_setpoint_c
+    default:
     - action: logbook.log
       data:
         name: Supply Temp Optimization
-        message: >
-          {% if is_state('input_boolean.enable_supply_temp_optimization', 'on') %}
-            ✅ ENABLED - Automatic setpoint adjustment active
-            (Limits: {{ states('input_number.supply_temp_min_limit') }}°F - {{ states('input_number.supply_temp_max_limit') }}°F)
-          {% else %}
-            ⏸️ DISABLED - Manual control only
-          {% endif %}
-        entity_id: input_boolean.enable_supply_temp_optimization
-  mode: single
+        message: '✓ No change recommended - Demand: {{ states(''sensor.radiant_system_demand_level'')
+          }}, Setpoint: {{ states(''number.cx50_heating_setpoint_c'') }}°C
 
-# One-time reminder - can be deleted after it runs
-- id: 'reminder_llm_optimization_20251119'
-  alias: "Reminder: Consider AI/LLM for Optimization"
+          '
+        entity_id: number.cx50_heating_setpoint_c
+  mode: single
+- id: log_supply_temp_optimization_toggle
+  alias: 'Log: Supply Temp Optimization Toggle'
+  description: Log when supply temp optimization is enabled or disabled
+  triggers:
+  - platform: state
+    entity_id: input_boolean.enable_supply_temp_optimization
+  actions:
+  - action: logbook.log
+    data:
+      name: Supply Temp Optimization
+      message: "{% if is_state('input_boolean.enable_supply_temp_optimization', 'on')
+        %}\n  ✅ ENABLED - Automatic setpoint adjustment active\n  (Limits: {{ states('input_number.supply_temp_min_limit')
+        }}°F - {{ states('input_number.supply_temp_max_limit') }}°F)\n{% else %}\n
+        \ ⏸️ DISABLED - Manual control only\n{% endif %}\n"
+      entity_id: input_boolean.enable_supply_temp_optimization
+  mode: single
+- id: reminder_llm_optimization_20251119
+  alias: 'Reminder: Consider AI/LLM for Optimization'
   description: One-time reminder to consider AI/LLM features for thermal optimization
   triggers:
-    - platform: time
-      at: "09:00:00"
+  - platform: time
+    at: 09:00:00
   conditions:
-    - condition: template
-      value_template: "{{ now().date() == strptime('2025-11-19', '%Y-%m-%d').date() }}"
+  - condition: template
+    value_template: '{{ now().date() == strptime(''2025-11-19'', ''%Y-%m-%d'').date()
+      }}'
   actions:
-    - action: persistent_notification.create
-      data:
-        title: "Reminder: AI/LLM for Optimization"
-        message: >
-          Consider whether HA's AI/LLM integrations would be useful for thermal optimization.
+  - action: persistent_notification.create
+    data:
+      title: 'Reminder: AI/LLM for Optimization'
+      message: 'Consider whether HA''s AI/LLM integrations would be useful for thermal
+        optimization.
 
-          Options to explore:
-          - Daily analysis reports via conversation.process
-          - Anomaly detection for unusual patterns
-          - Weather-aware recommendations
+        Options to explore: - Daily analysis reports via conversation.process - Anomaly
+        detection for unusual patterns - Weather-aware recommendations
 
-          Setup required: OpenAI, Anthropic, or Ollama integration
-        notification_id: llm_optimization_reminder
-    - action: notify.mobile_app_pixel_8_pro
-      data:
-        title: "Reminder: AI/LLM for Optimization"
-        message: "Consider AI/LLM features for thermal optimization analysis"
+        Setup required: OpenAI, Anthropic, or Ollama integration
+
+        '
+      notification_id: llm_optimization_reminder
+  - action: notify.mobile_app_pixel_8_pro
+    data:
+      title: 'Reminder: AI/LLM for Optimization'
+      message: Consider AI/LLM features for thermal optimization analysis
   mode: single

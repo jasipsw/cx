@@ -10,6 +10,7 @@ views:
         column_span: 3
         
         cards:
+
           # ========================================================================
           # PRIORITY MONITORING - PRIMARY FOCUS AREAS
           # ========================================================================
@@ -1065,174 +1066,18 @@ views:
               **Data Flow:** Operating Mode → Filter Power Sensors → COP Tracking
 
           - type: markdown
-            title: 🧪 Unit Conversion Filter Presence Check
+            title: 🧪 Unit Conversion Filters
             content: |
-              ## Filter Integration Status
+              ## Performance Metrics
+              | Sensor | Value | Status |
+              |--------|-------|--------|
+              | {{ 10 | lpm("GPM") }} lpm | 10 gpm | hard coded value |
+              | {{ 32 | c("°F") }} °F | 32 °F | hard coded value |
+              | {{ celsius('sensor.buffer_tank_temperature') }} °F |  {{ states('sensor.buffer_tank_temperature') }} | buffer_tank_temperature |
 
-              ### Flow Conversions
-              - l_per_min (10 GPM): **{{ 10 | l_per_min("GPM") | default("❌ MISSING", true) | round(2) }}** L/min (expected: 37.85)
-              - gpm (10 L/min): **{{ 10 | gpm("L/min") | default("❌ MISSING", true) | round(2) }}** GPM (expected: 2.64)
 
-              ### Temperature Conversions
-              - celsius (32°F): **{{ 32 | celsius("F") | default("❌ MISSING", true) | round(1) }}**°C (expected: 0.0)
-              - fahrenheit (0°C): **{{ 0 | fahrenheit("C") | default("❌ MISSING", true) | round(1) }}**°F (expected: 32.0)
-              - kelvin (0°C): **{{ 0 | kelvin("C") | default("❌ MISSING", true) | round(2) }}** K (expected: 273.15)
-
-              ### Power Conversions
-              - watts (5 kW): **{{ 5 | watts("kW") | default("❌ MISSING", true) }}** W (expected: 5000.0)
-              - kilowatts (1500 W): **{{ 1500 | kilowatts("W") | default("❌ MISSING", true) | round(1) }}** kW (expected: 1.5)
-
-              ### Energy Conversions (Short Names)
-              - wh (1 kWh): **{{ 1 | wh("kWh") | default("❌ MISSING", true) }}** Wh (expected: 1000.0)
-              - kwh (1000 Wh): **{{ 1000 | kwh("Wh") | default("❌ MISSING", true) | round(1) }}** kWh (expected: 1.0)
-              - joules (1 kWh): **{{ 1 | joules("kWh") | default("❌ MISSING", true) }}** J (expected: 3600000.0)
-              - btu (1055.06 J): **{{ 1055.06 | btu("J") | default("❌ MISSING", true) | round(1) }}** BTU (expected: 1.0)
-
-              ### Bidirectional BTU Conversions
-              - 3412.14 BTU → kWh: **{{ 3412.14 | kwh("BTU") | default("❌ MISSING", true) | round(2) }}** kWh (expected: 1.0)
-              - 1 kWh → BTU: **{{ 1 | btu("kWh") | default("❌ MISSING", true) | round(2) }}** BTU (expected: 3412.14)
-
-              ---
-              {% set test_result = 10 | l_per_min("GPM") | default(none) %}
-              {% if test_result is none %}
-              ❌ **Filters NOT loaded!** Please ensure:
-              1. Unit conversions integration is installed
-              2. `unit_conversions:` is in configuration.yaml
-              3. Home Assistant has been restarted
-              {% else %}
-              ✅ **All filters appear to be installed and working!**
-              {% endif %}
             grid_options:
               columns: full
-              
-          - type: markdown
-            grid_options:
-              columns: full
-            title: 🧪 Unit Conversion Test Panel (Sensors & Constants)
-            content: |
-              ## Live Filter Tests – Real Sensors
-
-              ### Flow Conversion (Real Sensor)
-              - **Pump Flow (GPM):**  
-                Raw: **{{ states('sensor.cx50_pump_flow_gpm') }} GPM**  
-                GPM → L/min:  
-                ```
-                {{ states('sensor.cx50_pump_flow_gpm') | l_per_min(states_attr('sensor.cx50_pump_flow_gpm', 'unit_of_measurement')) }}
-                ```
-                = **{{ states('sensor.cx50_pump_flow_gpm') | l_per_min(states_attr('sensor.cx50_pump_flow_gpm', 'unit_of_measurement')) }}**
-              - **Pump Flow (L/min):**  
-                Raw: **{{ states('sensor.cx50_pump_flow_lpm') }} L/min**  
-                L/min → GPM:  
-                ```
-                {{ states('sensor.cx50_pump_flow_lpm') | gpm(states_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement')) }}
-                ```
-                = **{{ states('sensor.cx50_pump_flow_lpm') | gpm(states_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement')) }}**
-
-              ### Flow Conversion (Constants)
-              - **10 GPM → L/min:**  
-                ```
-                {{ 10 | l_per_min("GPM") }}
-                ```
-                = **{{ 10 | l_per_min("GPM") }}**
-              - **10 L/min → GPM:**  
-                ```
-                {{ 10 | gpm("L/min") }}
-                ```
-                = **{{ 10 | gpm("L/min") }}**
-
-              ---
-
-              ### Temperature Conversion (Real Sensor)
-              - **Outlet Temp:**  
-                Raw: **{{ states('sensor.cx50_outlet_temp') }}°{{ state_attr('sensor.cx50_outlet_temp', 'unit_of_measurement') }}**  
-                °F → °C:  
-                ```
-                {{ states('sensor.cx50_outlet_temp') | celsius(states_attr('sensor.cx50_outlet_temp', 'unit_of_measurement')) }}
-                ```
-                = **{{ states('sensor.cx50_outlet_temp') | celsius(states_attr('sensor.cx50_outlet_temp', 'unit_of_measurement')) }}**
-
-              ### Temperature Conversion (Constants)
-              - **75°F → °C:**  
-                ```
-                {{ 75 | celsius("F") }}
-                ```
-                = **{{ 75 | celsius("F") }}**
-              - **21°C → °F:**  
-                ```
-                {{ 21 | fahrenheit("C") }}
-                ```
-                = **{{ 21 | fahrenheit("C") }}**
-
-              ---
-
-              ### Power Conversion (Real Sensor)
-              - **HP Thermal Power Output:**  
-                Raw: **{{ states('sensor.heat_pump_thermal_power_output') }} {{ state_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement') }}**  
-                W → kW:  
-                ```
-                {{ states('sensor.heat_pump_thermal_power_output') | kilowatts(states_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement')) }}
-                ```
-                = **{{ states('sensor.heat_pump_thermal_power_output') | kilowatts(states_attr('sensor.heat_pump_thermal_power_output', 'unit_of_measurement')) }}**
-
-              ### Power Conversion (Constants)
-              - **1500 W → kW:**  
-                ```
-                {{ 1500 | kilowatts("W") }}
-                ```
-                = **{{ 1500 | kilowatts("W") }}**
-              - **1.2 kW → W:**  
-                ```
-                {{ 1.2 | watts("kW") }}
-                ```
-                = **{{ 1.2 | watts("kW") }}**
-              - **1 HP → W:**  
-                ```
-                {{ 1 | watts("hp") }}
-                ```
-                = **{{ 1 | watts("hp") }}**
-
-              ---
-
-              ### Energy Conversion (Real Sensor)
-              - **HP Output Interval Energy:**  
-                Raw: **{{ states('sensor.heat_pump_output_power_interval_kwh') }} {{ state_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement') }}**  
-                kWh → Wh:  
-                ```
-                {{ states('sensor.heat_pump_output_power_interval_kwh') | wh(states_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement')) }}
-                ```
-                = **{{ states('sensor.heat_pump_output_power_interval_kwh') | wh(states_attr('sensor.heat_pump_output_power_interval_kwh', 'unit_of_measurement')) }}**
-
-              ### Energy Conversion (Constants)
-              - **3600000 J → kWh:**  
-                ```
-                {{ 3600000 | kwh("J") }}
-                ```
-                = **{{ 3600000 | kwh("J") }}**
-              - **2.5 kWh → Wh:**  
-                ```
-                {{ 2.5 | wh("kWh") }}
-                ```
-                = **{{ 2.5 | wh("kWh") }}**
-              - **5000 cal → J:**  
-                ```
-                {{ 5000 | joules("cal") }}
-                ```
-                = **{{ 5000 | joules("cal") }}**
-              - **10000 J → BTU:**  
-                ```
-                {{ 10000 | btu("J") }}
-                ```
-                = **{{ 10000 | btu("J") }}**
-
-                - **1055.06 J → BTU:**  
-                = **{{ 1055.06 | btu("J") | round(2) }}** BTU
-
-                - **3412.14 BTU → kWh:**  
-                = **{{ 3412.14 | kwh("BTU") | round(2) }}** kWh
-                - **1 kWh → BTU:**  
-                {{ 1 | btu("kWh") }}
-                = **{{ 1 | btu("kWh") | round(2) }}** BTU
-
           # OVERVIEW CARD
           - type: markdown
             title: 📋 Sensor Verification Overview
