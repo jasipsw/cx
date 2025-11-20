@@ -202,24 +202,14 @@
           and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
-      {# Get temperature values and check units #}
+      {# Get temperature values - these sensors always report in °F #}
       {% set return_val = states('sensor.buffer_return_from_hvac_load') | float(0) %}
       {% set supply_val = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
-      {% set return_unit = state_attr('sensor.buffer_return_from_hvac_load', 'unit_of_measurement') %}
-      {% set supply_unit = state_attr('sensor.buffer_supply_to_hvac_load', 'unit_of_measurement') %}
       
-      {# Convert temperatures to Celsius if needed #}
-      {% if return_unit == '°F' %}
-        {% set return_c = (return_val - 32) / 1.8 %}
-      {% else %}
-        {% set return_c = return_val %}
-      {% endif %}
-      
-      {% if supply_unit == '°F' %}
-        {% set supply_c = (supply_val - 32) / 1.8 %}
-      {% else %}
-        {% set supply_c = supply_val %}
-      {% endif %}
+      {# Convert temperatures from Fahrenheit to Celsius #}
+      {# Hardcoded conversion because these sensors have unreliable unit_of_measurement attributes #}
+      {% set return_c = (return_val - 32) / 1.8 %}
+      {% set supply_c = (supply_val - 32) / 1.8 %}
       
       {# Get flow rate and check units #}
       {% set flow_val = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
