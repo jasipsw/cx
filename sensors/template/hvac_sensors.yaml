@@ -198,15 +198,15 @@
     state_class: measurement
     icon: mdi:fire
     availability: >-
-      {{ states('sensor.buffer_supply_to_hvac_load') not in ['unknown', 'unavailable']
-          and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable']
+      {{ states('sensor.hvac_buffer_tank_supply_temperature') not in ['unknown', 'unavailable']
+          and states('sensor.hvac_buffer_tank_return_temperature') not in ['unknown', 'unavailable']
           and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
     state: >-
       {# Get temperature values and check units #}
-      {% set return_val = states('sensor.buffer_return_from_hvac_load') | float(0) %}
-      {% set supply_val = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
-      {% set return_unit = state_attr('sensor.buffer_return_from_hvac_load', 'unit_of_measurement') %}
-      {% set supply_unit = state_attr('sensor.buffer_supply_to_hvac_load', 'unit_of_measurement') %}
+      {% set supply_val = states('sensor.hvac_buffer_tank_supply_temperature') | float(0) %}
+      {% set return_val = states('sensor.hvac_buffer_tank_return_temperature') | float(0) %}
+      {% set supply_unit = state_attr('sensor.hvac_buffer_tank_supply_temperature', 'unit_of_measurement') %}
+      {% set return_unit = state_attr('sensor.hvac_buffer_tank_return_temperature', 'unit_of_measurement') %}
       
       {# Convert temperatures to Celsius if needed #}
       {% if return_unit == '°F' %}
