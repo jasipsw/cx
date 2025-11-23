@@ -17,8 +17,9 @@
       icon: mdi:valve
       state: >-
         {% set hp_running = is_state('binary_sensor.heat_pump_running', 'on') %}
+        {% set hp_flow = states('sensor.cx50_pump_flow_lpm') | float(0) %}
 
-        {% if not hp_running %}
+        {% if hp_flow < 0.1 %}
           {# HP is off - valve position doesn't matter #}
           Idle (HP Off)
 
@@ -31,8 +32,10 @@
           {% set buffer_supply = states('sensor.supply_from_heat_pump') | float(0) %}
 
           {# Get DHW supply temperature (other possible destination) #}
-          {# TODO: Replace with post-G2-valve sensor when available #}
           {% set dhw_supply = states('sensor.dhw_supply_from_heat_pump') | float(0) %}
+          {% set dhw_return = states('sensor.dhw_return_to_heat_pump') | float(0) %}
+          {% set dhw_delta_t = (dhw_supply - dhw_return) | abs %}
+
 
           {# Calculate temperature differences (abs value) #}
           {% set buffer_diff = (hp_outlet - buffer_supply) | abs %}
@@ -42,7 +45,7 @@
           {# Use 10°F threshold to avoid false positives from stale temps #}
           {% if buffer_diff < dhw_diff and buffer_diff < 10.0 %}
             Buffer Tank
-          {% elif dhw_diff < buffer_diff and dhw_diff < 10.0 %}
+          {% elif dhw_diff < buffer_diff and dhw_diff < 10.0 and dhw_delta_t > 5 %}
             DHW Tank
           {% else %}
             Buffer Tank            

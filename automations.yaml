@@ -838,8 +838,6 @@
   triggers:
   - event: start
     trigger: homeassistant
-  - hours: /1
-    trigger: time_pattern
   conditions: []
   actions:
   - if:
@@ -1051,4 +1049,24 @@
     data:
       title: 'Reminder: AI/LLM for Optimization'
       message: Consider AI/LLM features for thermal optimization analysis
+  mode: single
+- id: '1763830420340'
+  alias: test last changed detection for utility meter
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.hvac_thermal_energy_used_hourly
+    attribute: last_reset
+  conditions: []
+  actions:
+  - action: persistent_notification.create
+    metadata: {}
+    data:
+      title: Attribute Change Detected
+      message: 'The attribute ''{{ trigger.attribute }}'' of ''{{ trigger.entity_id
+        }}'' changed from ''{{ trigger.from_state.attributes.last_period }}'' to ''{{
+        trigger.to_state.attributes.last_period }}''.
+
+        '
   mode: single

@@ -148,3 +148,81 @@
     availability: >
       {{ states('sensor.buffer_tank_temperature') not in ['unknown','unavailable','none'] and
           (states('sensor.buffer_tank_volume') not in ['unknown','unavailable','none'] or states('input_number.buffer_tank_volume_gal') not in ['unknown','unavailable','none']) }}
+
+    # ------------------------------------------------------------------------
+    # Thermal Power Output (Q) - CORRECTED
+    # Formula: Q = ṁ × Cp × ΔT
+    # ------------------------------------------------------------------------
+  - name: "Buffer Tank Thermal Input"
+    unique_id: buffer_thermal_power_input
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    icon: mdi:fire
+    availability: >-
+      {{ states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable']
+          and states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable']
+          and states('sensor.hvac_buffer_tank_flow_rate') not in ['unknown', 'unavailable'] }}
+    state: >-
+      {# Get temperature values and check units #}
+      {% set return_val = states('sensor.buffer_return_to_heat_pump') | float(0) %}
+      {% set supply_val = states('sensor.supply_from_heat_pump') | float(0) %}
+      {% set return_unit = state_attr('sensor.buffer_return_to_heat_pump', 'unit_of_measurement') %}
+      {% set supply_unit = state_attr('sensor.supply_from_heat_pump', 'unit_of_measurement') %}
+      
+      {# Convert temperatures to Celsius if needed #}
+      {% if return_unit == '°F' %}
+        {% set return_c = (return_val - 32) / 1.8 %}
+      {% else %}
+        {% set return_c = return_val %}
+      {% endif %}
+      
+      {% if supply_unit == '°F' %}
+        {% set supply_c = (supply_val - 32) / 1.8 %}
+      {% else %}
+        {% set supply_c = supply_val %}
+      {% endif %}
+
+      {# Get flow rate and check units #}
+      {% set flow_val = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+      {% set flow_unit = state_attr('sensor.cx50_pump_flow_lpm', 'unit_of_measurement') %}
+      
+      {# Convert flow rate to L/min if needed #}
+      {% if flow_unit == 'gal/min' or flow_unit == 'GPM' %}
+        {% set flow_lpm = flow_val * 3.78541 %}
+      {% elif flow_unit == 'gal/h' or flow_unit == 'GPH' %}
+        {% set flow_lpm = flow_val * 3.78541 / 60 %}
+      {% else %}
+        {% set flow_lpm = flow_val %}
+      {% endif %}
+
+      {% set density = states('input_number.cx_fluid_density') | float(970) %}
+      {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
+
+      {% set delta_t_c = supply_c - return_c %}
+
+      {% set flow_lps = flow_lpm / 60 %}
+      {% set flow_kgs = (flow_lps * density) / 1000 %}
+      {% set specific_heat_j = specific_heat * 1000 %}
+      {% set thermal_output = flow_kgs * specific_heat_j * delta_t_c %}
+      {{ thermal_output | round(0) }}
+
+
+# heat pump flow as measured by the heat pump is adjusted based on the measured 
+# flow from the modbus sensor.  that value is used to identify the flow !env_var 
+# rate from the pump curve in the hpumpe specifications (see CS50-2 IOM pdf). 
+# value was confirmed by measuring the actual flow on the inlet pipe using a 
+# ultrasonic flow meter.
+# 18 lpm reported by the heat pump appears to be 14 lpm at the buffer tank inlet
+
+  - name: "Heat Pump Buffer Tank Flow Rate"
+    unique_id: buffer_flow_from_heat_pump
+    unit_of_measurement: "L/min"
+    device_class: volume_flow_rate
+    state_class: measurement
+    icon: mdi:waves-arrow-left
+    state: >-
+      {% set flow  = states('sensor.cx50_pump_flow_lpm') | float(0) %}
+      {% set correction_factor  = states('input_number.heat_pump_flow_compensation') | float(1) %}
+      {% set flow = flow * correction_factor %}
+      {{ flow | round(0) }}

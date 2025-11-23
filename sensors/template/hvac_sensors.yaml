@@ -191,6 +191,30 @@
         OK - All inputs valid
       {% endif %}
 
+  - name: "HVAC Temperature Unit"
+    unique_id: hvac_temperature_unit
+    icon: mdi:fire
+    state: >-
+      {% set u1_unit = state_attr('sensor.buffer_supply_to_hvac_load', 'unit_of_measurement') %}
+      {% set u2_unit = state_attr('sensor.buffer_return_from_hvac_load', 'unit_of_measurement') %}
+
+      {# Set u1 based on the first sensor's unit #}
+      {% if u1_unit == '°F' %}
+        {% set u1 = "Fahrenheit" %}
+      {% else %}
+        {% set u1 = "Celsius" %}
+      {% endif %}
+
+      {# Set u2 based on the second sensor's unit #}
+      {% if u2_unit == '°F' %}
+        {% set u2 = "Fahrenheit" %}
+      {% else %}
+        {% set u2 = "Celsius" %}
+      {% endif %}
+
+      {# Concatenate u1, the delimiter, and u2 #}
+      {{ u1 + " / " + u2 }}
+
   - name: "HVAC Thermal Power Used"
     unique_id: hvac_thermal_power_used
     unit_of_measurement: "W"
@@ -220,7 +244,7 @@
       {% else %}
         {% set supply_c = supply_val %}
       {% endif %}
-      
+
       {# Get flow rate and check units #}
       {% set flow_val = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}
       {% set flow_unit = state_attr('sensor.hvac_buffer_tank_flow_rate', 'unit_of_measurement') %}
@@ -233,7 +257,7 @@
       {% else %}
         {% set flow_lpm = flow_val %}
       {% endif %}
-      
+
       {% set density = states('input_number.cx_fluid_density') | float(970) %}
       {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
 
@@ -265,7 +289,7 @@
     #   {{ flow_ok and t_sup_ok and t_ret_ok and cp_ok and rho_ok }}
       
     state: >-
-        {% set result_kw = states('input_number.hvac_thermal_power_used') | float(0) %}
+        {% set result_kw = states('sensor.hvac_thermal_power_used') | float(0) %}
         {{ result_kw / 1000.0 | round(2) }}
 
 #      {% set flow_lpm = states('sensor.hvac_buffer_tank_flow_rate') | float(0) %}

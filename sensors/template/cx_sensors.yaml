@@ -26,7 +26,7 @@
       icon: mdi:thermometer
       state: >
         {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
-        {{ (inlet * 1.8 + 32.0) | round(2) }}
+        {{ (inlet * 1.8 + 32.0) | round(1) }}
 
     - name: "Heat Pump Target Heating Temperature"
       unique_id: heat_pump_target_heating_temperature
@@ -35,7 +35,16 @@
       icon: mdi:thermometer
       state: >
         {% set temp = states('sensor.cx50_heating_target_temp_c') | float(0) %}
-        {{ (temp * 1.8 + 32.0) | round(2) }}
+        {{ (temp * 1.8 + 32.0) | round(1) }}
+
+    - name: "Heat Pump Target Cooling Temperature"
+      unique_id: heat_pump_target_cooling_temperature
+      unit_of_measurement: "°F"
+      state_class: measurement
+      icon: mdi:thermometer
+      state: >
+        {% set temp = states('sensor.cx50_cooling_target_temp_c') | float(0) %}
+        {{ (temp * 1.8 + 32.0) | round(1) }}
 
     - name: "Heat Pump Target DHW Temperature"
       unique_id: heat_pump_target_dhw_temperature
@@ -44,7 +53,7 @@
       icon: mdi:thermometer
       state: >
         {% set temp = states('sensor.cx50_dhw_target_temp_c') | float(0) %}
-        {{ (temp * 1.8 + 32.0) | round(2) }}        
+        {{ (temp * 1.8 + 32.0) | round(1) }}        
          
     - name: "Heat Pump Ambient Temperature"
       unique_id: heat_pump_ambient_temperature
@@ -53,7 +62,7 @@
       icon: mdi:thermometer
       state: >
         {% set temp = states('sensor.cx50_ambient_temp_c') | float(0) %}
-        {{ (temp * 1.8 + 32.0) | round(2) }}
+        {{ (temp * 1.8 + 32.0) | round(1) }}
 
     - name: "Heat Pump Outlet Temperature"
       unique_id: heat_pump_outlet_temperature
@@ -62,7 +71,7 @@
       icon: mdi:thermometer
       state: >
         {% set outlet = states('sensor.cx50_outlet_water_temp_c')  | float(0) %}
-        {{ (outlet * 1.8 + 32.0) | round(2) }}
+        {{ (outlet * 1.8 + 32.0) | round(1) }}
 
     # ------------------------------------------------------------------------
     # Temperature Delta (ΔT) - CORRECTED
@@ -75,7 +84,7 @@
       state: >
         {% set inlet = states('sensor.heat_pump_inlet_temperature') | float(0) %}
         {% set outlet = states('sensor.heat_pump_outlet_temperature')  | float(0) %}
-        {{ ( outlet - inlet ) | round(2) }}
+        {{ ( outlet - inlet ) | round(1) }}
 
     # ------------------------------------------------------------------------
     # Electrical Power Input - CORRECTED (V × I)
@@ -138,7 +147,6 @@
     # Thermal Power Output (Q) - CORRECTED
     # Formula: Q = ṁ × Cp × ΔT
     # ------------------------------------------------------------------------
-
     - name: "Heat Pump Thermal Power Output"
       unique_id: heat_pump_thermal_power_output
       unit_of_measurement: "W"

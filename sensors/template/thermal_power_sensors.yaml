@@ -33,8 +33,8 @@
     state_class: measurement
     icon: mdi:radiator
     availability: >-
-      {{ states('sensor.supply_from_heat_pump') not in ['unknown', 'unavailable']
-          and states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable']
+      {{ states('sensor.main_supply_from_heat_pump') not in ['unknown', 'unavailable']
+          and states('sensor.main_return_to_heat_pump') not in ['unknown', 'unavailable']
           and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable']
           and states('sensor.g2_valve_position') not in ['unknown', 'unavailable'] }}
     state: >-
@@ -44,10 +44,10 @@
 
       {% if hp_running and g2_position == 'Buffer Tank' %}
         {# Get temperature values and check units #}
-        {% set supply_val = states('sensor.supply_from_heat_pump') | float(0) %}
-        {% set return_val = states('sensor.buffer_return_to_heat_pump') | float(0) %}
-        {% set supply_unit = state_attr('sensor.supply_from_heat_pump', 'unit_of_measurement') %}
-        {% set return_unit = state_attr('sensor.buffer_return_to_heat_pump', 'unit_of_measurement') %}
+        {% set supply_val = states('sensor.main_supply_from_heat_pump') | float(0) %}
+        {% set return_val = states('sensor.main_return_to_heat_pump') | float(0) %}
+        {% set supply_unit = state_attr('sensor.main_supply_from_heat_pump', 'unit_of_measurement') %}
+        {% set return_unit = state_attr('sensor.main_return_to_heat_pump', 'unit_of_measurement') %}
 
         {# Convert temperatures to Celsius if needed #}
         {% if supply_unit == '°F' %}

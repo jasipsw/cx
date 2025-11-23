@@ -1,0 +1,1682 @@
+views:
+  - type: sections
+    title: Radiant Floor
+    path: radiant-floor
+    icon: ''
+    sections:
+      - type: grid
+        cards:
+          - type: history-graph
+            entities:
+              - entity: sensor.average_room_temperature
+              - entity: sensor.average_floor_temperature
+              - entity: sensor.buffer_supply_to_hvac_load
+              - entity: sensor.buffer_return_from_hvac_load
+              - entity: sensor.hvac_buffer_tank_flow_rate
+              - entity: sensor.outdoor_temperature
+              - entity: binary_sensor.main_floor_radiant
+              - entity: binary_sensor.master_suite_radiant
+              - entity: binary_sensor.family_room_radiant
+              - entity: binary_sensor.office_radiant
+              - entity: binary_sensor.front_bedroom_radiant
+              - entity: binary_sensor.bedroom_floor_radiant
+              - entity: sun.sun
+            grid_options:
+              columns: full
+            title: Hydronics
+            hours_to_show: 24
+        column_span: 4
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+    cards: []
+    max_columns: 4
+  - type: sections
+    max_columns: 4
+    title: Radiant Zones
+    path: room-temperatures
+    icon: ''
+    sections:
+      - type: grid
+        cards:
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            header:
+              show: true
+              title: Radiant Flow
+              show_states: true
+              colorize_states: true
+            yaxis:
+              - id: temp
+                min: 60
+                max: 95
+                decimals: 0
+              - id: flow
+                opposite: true
+                min: 0
+                max: 70
+                decimals: 1
+            all_series_config:
+              stroke_width: 2
+              float_precision: 0
+            series:
+              - entity: sensor.radiant_flow_temp
+                name: Flow Temp
+                color: red
+                yaxis_id: temp
+                show:
+                  extremas: true
+                  in_chart: true
+                  in_header: true
+              - entity: sensor.buffer_supply_to_hvac_load
+                name: 2 Hr Average Flow Temp
+                yaxis_id: temp
+                type: line
+                stroke_width: 0.5
+                color: black
+                group_by:
+                  func: avg
+                  duration: 2h
+                show:
+                  in_chart: true
+                  in_header: true
+              - entity: sensor.hvac_buffer_tank_flow_rate
+                name: Flow Rate
+                color: dodgerblue
+                stroke_width: 0
+                yaxis_id: flow
+                type: area
+                group_by:
+                  func: avg
+                  duration: 20m
+                show:
+                  extremas: true
+                  in_chart: true
+                  in_header: true
+            apex_config:
+              legend:
+                show: false
+                decimals: 0
+              chart:
+                height: 200px
+            grid_options:
+              columns: 48
+              rows: 5
+          - type: horizontal-stack
+            cards:
+              - type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: Master Suite Radiant Temperatures
+                  show_states: true
+                  colorize_states: true
+                yaxis:
+                  - min: 60
+                    max: 95
+                    decimals: 0
+                all_series_config:
+                  stroke_width: 2
+                  float_precision: 0
+                series:
+                  - entity: sensor.master_suite_radiant_flow_temp
+                    name: Flow
+                    color: red
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.master_suite_floor_temperature
+                    name: Floor
+                    color: mediumblue
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.master_suite_room_temperature
+                    name: Room
+                    color: orange
+                    stroke_width: 1
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.master_suite_heat_target
+                    name: Target
+                    color: lightblue
+                    show:
+                      in_chart: false
+                      in_header: true
+                  - entity: sensor.master_suite_radiant_flow_temp
+                    type: line
+                    stroke_width: 0.5
+                    color: black
+                    group_by:
+                      func: avg
+                      duration: 2h
+                    show:
+                      in_chart: true
+                      in_header: false
+                apex_config:
+                  legend:
+                    show: false
+                    decimals: 0
+                grid_options:
+                  columns: 12
+              - type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: Main Floor Radiant Temperatures
+                  show_states: true
+                  colorize_states: true
+                yaxis:
+                  - min: 60
+                    max: 95
+                    decimals: 0
+                all_series_config:
+                  stroke_width: 2
+                  float_precision: 0
+                series:
+                  - entity: sensor.main_floor_radiant_flow_temp
+                    name: Flow
+                    color: red
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.main_floor_floor_temperature
+                    name: Floor
+                    color: mediumblue
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.main_floor_room_temperature
+                    name: Room
+                    color: orange
+                    stroke_width: 1
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.main_floor_heat_target
+                    name: Target
+                    color: lightblue
+                    show:
+                      in_chart: false
+                      in_header: true
+                  - entity: sensor.main_floor_radiant_flow_temp
+                    type: line
+                    stroke_width: 0.5
+                    color: black
+                    group_by:
+                      func: avg
+                      duration: 2h
+                    show:
+                      in_chart: true
+                      in_header: false
+                apex_config:
+                  legend:
+                    show: false
+                    decimals: 0
+                grid_options:
+                  columns: 12
+              - type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: Front Bedroom Radiant Temperatures
+                  show_states: true
+                  colorize_states: true
+                yaxis:
+                  - min: 60
+                    max: 95
+                    decimals: 0
+                all_series_config:
+                  stroke_width: 2
+                  float_precision: 0
+                series:
+                  - entity: sensor.front_bedroom_radiant_flow_temp
+                    name: Flow
+                    color: red
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.front_bedroom_floor_temperature
+                    name: Floor
+                    color: mediumblue
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.front_bedroom_room_temperature
+                    name: Room
+                    color: orange
+                    stroke_width: 1
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.front_bedroom_heat_target
+                    name: Target
+                    color: lightblue
+                    show:
+                      in_chart: false
+                      in_header: true
+                  - entity: sensor.front_bedroom_radiant_flow_temp
+                    type: line
+                    stroke_width: 0.5
+                    color: black
+                    group_by:
+                      func: avg
+                      duration: 2h
+                    show:
+                      in_chart: true
+                      in_header: false
+                apex_config:
+                  legend:
+                    show: false
+                    decimals: 0
+                grid_options:
+                  columns: 12
+            title: Main Floor
+            grid_options:
+              columns: full
+          - type: horizontal-stack
+            cards:
+              - type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: Office Radiant Temperatures
+                  show_states: true
+                  colorize_states: true
+                yaxis:
+                  - min: 60
+                    max: 95
+                    decimals: 0
+                all_series_config:
+                  stroke_width: 2
+                  float_precision: 0
+                series:
+                  - entity: sensor.office_radiant_flow_temp
+                    name: Flow
+                    color: red
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.office_3_floor_temperature
+                    name: Floor
+                    color: mediumblue
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.office_3_room_temperature
+                    name: Room
+                    color: orange
+                    stroke_width: 1
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.office_3_heat_target
+                    name: Target
+                    color: lightblue
+                    show:
+                      in_chart: false
+                      in_header: true
+                  - entity: sensor.office_radiant_flow_temp
+                    type: line
+                    stroke_width: 0.5
+                    color: black
+                    group_by:
+                      func: avg
+                      duration: 2h
+                    show:
+                      in_chart: true
+                      in_header: false
+                apex_config:
+                  legend:
+                    show: false
+                    decimals: 0
+                grid_options:
+                  columns: 12
+              - type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: Family Room Radiant Temperatures
+                  show_states: true
+                  colorize_states: true
+                yaxis:
+                  - min: 60
+                    max: 95
+                    decimals: 0
+                all_series_config:
+                  stroke_width: 2
+                  float_precision: 0
+                series:
+                  - entity: sensor.family_room_radiant_flow_temp
+                    name: Flow
+                    color: red
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.family_room_floor_temperature
+                    name: Floor
+                    color: mediumblue
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.family_room_room_temperature
+                    name: Room
+                    color: orange
+                    stroke_width: 1
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.family_room_heat_target
+                    name: Target
+                    color: lightblue
+                    show:
+                      in_chart: false
+                      in_header: true
+                  - entity: sensor.family_room_radiant_flow_temp
+                    type: line
+                    stroke_width: 0.5
+                    color: black
+                    group_by:
+                      func: avg
+                      duration: 2h
+                    show:
+                      in_chart: true
+                      in_header: false
+                apex_config:
+                  legend:
+                    show: false
+                    decimals: 0
+                grid_options:
+                  columns: 12
+              - type: custom:apexcharts-card
+                graph_span: 24h
+                header:
+                  show: true
+                  title: Guest Bedroom Radiant Temperatures
+                  show_states: true
+                  colorize_states: true
+                yaxis:
+                  - min: 60
+                    max: 95
+                    decimals: 0
+                all_series_config:
+                  stroke_width: 2
+                  float_precision: 0
+                series:
+                  - entity: sensor.bedroom_radiant_flow_temp
+                    name: Flow
+                    color: red
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.bedroom_floor_temperature
+                    name: Floor
+                    color: mediumblue
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.bedroom_room_temperature
+                    name: Room
+                    color: orange
+                    stroke_width: 1
+                    show:
+                      extremas: true
+                      in_chart: true
+                      in_header: true
+                  - entity: sensor.bedroom_heat_target
+                    name: Target
+                    color: lightblue
+                    show:
+                      in_chart: false
+                      in_header: true
+                  - entity: sensor.bedroom_radiant_flow_temp
+                    type: line
+                    stroke_width: 0.5
+                    color: black
+                    group_by:
+                      func: avg
+                      duration: 2h
+                    show:
+                      in_chart: true
+                      in_header: false
+                apex_config:
+                  legend:
+                    show: false
+                    decimals: 0
+                grid_options:
+                  columns: 12
+            title: Ground Floor
+            grid_options:
+              columns: full
+        column_span: 4
+      - type: grid
+        cards:
+          - chart_type: line
+            period: 5minute
+            type: statistics-graph
+            entities:
+              - sensor.master_suite_floor_temperature
+              - sensor.master_suite_room_temperature
+              - sensor.master_suite_heat_target
+              - sensor.outdoor_temperature
+              - sensor.master_suite_radiant_flow_temp
+            stat_types:
+              - mean
+            days_to_show: 3
+            grid_options:
+              columns: 48
+              rows: 8
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.bedroom_floor_temperature
+              - sensor.bedroom_heat_target
+              - sensor.bedroom_room_temperature
+              - sensor.outdoor_temperature
+            stat_types:
+              - mean
+            days_to_show: 3
+            grid_options:
+              columns: 48
+              rows: 8
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.family_room_floor_temperature
+              - sensor.family_room_temperature
+              - sensor.family_room_heat_target
+              - sensor.outdoor_temperature
+            stat_types:
+              - mean
+            days_to_show: 3
+            grid_options:
+              columns: 48
+              rows: 8
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.front_bedroom_floor_temperature
+              - sensor.front_bedroom_room_temperature
+              - sensor.front_bedroom_heat_target
+              - sensor.outdoor_temperature
+            stat_types:
+              - mean
+            days_to_show: 3
+            grid_options:
+              columns: 48
+              rows: 8
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.office_3_floor_temperature
+              - sensor.office_3_room_temperature
+              - sensor.office_3_heat_target
+              - sensor.outdoor_temperature
+            stat_types:
+              - mean
+            days_to_show: 3
+            grid_options:
+              columns: 48
+              rows: 8
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.main_floor_floor_temperature
+              - sensor.main_floor_heat_target
+              - sensor.main_floor_room_temperature
+              - sensor.main_floor_temperature
+            stat_types:
+              - mean
+            days_to_show: 3
+            grid_options:
+              columns: 48
+              rows: 8
+        column_span: 4
+      - type: grid
+        cards:
+          - type: heading
+            heading: Room Temperatures
+            heading_style: title
+          - type: tile
+            entity: sensor.bedroom_room_temperature
+            vertical: false
+            features_position: bottom
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: tile
+            entity: sensor.family_room_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.front_bedroom_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.main_floor_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.master_suite_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.office_3_room_temperature
+            grid_options:
+              columns: 9
+      - type: grid
+        cards:
+          - type: heading
+            heading: Floor Temperatures
+            heading_style: title
+          - type: tile
+            entity: sensor.bedroom_floor_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.family_room_floor_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.front_bedroom_floor_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.main_floor_floor_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.master_suite_floor_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.office_3_floor_temperature
+            grid_options:
+              columns: 9
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating Targets
+            heading_style: title
+          - type: tile
+            entity: sensor.bedroom_heat_target
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.family_room_heat_target
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.front_bedroom_heat_target
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.main_floor_heat_target
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.master_suite_heat_target
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.office_3_heat_target
+            grid_options:
+              columns: 9
+      - type: grid
+        cards:
+          - type: heading
+            heading: Room Temperatures
+            heading_style: title
+          - type: tile
+            entity: sensor.bedroom_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.family_room_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.front_bedroom_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.main_floor_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.master_suite_room_temperature
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.office_3_room_temperature
+            grid_options:
+              columns: 9
+      - type: grid
+        cards:
+          - type: heading
+            heading: Demand 1
+            heading_style: title
+          - type: tile
+            entity: sensor.bedroom_demand_1
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.family_room_demand_1
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.front_bedroom_demand_1
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.main_floor_demand_1
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.master_suite_demand_1
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.office_3_demand_1
+            grid_options:
+              columns: 9
+      - type: grid
+        cards:
+          - type: heading
+            heading: Demand 2
+            heading_style: title
+          - type: tile
+            entity: sensor.bedroom_demand_2
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.family_room_demand_2
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.front_bedroom_demand_2
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.main_floor_demand_2
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.master_suite_demand_2
+            grid_options:
+              columns: 9
+          - type: tile
+            entity: sensor.office_3_demand_2
+            grid_options:
+              columns: 9
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: custom:auto-entities
+            card:
+              type: custom:flex-table-card
+              title: HBX
+              columns:
+                - name: Name
+                  data: friendly_name
+                - name: State
+                  data: state
+                - name: Last Changed
+                  data: last_changed
+            filter:
+              include:
+                - options: {}
+                  integration: 01K01S75TNDXA66H7Y77FZW8XP
+                - options: {}
+            grid_options:
+              columns: full
+        column_span: 3
+      - type: grid
+        cards:
+          - type: markdown
+            content: >
+              type: markdown
+
+              content: |
+
+              | Zone | Room | Floor  | Heat | Cool | Humid | D1 | D2 | Zone |
+              Pri | H-On |
+                |:----------|:---------:|:-----:|:----:|:----:|:-----:|:--:|:--:|:----:|:---:|:----------:|
+                | Bedroom |   {{states('sensor.bedroom_room_temperature')|round(1)}}°F | {{states('sensor.bedroom_floor_temperature')|round(1)}}°F | {{states('sensor.bedroom_heat_target')|round(1)}}°F | {{states('sensor.bedroom_cool_target')|round(1)}}°F | {{states('sensor.bedroom_humidity')|round(0)}}% | {{states('sensor.bedroom_demand_1')|round(0)}} | {{states('sensor.bedroom_demand_2')|round(0)}} | {{states('sensor.bedroom_zone')|round(0)}} | {{states('sensor.bedroom_priority')|round(0)}} | {{states('sensor.bedroom_humidity_on')|round(0)}} |
+                | Family Room | {{states('sensor.family_room_room_temperature')|round(1)}}°F | {{states('sensor.family_room_floor_temperature')|round(1)}}°F | {{states('sensor.family_room_heat_target')|round(1)}}°F | {{states('sensor.family_room_cool_target')|round(1)}}°F | {{states('sensor.family_room_humidity_2')|round(0)}}% | {{states('sensor.family_room_demand_1')|round(0)}} | {{states('sensor.family_room_demand_2')|round(0)}} | {{states('sensor.family_room_zone')|round(0)}} | {{states('sensor.family_room_priority')|round(0)}} | {{states('sensor.family_room_humidity_on')|round(0)}} |
+                | Front Bedroom | {{states('sensor.front_bedroom_room_temperature')|round(1)}}°F | {{states('sensor.front_bedroom_floor_temperature')|round(1)}}°F | {{states('sensor.front_bedroom_heat_target')|round(1)}}°F | {{states('sensor.front_bedroom_cool_target')|round(1)}}°F | {{states('sensor.front_bedroom_humidity')|round(0)}}% | {{states('sensor.front_bedroom_demand_1')|round(0)}} | {{states('sensor.front_bedroom_demand_2')|round(0)}} | {{states('sensor.front_bedroom_zone')|round(0)}} | {{states('sensor.front_bedroom_priority')|round(0)}} | {{states('sensor.front_bedroom_humidity_on')|round(0)}} |
+                | Main Floor | {{states('sensor.main_floor_room_temperature')|round(1)}}°F | {{states('sensor.main_floor_floor_temperature')|round(1)}}°F | {{states('sensor.main_floor_heat_target')|round(1)}}°F | {{states('sensor.main_floor_cool_target')|round(1)}}°F | {{states('sensor.main_floor_humidity')|round(0)}}% | {{states('sensor.main_floor_demand_1')|round(0)}} | {{states('sensor.main_floor_demand_2')|round(0)}} | {{states('sensor.main_floor_zone')|round(0)}} | {{states('sensor.main_floor_priority')|round(0)}} | {{states('sensor.main_floor_humidity_on')|round(0)}} |
+                | Master Suite | {{states('sensor.master_suite_room_temperature')|round(1)}}°F | {{states('sensor.master_suite_floor_temperature')|round(1)}}°F | {{states('sensor.master_suite_heat_target')|round(1)}}°F | {{states('sensor.master_suite_cool_target')|round(1)}}°F | {{states('sensor.master_suite_humidity')|round(0)}}% | {{states('sensor.master_suite_demand_1')|round(0)}} | {{states('sensor.master_suite_demand_2')|round(0)}} | {{states('sensor.master_suite_zone')|round(0)}} | {{states('sensor.master_suite_priority')|round(0)}} | {{states('sensor.master_suite_humidity_on')|round(0)}} |
+                | Office 3 | {{states('sensor.office_3_room_temperature')|round(1)}}°F | {{states('sensor.office_3_floor_temperature')|round(1)}}°F | {{states('sensor.office_3_heat_target')|round(1)}}°F | {{states('sensor.office_3_cool_target')|round(1)}}°F | {{states('sensor.office_3_humidity')|round(0)}}% | {{states('sensor.office_3_demand_1')|round(0)}} | {{states('sensor.office_3_demand_2')|round(0)}} | {{states('sensor.office_3_zone')|round(0)}} | {{states('sensor.office_3_priority')|round(0)}} | {{states('sensor.office_3_humidity_on')|round(0)}} |
+            grid_options:
+              columns: full
+        column_span: 4
+    cards: []
+  - type: sections
+    max_columns: 4
+    title: Balance
+    path: balance
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: custom:apexcharts-card
+            apex_config:
+              chart:
+                height: 300px
+            grid_options:
+              columns: full
+            header:
+              show: true
+              title: Energy Balance (Last 24 Hours)
+              show_states: true
+              colorize_states: true
+            graph_span: 24h
+            span:
+              end: hour
+            yaxis:
+              - id: kwh
+                min: 0
+                max: 12
+                decimals: 1
+                apex_config:
+                  title:
+                    text: kWh
+              - id: temp
+                min: 0
+                decimals: 0
+                opposite: true
+            series:
+              - entity: sensor.hp_electrical_energy_hourly
+                name: Electrical Input
+                type: column
+                yaxis_id: kwh
+                color: gray
+                group_by:
+                  func: last
+                  duration: 1h
+              - entity: sensor.hp_thermal_energy_output_hourly
+                name: HP Output
+                type: column
+                yaxis_id: kwh
+                color: '#4CAF50'
+                group_by:
+                  func: last
+                  duration: 1h
+              - entity: sensor.buffer_tank_energy_in_hourly
+                name: Buffer Input
+                type: column
+                yaxis_id: kwh
+                color: orange
+                group_by:
+                  func: last
+                  duration: 1h
+              - entity: sensor.dhw_tank_energy_in_hourly
+                name: DHW Input
+                type: column
+                yaxis_id: kwh
+                color: '#FED8b1'
+                group_by:
+                  func: last
+                  duration: 1h
+              - entity: sensor.hvac_thermal_energy_used_hourly
+                name: HVAC Delivered
+                type: column
+                yaxis_id: kwh
+                color: '#2196F3'
+                group_by:
+                  func: last
+                  duration: 1h
+        column_span: 4
+      - type: grid
+        cards:
+          - type: heading
+            heading: Energy & Power
+            heading_style: title
+          - type: entities
+            entities:
+              - entity: sensor.hp_electrical_energy_hourly
+              - entity: sensor.hp_electrical_energy_daily
+              - entity: sensor.hp_electrical_energy_monthly
+              - entity: sensor.heat_pump_electrical_power_input
+              - entity: sensor.heat_pump_input_power_interval_kwh
+          - type: entities
+            entities:
+              - entity: sensor.hp_thermal_energy_output_hourly
+              - entity: sensor.hp_thermal_energy_output_daily
+              - entity: sensor.hp_thermal_energy_output_monthly
+              - entity: sensor.heat_pump_thermal_power_output
+              - entity: sensor.heat_pump_output_power_interval_kwh
+          - type: entities
+            entities:
+              - entity: sensor.buffer_tank_energy_in_hourly
+              - entity: sensor.buffer_tank_energy_in_daily
+              - entity: sensor.buffer_tank_energy_in_monthly
+              - entity: sensor.buffer_tank_thermal_power_input
+              - entity: sensor.buffer_tank_energy_input
+          - type: entities
+            entities:
+              - entity: sensor.hvac_thermal_energy_used_hourly
+              - entity: sensor.hvac_thermal_energy_used_daily
+              - entity: sensor.hvac_thermal_energy_used_monthly
+              - entity: sensor.hvac_thermal_power_used
+              - entity: sensor.hvac_thermal_energy_used
+          - type: entities
+            entities:
+              - entity: sensor.dhw_tank_energy_in_hourly
+              - entity: sensor.dhw_tank_energy_in_daily
+              - entity: sensor.dhw_tank_energy_in_monthly
+              - entity: sensor.dhw_tank_thermal_power_input
+              - entity: sensor.dhw_tank_energy_input
+        column_span: 4
+      - type: grid
+        cards:
+          - type: heading
+            icon: mdi:fridge
+            heading: Supply & Return Temperatures
+            heading_style: title
+          - type: entities
+            entities:
+              - entity: sensor.heat_pump_outlet_temperature
+              - entity: sensor.heat_pump_inlet_temperature
+              - entity: sensor.cx50_pump_flow_lpm
+          - type: entities
+            entities:
+              - entity: sensor.main_supply_from_heat_pump
+              - entity: sensor.main_return_to_heat_pump
+              - entity: sensor.cx50_pump_flow_lpm
+          - type: entities
+            entities:
+              - entity: sensor.supply_from_heat_pump
+              - entity: sensor.buffer_return_to_heat_pump
+              - entity: sensor.cx50_pump_flow_lpm
+          - type: entities
+            entities:
+              - entity: sensor.dhw_supply_from_heat_pump
+              - entity: sensor.dhw_return_to_heat_pump
+              - entity: sensor.cx50_pump_flow_lpm
+          - type: entities
+            entities:
+              - entity: sensor.buffer_supply_to_hvac_load
+              - entity: sensor.buffer_return_from_hvac_load
+              - entity: sensor.hvac_buffer_tank_flow_rate
+        column_span: 4
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: entities
+            entities:
+              - entity: input_number.cx_fluid_density
+              - entity: input_number.cx_fluid_specific_heat
+              - entity: input_number.heat_pump_flow_compensation
+  - type: sections
+    max_columns: 4
+    title: System
+    path: system
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: 'Hydronics '
+            heading_style: title
+          - type: history-graph
+            entities:
+              - entity: binary_sensor.cx_running
+              - entity: binary_sensor.cx_heating_mode
+              - entity: binary_sensor.cx_dhw_mode
+              - entity: binary_sensor.cx_auxiliary_electric_heater
+              - entity: sensor.cx_inlet_water_temp
+              - entity: sensor.cx_outlet_water_temp
+              - entity: sensor.cx_heating_target_temp
+              - entity: sensor.cx_dhw_target_temp
+              - entity: sensor.shellyplus1_c4d8d5543fc0_temperature
+              - entity: sensor.shellyplus1_c4d8d5543fc0_temperature_3
+              - entity: sensor.outdoor_temperature
+              - entity: sensor.cx_ambient_temp
+              - entity: sensor.airgradiant_temperature
+              - entity: sensor.hvac_buffer_tank_flow_rate
+            hours_to_show: 72
+            grid_options:
+              columns: full
+        column_span: 4
+    cards: []
+  - title: HP Technical
+    path: test2
+    cards:
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.cx_inlet_water_temp
+            max: 130
+            min: 0
+            name: Inlet Temp
+            unit: F
+          - type: gauge
+            entity: sensor.cx_outlet_water_temp
+            max: 130
+            min: 0
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            name: Outlet Temp
+            unit: °F
+          - type: gauge
+            entity: sensor.cx_heating_target_temp
+            max: 130
+            min: 0
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            name: Target  Temp
+            unit: °F
+          - type: gauge
+            entity: sensor.cx_ambient_temp
+            name: Outdoor Temp
+          - type: gauge
+            entity: sensor.cx_delta_t
+            name: Delta T
+            min: -15
+            max: 15
+            needle: true
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+          - type: gauge
+            entity: sensor.cx50_pump_flow_gpm
+            name: Pump GPM
+            needle: true
+          - type: gauge
+            entity: sensor.cx50_pump_flow_lpm
+            name: Pump LPM
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: binary_sensor.cx_running
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.cx50_heat_pump_watts
+            name: Leviton L/C Heat Pump Watts
+            unit: W
+            needle: false
+          - type: gauge
+            entity: sensor.cx50_compressor_frequency
+            min: 0
+            max: 60
+            name: HP Compressor Freq
+            unit: Hz
+          - type: gauge
+            entity: sensor.cx_input_power_w
+            name: CX Input Power
+          - type: gauge
+            entity: sensor.cx_output_power_w
+            name: CX Output Power
+      - type: entities
+        entities:
+          - entity: sensor.cx50_pump_flow_lpm
+          - entity: sensor.hp_flow
+          - entity: sensor.cx50_heat_pump_watts
+          - entity: sensor.cx50_compressor_frequency
+          - entity: sensor.cx50_input_ac_current
+          - entity: sensor.cx50_input_ac_voltage
+          - entity: sensor.cx_input_power_w
+      - type: custom:apexcharts-card
+        graph_span: 60d
+        header:
+          show: true
+          title: ApexCharts-Card
+          show_states: true
+          colorize_states: true
+        series:
+          - entity: sensor.cx50_heat_pump_total_daily_energy
+            type: column
+            name: Heat Pump kWh
+            group_by:
+              func: max
+              duration: 1d
+          - entity: sensor.outdoor_temperature
+            type: line
+            name: Outdoor Temp
+            group_by:
+              func: min
+              duration: 1d
+    type: sidebar
+  - title: Data
+    path: data
+    cards:
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: CX50 internal
+          state_color: true
+        filter:
+          include:
+            - entity_id: sensor.cx50_*
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: CX50 Calculated
+        filter:
+          include:
+            - entity_id: sensor.cx_*
+        sort:
+          method: state
+          numeric: false
+      - type: custom:auto-entities
+        card:
+          type: entities
+          title: Load Center Heat Pump Breaker
+        filter:
+          include:
+            - entity_id: sensor.lc_*
+          exclude: []
+  - title: dev
+    cards: []
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - graph: line
+            type: sensor
+            entity: sensor.hvac_buffer_tank_flow_rate
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.hvac_buffer_tank_delta_t
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.hvac_buffer_tank_return_temperature
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.hvac_buffer_tank_supply_temperature
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.hvac_thermal_power_used
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.thermal_energy_used_last_minute_meter
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.thermal_energy_used_minute
+            detail: 1
+            grid_options:
+              columns: full
+          - graph: line
+            type: sensor
+            entity: sensor.hvac_buffer_tank_flow_rate
+            detail: 1
+            grid_options:
+              columns: full
+        column_span: 2
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: heading
+            heading: New section
+          - type: history-graph
+            entities:
+              - entity: sensor.shellyplus1_c4d8d5543fc0_temperature
+              - entity: sensor.shellyplus1_c4d8d5543fc0_temperature_2
+              - entity: sensor.shellyplus1_c4d8d5543fc0_temperature_3
+            hours_to_show: 8
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - chart_type: bar
+            period: 5minute
+            type: statistics-graph
+            entities:
+              - sensor.hvac_thermal_power_used
+            stat_types:
+              - mean
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: horizontal-stack
+            cards:
+              - type: entity
+                entity: sensor.heat_pump_thermal_power_output
+                name: Thermal Power
+                icon: mdi:fire
+              - type: entity
+                entity: sensor.heat_pump_electrical_power_input
+                name: Electrical Power
+                icon: mdi:flash
+              - type: entity
+                entity: sensor.hvac_thermal_power_used
+                name: HVAC Load
+                icon: mdi:radiator
+              - type: entity
+                entity: sensor.heat_pump_cop
+                name: COP
+                icon: mdi:gauge
+        column_span: 4
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: custom:layout-card
+            layout_type: custom:grid-layout
+            layout: {}
+            cards:
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Real-Time Power - Last Hour
+                  show_states: true
+                graph_span: 1h
+                span:
+                  start: hour
+                now:
+                  show: true
+                  label: Now
+                apex_config:
+                  chart:
+                    type: line
+                  stroke:
+                    curve: smooth
+                    width: 2
+                yaxis:
+                  - id: power_w
+                    decimals: 0
+                    apex_config:
+                      title:
+                        text: Power (W)
+                series:
+                  - entity: sensor.heat_pump_thermal_power_output
+                    name: Heat Pump Thermal Output
+                    type: line
+                    color: '#FF6B6B'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.heat_pump_electrical_power_input
+                    name: Heat Pump Electrical Input
+                    type: line
+                    color: '#4ECDC4'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.hvac_thermal_power_used
+                    name: HVAC Thermal Load
+                    type: line
+                    color: '#FFA500'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Energy Consumption - Minute by Minute (Last 2 Hours)
+                  show_states: true
+                graph_span: 2h
+                update_interval: 1min
+                span:
+                  start: hour
+                apex_config:
+                  chart:
+                    type: bar
+                    stacked: false
+                  plotOptions:
+                    bar:
+                      columnWidth: 95%
+                  dataLabels:
+                    enabled: false
+                  legend:
+                    show: true
+                    position: top
+                  tooltip:
+                    shared: true
+                    intersect: false
+                yaxis:
+                  - id: energy
+                    decimals: 3
+                    apex_config:
+                      title:
+                        text: Energy (kWh)
+                      tickAmount: 5
+                series:
+                  - entity: sensor.cx_output_power_interval
+                    name: Thermal Energy (Heat Pump)
+                    type: column
+                    color: '#FF6B6B'
+                    yaxis_id: energy
+                    group_by:
+                      func: delta
+                      duration: 1min
+                  - entity: sensor.cx_input_power_kwh
+                    name: Electrical Energy (Heat Pump)
+                    type: column
+                    color: '#4ECDC4'
+                    yaxis_id: energy
+                    group_by:
+                      func: delta
+                      duration: 1min
+                  - entity: sensor.hvac_thermal_energy_used
+                    name: Thermal Energy (HVAC Load)
+                    type: column
+                    color: '#FFA500'
+                    yaxis_id: energy
+                    group_by:
+                      func: delta
+                      duration: 1min
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Real-Time Power - Last Hour
+                  show_states: true
+                graph_span: 1h
+                span:
+                  start: hour
+                now:
+                  show: true
+                  label: Now
+                apex_config:
+                  chart:
+                    type: line
+                  stroke:
+                    curve: smooth
+                    width: 2
+                yaxis:
+                  - id: power_w
+                    decimals: 0
+                    apex_config:
+                      title:
+                        text: Power (W)
+                series:
+                  - entity: sensor.heat_pump_thermal_power_output
+                    name: Heat Pump Thermal Output
+                    type: line
+                    color: '#FF6B6B'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.heat_pump_electrical_power_input
+                    name: Heat Pump Electrical Input
+                    type: line
+                    color: '#4ECDC4'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.hvac_thermal_power_used
+                    name: HVAC Thermal Load
+                    type: line
+                    color: '#FFA500'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Real-Time Power - Last Hour
+                  show_states: true
+                graph_span: 1h
+                span:
+                  start: hour
+                now:
+                  show: true
+                  label: Now
+                apex_config:
+                  chart:
+                    type: line
+                  stroke:
+                    curve: smooth
+                    width: 2
+                yaxis:
+                  - id: power_w
+                    decimals: 0
+                    apex_config:
+                      title:
+                        text: Power (W)
+                series:
+                  - entity: sensor.heat_pump_thermal_power_output
+                    name: Heat Pump Thermal Output
+                    type: line
+                    color: '#FF6B6B'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.heat_pump_electrical_power_input
+                    name: Heat Pump Electrical Input
+                    type: line
+                    color: '#4ECDC4'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.hvac_thermal_power_used
+                    name: HVAC Thermal Load
+                    type: line
+                    color: '#FFA500'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Real-Time Power - Last Hour
+                  show_states: true
+                graph_span: 1h
+                span:
+                  start: hour
+                now:
+                  show: true
+                  label: Now
+                apex_config:
+                  chart:
+                    type: line
+                  stroke:
+                    curve: smooth
+                    width: 2
+                yaxis:
+                  - id: power_w
+                    decimals: 0
+                    apex_config:
+                      title:
+                        text: Power (W)
+                series:
+                  - entity: sensor.heat_pump_thermal_power_output
+                    name: Heat Pump Thermal Output
+                    type: line
+                    color: '#FF6B6B'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.heat_pump_electrical_power_input
+                    name: Heat Pump Electrical Input
+                    type: line
+                    color: '#4ECDC4'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.hvac_thermal_power_used
+                    name: HVAC Thermal Load
+                    type: line
+                    color: '#FFA500'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+              - type: custom:apexcharts-card
+                header:
+                  show: true
+                  title: Real-Time Power - Last Hour
+                  show_states: true
+                graph_span: 1h
+                span:
+                  start: hour
+                now:
+                  show: true
+                  label: Now
+                apex_config:
+                  chart:
+                    type: line
+                  stroke:
+                    curve: smooth
+                    width: 2
+                yaxis:
+                  - id: power_w
+                    decimals: 0
+                    apex_config:
+                      title:
+                        text: Power (W)
+                series:
+                  - entity: sensor.heat_pump_thermal_power_output
+                    name: Heat Pump Thermal Output
+                    type: line
+                    color: '#FF6B6B'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.heat_pump_electrical_power_input
+                    name: Heat Pump Electrical Input
+                    type: line
+                    color: '#4ECDC4'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+                  - entity: sensor.hvac_thermal_power_used
+                    name: HVAC Thermal Load
+                    type: line
+                    color: '#FFA500'
+                    stroke_width: 2
+                    yaxis_id: power_w
+                    group_by:
+                      func: avg
+                      duration: 1min
+            grid_options:
+              columns: 24
+              rows: 1
+        column_span: 4
+  - type: sections
+    max_columns: 4
+    title: temperatures
+    path: temperatures
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heat Pump
+            heading_style: title
+          - type: tile
+            entity: sensor.heat_pump_outlet_temperature
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.heat_pump_inlet_temperature
+            grid_options:
+              columns: full
+      - type: grid
+        cards:
+          - type: heading
+            heading: Main Supply -  Lower Level A/H
+            heading_style: title
+          - type: tile
+            entity: sensor.main_supply_from_heat_pump
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.main_return_to_heat_pump
+            vertical: false
+            features_position: bottom
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.shellyplus1_048308d6a208_temperature_3
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.shellyplus1_048308d6a208_temperature_5
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.shellyplus1_048308d6a208_temperature_6
+            grid_options:
+              columns: full
+      - type: grid
+        cards:
+          - type: heading
+            heading: Buffer Tank
+          - type: tile
+            entity: sensor.supply_from_heat_pump
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.buffer_return_to_heat_pump
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.buffer_return_from_hvac_load
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.buffer_supply_to_hvac_load
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.buffer_tank_temperature
+            grid_options:
+              columns: full
+      - type: grid
+        cards:
+          - type: heading
+            heading: DHW
+          - type: tile
+            entity: sensor.dhw_supply_from_heat_pump
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.dhw_return_to_heat_pump
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.dhw_cold_water_in
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.dhw_hot_water_out
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.dhw_tank_temperature
+            grid_options:
+              columns: full
+      - type: grid
+        cards:
+          - type: heading
+            heading: Shelly-Plus Master Suite A/H
+          - type: tile
+            entity: sensor.master_suite_a_h_water_supply
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.master_suite_a_h_water_return
+            grid_options:
+              columns: full
+          - type: tile
+            entity: sensor.master_suite_a_h_air_supply
+            grid_options:
+              columns: full
+          - type: tile
+            grid_options:
+              columns: full
+            entity: sensor.master_suite_a_h_air_return
+          - type: tile
+            entity: sensor.shellyplus1_8813bf9fc014_temperature_4
+            grid_options:
+              columns: full
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: markdown
+            content: |-
+              ## Shelly Temperature Sensors (By Entity ID Pattern)
+
+               | Friendly Name | Entity ID | Current Value | Unit | Status |
+               |---------------|-----------|---------------|------|--------|
+               {%- for entity in states.sensor %}
+                 {%- if 'shelly' in entity.entity_id | lower and 'temperature' in entity.entity_id | lower %}
+               | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                 {%- endif %}
+               {%- endfor %}
+
+               ## All Temperature Sensors (Any Source)
+               **This shows ALL temperature sensors in the system, including renamed or wrapped Shelly sensors:**
+
+               | Friendly Name | Entity ID | Current Value | Unit | Device Class | Status |
+               |---------------|-----------|---------------|------|--------------|--------|
+               {%- for entity in states.sensor %}
+                 {%- if state_attr(entity.entity_id, 'device_class') == 'temperature' %}
+               | {{ entity.name }} | `{{ entity.entity_id }}` | {{ entity.state }} | {{ state_attr(entity.entity_id, 'unit_of_measurement') }} | {{ state_attr(entity.entity_id, 'device_class') }} | {{ '✅' if entity.state not in ['unknown', 'unavailable'] else '❌' }} |
+                 {%- endif %}
+               {%- endfor %}
+
+               ## Buffer Tank Wrapper Sensors (Expected)
+               | Wrapper Sensor | Source | Status |
+               |----------------|--------|--------|
+               | `sensor.buffer_supply_from_heat_pump` | `sensor.shellyplus1_c4d8d5543fc0_temperature` | {{ '✅' if states('sensor.buffer_supply_from_heat_pump') not in ['unknown', 'unavailable'] else '❌ Not found' }} |
+               | `sensor.buffer_return_to_heat_pump` | `sensor.shellyplus1_c4d8d5543fc0_temperature_3` | {{ '✅' if states('sensor.buffer_return_to_heat_pump') not in ['unknown', 'unavailable'] else '❌ Not found' }} |
+
+               **Purpose:** Verify Shelly integration sensor names match our configuration
+            grid_options:
+              columns: full
+        column_span: 4
