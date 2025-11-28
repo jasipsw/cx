@@ -94,14 +94,18 @@
 
       {% if steady_state and enable and cop_value > 0 %}
         {{ cop_value | round(2) }}
-      {% elif current_value > 0 %}
-        {{ current_value | round(2) }}
       {% else %}
-        {{ 0 }}
+        {{ current_value | round(2) }}
       {% endif %}
     availability: >-
-      {{ states('sensor.heat_pump_current_cop') not in ['unknown', 'unavailable']
-          or states('sensor.heat_pump_average_steady_state_cop') not in ['unknown', 'unavailable', 'none'] }}
+      {% set cop_available = states('sensor.heat_pump_current_cop') not in ['unknown', 'unavailable'] %}
+      {% set cop_value = states('sensor.heat_pump_current_cop') | float(0) %}
+      {% set steady_state = is_state('binary_sensor.heat_pump_steady_state', 'on') %}
+      {% set enable = is_state('input_boolean.enable_cop_optimization', 'on') %}
+      {% set has_previous = states('sensor.heat_pump_average_steady_state_cop') not in ['unknown', 'unavailable', 'none'] %}
+      {% set previous_value = states('sensor.heat_pump_average_steady_state_cop') | float(0) %}
+
+      {{ (steady_state and enable and cop_available and cop_value > 0) or (has_previous and previous_value > 0) }}
       
   - name: "System Distribution Efficiency"
     unique_id: system_distribution_efficiency

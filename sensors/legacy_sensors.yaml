@@ -455,11 +455,7 @@
       value_template: >-
         {% set thermal_w = states('sensor.heat_pump_thermal_power_output') | float(0) %}
         {% set elec_w = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-        {% if elec_w > 500 %}
-          {{ (thermal_w / elec_w) | round(2) }}
-        {% else %}
-          0
-        {% endif %}
+        {{ (thermal_w / elec_w) | round(2) }}
       availability_template: >-
         {{ states('sensor.heat_pump_electrical_power_input') | float(0) > 500
             and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable']
