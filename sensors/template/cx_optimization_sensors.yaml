@@ -106,6 +106,62 @@
       {% set previous_value = states('sensor.heat_pump_average_steady_state_cop') | float(0) %}
 
       {{ (steady_state and enable and cop_available and cop_value > 0) or (has_previous and previous_value > 0) }}
+
+  # ------------------------------------------------------------------------
+  # Steady State COP (Real-time, only available during steady state)
+  # Shows what COP is RIGHT NOW when in steady state
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Steady State COP (Current)"
+    unique_id: heat_pump_steady_state_cop_current
+    state_class: measurement
+    unit_of_measurement: "COP"
+    icon: mdi:check-circle
+    state: >-
+      {{ states('sensor.heat_pump_current_cop') | float(0) | round(2) }}
+    availability: >-
+      {{ is_state('binary_sensor.heat_pump_steady_state', 'on')
+          and states('sensor.heat_pump_current_cop') not in ['unknown', 'unavailable'] }}
+
+  # ------------------------------------------------------------------------
+  # Startup Phase COP Penalty
+  # Shows how much COP is reduced during startup vs steady state
+  # Negative = startup is worse, Positive = startup better (rare)
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Startup COP Penalty"
+    unique_id: heat_pump_startup_cop_penalty
+    unit_of_measurement: "COP"
+    icon: mdi:alert-decagram
+    state: >-
+      {% set current_cop = states('sensor.heat_pump_current_cop') | float(0) %}
+      {% set steady_cop = states('sensor.heat_pump_average_steady_state_cop') | float(0) %}
+      {{ (current_cop - steady_cop) | round(2) }}
+    availability: >-
+      {{ is_state('binary_sensor.heat_pump_in_startup_phase', 'on')
+          and states('sensor.heat_pump_current_cop') not in ['unknown', 'unavailable']
+          and states('sensor.heat_pump_average_steady_state_cop') not in ['unknown', 'unavailable'] }}
+
+  # ------------------------------------------------------------------------
+  # Startup Efficiency Loss (%)
+  # Shows percentage loss during startup compared to steady state
+  # Example: -30% means startup COP is 30% worse than steady state
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Startup Efficiency Loss"
+    unique_id: heat_pump_startup_efficiency_loss
+    unit_of_measurement: "%"
+    icon: mdi:percent-outline
+    state: >-
+      {% set current_cop = states('sensor.heat_pump_current_cop') | float(0) %}
+      {% set steady_cop = states('sensor.heat_pump_average_steady_state_cop') | float(0) %}
+      {% if steady_cop > 0 %}
+        {{ (((current_cop - steady_cop) / steady_cop) * 100) | round(1) }}
+      {% else %}
+        {{ 0 }}
+      {% endif %}
+    availability: >-
+      {{ is_state('binary_sensor.heat_pump_in_startup_phase', 'on')
+          and states('sensor.heat_pump_current_cop') not in ['unknown', 'unavailable']
+          and states('sensor.heat_pump_average_steady_state_cop') not in ['unknown', 'unavailable']
+          and states('sensor.heat_pump_average_steady_state_cop') | float(0) > 0 }}
       
   - name: "System Distribution Efficiency"
     unique_id: system_distribution_efficiency
