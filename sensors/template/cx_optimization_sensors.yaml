@@ -179,7 +179,11 @@
     state: >-
       {% set load_kwh = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
       {% set source_kwh = states('sensor.hvac_hp_thermal_energy_produced_daily') | float(0) %}
-      {{ ((load_kwh / source_kwh) * 100) | round(1) }}
+      {% if source_kwh > 0.5 %}
+        {{ ((load_kwh / source_kwh) * 100) | round(1) }}
+      {% else %}
+        {{ 0 }}
+      {% endif %}
     availability: >-
       {{ states('sensor.hvac_hp_thermal_energy_produced_daily') | float(0) > 0.5
           and states('sensor.hvac_thermal_energy_used_daily') not in ['unknown', 'unavailable']
