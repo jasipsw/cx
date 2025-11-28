@@ -440,3 +440,41 @@
       {% set delta = states('sensor.heat_pump_designed_max_temp_delta') | float(5) %}
       {# Convert C to F #}
       {{ ((temp-delta) * 1.8 + 32.0) | round(2) }}
+
+
+  - name: "HVAC Delta T"
+    unique_id: hvac_delta_t
+    unit_of_measurement: "°F"
+    state_class: measurement
+    device_class: temperature
+    icon: mdi:thermometer
+    availability: >-
+      {{ states('sensor.buffer_supply_to_hvac_load') not in ['unknown', 'unavailable']
+          and states('sensor.buffer_return_from_hvac_load') not in ['unknown', 'unavailable'] 
+          and states('sensor.hvac_buffer_tank_flow_rate') | float(0) > 0 }}    
+
+    state: >-
+      {# Get temperature values and check units #}
+      {% set return_val = states('sensor.buffer_return_from_hvac_load') | float(0) %}
+      {% set supply_val = states('sensor.buffer_supply_to_hvac_load') | float(0) %}
+      {% set return_unit = state_attr('sensor.buffer_return_from_hvac_load', 'unit_of_measurement') %}
+      {% set supply_unit = state_attr('sensor.buffer_supply_to_hvac_load', 'unit_of_measurement') %}
+      
+      {# Convert temperatures to Celsius if needed #}
+      {% if return_unit == '°F' %}
+        {% set return_c = (return_val - 32) / 1.8 %}
+      {% else %}
+        {% set return_c = return_val %}
+      {% endif %}
+      
+      {% if supply_unit == '°F' %}
+        {% set supply_c = (supply_val - 32) / 1.8 %}
+      {% else %}
+        {% set supply_c = supply_val %}
+      {% endif %}
+
+      {% set delta_t_c = supply_c - return_c | abs %}
+
+      {% set delta_t_f = delta_t_c * 1.8 | float %}
+
+      {{ delta_t_f | round(1) }}

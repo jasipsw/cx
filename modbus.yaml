@@ -628,6 +628,14 @@
       slave: 1
       scan_interval: 15
 
+    - name: "cx50_c48_pump_speed_setting"
+      unique_id: "cx50_c48_pump_speed_setting"
+      state_class: measurement
+      input_type: holding
+      address: 248
+      slave: 1
+      scan_interval: 60
+
     - name: "cx50_input_ac_voltage"
       unique_id: "cx50_input_ac_voltage"
       state_class: measurement
@@ -678,7 +686,6 @@
       slave: 1
       scan_interval: 60
 
-
     - name: "cx50_c60_ipm_temp"
       unique_id: "cx50_c60_ipm_temp"
       state_class: measurement
@@ -686,7 +693,6 @@
       address: 260
       slave: 1
       scan_interval: 60
-
 
     - name: "cx50_c61_compressor_total_running_time"
       unique_id: "cx50_c61_compressor_total_running_time"

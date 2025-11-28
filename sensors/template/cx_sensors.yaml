@@ -199,8 +199,13 @@
           unavailable
         {% endif %}
       availability: >-
-        {% set input_power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-        {{ input_power > 100 }}
+        {% if states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable']
+             and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] %}
+          {% set input_power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+          {{ input_power > 100 }}
+        {% else %}
+          false
+        {% endif %}
 
     # ------------------------------------------------------------------------
     # COP by Operating Mode

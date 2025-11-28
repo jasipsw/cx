@@ -228,18 +228,14 @@
     trigger: device
   conditions: []
   actions:
-  - type: turn_on
-    device_id: 18d461dfd0c26fb71ea7a91e85ca11ab
-    entity_id: 61c07151cfd07658efd6048a07e48c32
-    domain: light
-  - type: turn_on
-    device_id: 83333838aaced608d2e153afd7e5d65f
-    entity_id: 251c90afd8b2c92fbc62d28c52f2a9bd
-    domain: light
-  - type: turn_on
-    device_id: cf14bb166bd0db6bb58a1f86eb7e3a1e
-    entity_id: c501ee27ab7abe50d1f3b33b56a3efdf
-    domain: light
+  - action: light.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - light.shed_sconce
+      - light.cavern_sconce
+      - light.driveway_downlight
   mode: single
 - id: '1734371514735'
   alias: Mudroom driveway light turning off turns off garage light
@@ -252,18 +248,14 @@
     trigger: device
   conditions: []
   actions:
-  - type: turn_off
-    device_id: 18d461dfd0c26fb71ea7a91e85ca11ab
-    entity_id: 61c07151cfd07658efd6048a07e48c32
-    domain: light
-  - type: turn_off
-    device_id: 83333838aaced608d2e153afd7e5d65f
-    entity_id: 251c90afd8b2c92fbc62d28c52f2a9bd
-    domain: light
-  - type: turn_off
-    device_id: cf14bb166bd0db6bb58a1f86eb7e3a1e
-    entity_id: c501ee27ab7abe50d1f3b33b56a3efdf
-    domain: light
+  - action: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - light.shed_sconce
+      - light.cavern_sconce
+      - light.driveway_downlight_2
   mode: single
 - id: '1735826596716'
   alias: Turn off outside lights in the morning
@@ -1058,6 +1050,7 @@
     entity_id:
     - sensor.hvac_thermal_energy_used_hourly
     attribute: last_reset
+    enabled: false
   conditions: []
   actions:
   - action: persistent_notification.create

@@ -336,7 +336,7 @@
     unique_id: system_thermal_loss_hourly
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: measurement
+    state_class: total
     icon: mdi:thermometer-minus
     state: >
       {% set hvac = states('sensor.hvac_thermal_energy_used_hourly') | float(0) %}
@@ -357,7 +357,7 @@
     unique_id: system_thermal_loss_daily
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: measurement
+    state_class: total
     icon: mdi:thermometer-minus
     state: >
       {% set hvac = states('sensor.hvac_thermal_energy_used_daily') | float(0) %}
@@ -378,7 +378,7 @@
     unique_id: system_thermal_loss_monthly
     unit_of_measurement: "kWh"
     device_class: energy
-    state_class: measurement
+    state_class: total
     icon: mdi:thermometer-minus
     state: >
       {% set hvac = states('sensor.hvac_thermal_energy_used_monthly') | float(0) %}

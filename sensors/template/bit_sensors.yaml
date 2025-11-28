@@ -1,173 +1,160 @@
-#####################
-# Test Sensors
 - binary_sensor:
-  # Bit 0 (Value 1)
   - name: "DIN7 Bit 0"
     unique_id: din7_bit_0
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(1) > 0 }}"
     icon: mdi:numeric-0-box
 
-  # Bit 1 (Value 2)
   - name: "DIN7 Bit 1"
     unique_id: din7_bit_01
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(2) > 0 }}"
     icon: mdi:numeric-1-box
 
-  # Bit 2 (Value 4)
   - name: "DIN7 Bit 2"
     unique_id: din7_bit_02
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(4) > 0 }}"
     icon: mdi:numeric-2-box
 
-  # Bit 3 (Value 8)
   - name: "DIN7 Bit 3"
-    unique_id: din7_bit_05
+    unique_id: din7_bit_03
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box
 
-  # Bit 3 (Value 8)
   - name: "DIN7 Bit 4"
-    unique_id: din7_bit_05
+    unique_id: din7_bit_04
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(16) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 5"
     unique_id: din7_bit_05
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(32) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 6"
     unique_id: din7_bit_06
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(64) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 7"
     unique_id: din7_bit_07
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(128) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 8"
     unique_id: din7_bit_08
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(256) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 9"
     unique_id: din7_bit_09
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(512) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 10"
     unique_id: din7_bit_10
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 11"
     unique_id: din7_bit_11
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 12"
     unique_id: din7_bit_12
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 13"
     unique_id: din7_bit_13
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 14"
     unique_id: din7_bit_14
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN7 Bit 15"
     unique_id: din7_bit_15
     state: "{{ (states('sensor.cx50_c64_din7_ac_cooling_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-
 
   - name: "DIN6 Bit 0"
     unique_id: din6_bit_0
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(1) > 0 }}"
     icon: mdi:numeric-0-box
 
-  # Bit 1 (Value 2)
   - name: "DIN6 Bit 1"
     unique_id: din6_bit_01
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(2) > 0 }}"
     icon: mdi:numeric-1-box
 
-  # Bit 2 (Value 4)
   - name: "DIN6 Bit 2"
     unique_id: din6_bit_02
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(4) > 0 }}"
     icon: mdi:numeric-2-box
 
-  # Bit 3 (Value 8)
   - name: "DIN6 Bit 3"
-    unique_id: din6_bit_05
+    unique_id: din6_bit_03
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box
 
-  # Bit 3 (Value 8)
   - name: "DIN6 Bit 4"
-    unique_id: din6_bit_05
+    unique_id: din6_bit_04
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(16) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 5"
     unique_id: din6_bit_05
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(32) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 6"
     unique_id: din6_bit_06
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(64) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 7"
     unique_id: din6_bit_07
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(128) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 8"
     unique_id: din6_bit_08
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(256) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 9"
     unique_id: din6_bit_09
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(512) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 10"
     unique_id: din6_bit_10
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 11"
     unique_id: din6_bit_11
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 12"
     unique_id: din6_bit_12
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 13"
     unique_id: din6_bit_13
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 14"
     unique_id: din6_bit_14
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)
+
   - name: "DIN6 Bit 15"
     unique_id: din6_bit_15
     state: "{{ (states('sensor.cx50_c63_din6_ac_heating_mode_switch') | int(0)) | bitwise_and(8) > 0 }}"
     icon: mdi:numeric-3-box                
-  # Bit 3 (Value 8)

@@ -317,3 +317,59 @@
       {% else %}
         {{ 0.0 }}
       {% endif %}
+
+  - name: "Model Heat Loss Per Degree F"
+    unique_id: model_heat_loss_per_degree
+    unit_of_measurement: "W"
+    # device_class: power
+    # state_class: measurement
+    icon: mdi:fire
+    state: >-
+      {% set btu_loss_per_hour = states('input_number.manual_j_heat_loss_per_hour_at_design_temperature') | float(45000) %}
+      {% set design_temp = states('input_number.home_heat_loss_design_temperature') | float(9) %}
+      {% set target_temp = states('input_number.model_heat_target_temperature') | float(70) %}
+      {% set watts = btu_loss_per_hour / 3412 | float %}
+      {% set range = target_temp - design_temp | float %}
+      {% set loss_per_degree = watts/range * 1000| float %}
+      {{ loss_per_degree | float }}
+
+  - name: "Model Heat Loss Per Hour"
+    unique_id: model_heat_loss_per_hour
+    unit_of_measurement: "kW"
+    device_class: power
+    state_class: measurement
+    icon: mdi:fire
+    state: >-
+      {% set btu_loss_per_hour = states('input_number.manual_j_heat_loss_per_hour_at_design_temperature') | float(45000) %}
+      {% set design_temp = states('input_number.home_heat_loss_design_temperature') | float(9) %}
+      {% set target_temp = states('input_number.model_heat_target_temperature') | float(70) %}
+      {% set watts = btu_loss_per_hour / 3412 | float %}
+      {% set range = target_temp - design_temp | float %}
+      {% set loss_per_degree = watts/range * 1000| float %}
+
+      {% set average_temp = states('sensor.last_hour_temperature_average') | float(47)  %}
+
+      {% set range = target_temp - average_temp | float %}
+      {% set watts = (loss_per_degree * range)/1000 | float %}
+      {{ watts | round(1) }}
+
+  - name: "Model Heat Loss Per Day"
+    unique_id: model_heat_loss_per_day
+    unit_of_measurement: "kW"
+    device_class: power
+    state_class: measurement
+    icon: mdi:fire
+    state: >-
+      {% set btu_loss_per_hour = states('input_number.manual_j_heat_loss_per_hour_at_design_temperature') | float(45000) %}
+      {% set design_temp = states('input_number.home_heat_loss_design_temperature') | float(9) %}
+      {% set target_temp = states('input_number.model_heat_target_temperature') | float(70) %}
+      {% set watts = btu_loss_per_hour / 3412 | float %}
+      {% set range = target_temp - design_temp | float %}
+      {% set loss_per_degree = watts/range * 1000| float %}
+
+      {% set average_temp = states('sensor.last_day_temperature_average') | float(47)  %}
+
+      {% set range = target_temp - average_temp | float %}
+      {% set watts_per_hour = (loss_per_degree * range)/1000 | float %}
+      {% set watts_per_day = (watts_per_hour * 24) | float %}
+      {{ watts_per_day | round(1) }}      

@@ -1,0 +1,22 @@
+
+
+- sensor:
+
+    - name: "envoy_lifetime_energy_consumption_kwh"
+      unique_id: "envoy_lifetime_energy_consumption_kwh"        
+      unit_of_measurement: "kWh"
+      state_class: measurement
+      icon: mdi:lightning-bolt-circle
+      state: >
+        {% set mwh = states('sensor.envoy_202425002148_lifetime_energy_consumption') | float(0) %}
+        {{ (mwh / 1000.0) }}
+
+    - name: "envoy_lifetime_energy_production_kwh"
+      unique_id: "envoy_lifetime_energy_production_kwh"        
+      unit_of_measurement: "kWh"
+      state_class: measurement
+      icon: mdi:lightning-bolt-circle
+      state: >
+        {% set mwh = states('sensor.envoy_202425002148_lifetime_energy_production') | float(0) %}
+        {{ (mwh / 1000.0 ) | float }}
+        
