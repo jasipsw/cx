@@ -1,0 +1,52 @@
+# ============================================================================
+# Enphase Envoy Energy Sensors (Unit Conversions)
+# ============================================================================
+# Converts Envoy lifetime energy sensors from MWh to kWh
+# Uses state_class: total_increasing for cumulative energy tracking
+# ============================================================================
+
+- sensor:
+    # ------------------------------------------------------------------------
+    # Lifetime Energy Consumption (MWh → kWh)
+    # ------------------------------------------------------------------------
+    - name: "Envoy Lifetime Energy Consumption (kWh)"
+      unique_id: "envoy_lifetime_energy_consumption_kwh"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      icon: mdi:lightning-bolt-circle
+      state: >-
+        {% set mwh = states('sensor.envoy_202425002148_lifetime_energy_consumption') | float(0) %}
+        {{ (mwh * 1000.0) | round(3) }}
+      availability: >-
+        {{ states('sensor.envoy_202425002148_lifetime_energy_consumption') not in ['unknown', 'unavailable'] }}
+
+    # ------------------------------------------------------------------------
+    # Lifetime Energy Production (MWh → kWh)
+    # ------------------------------------------------------------------------
+    - name: "Envoy Lifetime Energy Production (kWh)"
+      unique_id: "envoy_lifetime_energy_production_kwh"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      icon: mdi:solar-power
+      state: >-
+        {% set mwh = states('sensor.envoy_202425002148_lifetime_energy_production') | float(0) %}
+        {{ (mwh * 1000.0) | round(3) }}
+      availability: >-
+        {{ states('sensor.envoy_202425002148_lifetime_energy_production') not in ['unknown', 'unavailable'] }}
+
+    # ------------------------------------------------------------------------
+    # Lifetime Net Energy Consumption (MWh → kWh)
+    # ------------------------------------------------------------------------
+    - name: "Envoy Lifetime Net Energy Consumption (kWh)"
+      unique_id: "envoy_lifetime_net_energy_consumption_kwh"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      icon: mdi:transmission-tower
+      state: >-
+        {% set mwh = states('sensor.envoy_202425002148_lifetime_net_energy_consumption') | float(0) %}
+        {{ (mwh * 1000.0) | round(3) }}
+      availability: >-
+        {{ states('sensor.envoy_202425002148_lifetime_net_energy_consumption') not in ['unknown', 'unavailable'] }}
