@@ -193,14 +193,13 @@
       state: >-
         {% set input_power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
         {% set output_power = states('sensor.heat_pump_thermal_power_output') | float(0) %}
-        {% if input_power > 100 and output_power > 0 %}
-          {{ (output_power / input_power) | round(2) }}
-        {% else %}
-          unavailable
-        {% endif %}
+        {{ (output_power / input_power) | round(2) }}
       availability: >-
         {% set input_power = states('sensor.heat_pump_electrical_power_input') | float(0) %}
-        {{ input_power > 100 }}
+        {% set output_power = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+        {{ input_power > 100 and output_power > 0
+            and states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable']
+            and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable'] }}
 
     # ------------------------------------------------------------------------
     # COP by Operating Mode
@@ -211,39 +210,30 @@
       state_class: measurement
       icon: mdi:fire
       state: >
-        {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.heat_pump_cop') %}
-        {% if operating_state == 2 and cop not in ['unavailable', 'unknown'] %}
-          {{ cop }}
-        {% else %}
-          unavailable
-        {% endif %}
+        {{ states('sensor.heat_pump_cop') }}
+      availability: >-
+        {{ states('sensor.cx50_operating_mode') | int(0) == 2
+            and states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
 
     - name: "Heat Pump COP Cooling"
       unique_id: heat_pump_cop_cooling
       state_class: measurement
       icon: mdi:snowflake
       state: >
-        {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.heat_pump_cop') %}
-        {% if operating_state == 1 and cop not in ['unavailable', 'unknown'] %}
-          {{ cop }}
-        {% else %}
-          unavailable
-        {% endif %}
+        {{ states('sensor.heat_pump_cop') }}
+      availability: >-
+        {{ states('sensor.cx50_operating_mode') | int(0) == 1
+            and states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
 
     - name: "Heat Pump COP DHW"
       unique_id: heat_pump_cop_dhw
       state_class: measurement
       icon: mdi:water-boiler
       state: >
-        {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
-        {% set cop = states('sensor.heat_pump_cop') %}
-        {% if operating_state == 4 and cop not in ['unavailable', 'unknown'] %}
-          {{ cop }}
-        {% else %}
-          unavailable
-        {% endif %}
+        {{ states('sensor.heat_pump_cop') }}
+      availability: >-
+        {{ states('sensor.cx50_operating_mode') | int(0) == 4
+            and states('sensor.heat_pump_cop') not in ['unavailable', 'unknown'] }}
 
     # ------------------------------------------------------------------------
     # Efficiency Rating (Human-readable)
