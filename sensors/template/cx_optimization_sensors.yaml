@@ -382,4 +382,29 @@
       {% set range = target_temp - average_temp | float %}
       {% set watts_per_hour = (loss_per_degree * range)/1000 | float %}
       {% set watts_per_day = (watts_per_hour * 24) | float %}
-      {{ watts_per_day | round(1) }}      
+      {{ watts_per_day | round(1) }}
+
+  # ------------------------------------------------------------------------
+  # Heat Pump Supply Temperature
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Supply Temperature"
+    unique_id: heat_pump_supply_temp
+    unit_of_measurement: "°F"
+    state: >-
+      {{ states('sensor.heat_pump_outlet_temperature') | float(0) }}
+
+  # ------------------------------------------------------------------------
+  # Heat Pump Current COP (Coefficient of Performance)
+  # Used by other sensors in this file - DO NOT REMOVE
+  # ------------------------------------------------------------------------
+  - name: "Heat Pump Current COP"
+    unique_id: heat_pump_current_cop
+    unit_of_measurement: "COP"
+    state: >-
+      {% set thermal_w = states('sensor.heat_pump_thermal_power_output') | float(0) %}
+      {% set elec_w = states('sensor.heat_pump_electrical_power_input') | float(0) %}
+      {{ (thermal_w / elec_w) | round(2) }}
+    availability: >-
+      {{ states('sensor.heat_pump_electrical_power_input') | float(0) > 500
+          and states('sensor.heat_pump_thermal_power_output') not in ['unknown', 'unavailable']
+          and states('sensor.heat_pump_electrical_power_input') not in ['unknown', 'unavailable'] }}      

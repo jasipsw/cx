@@ -1,0 +1,175 @@
+# Power and Grid Sensors
+# Leviton Current Transformers and Power Monitoring
+- sensor:
+    - name: "Grid Power Consumption"
+      unique_id: grid_power_consumption_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set enphase_grid_kw = states('sensor.envoy_202425002148_current_net_power_consumption') | float(0) %}
+        {% set enphase_grid_watts  = enphase_grid_kw * 1000 | float %}
+        {% set lc2_grid_watts  = states('sensor.lc2_grid_power_watts_2') | int(0) %}
+        {% set x  = lc2_grid_watts + enphase_grid_watts | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "Shed LC CT1"
+      unique_id: lc_shed_lc_watts
+      unit_of_measurement: "W"
+      state: "{{ ( states('sensor.sub_panel_watts_2') | int(0) ) }}"
+
+    - name: "Shed LC CT1"
+      unique_id: lc_shed_ct1_watts
+      unit_of_measurement: "W"
+      state: "{{ ( states('sensor.sub_panel_watts_2') | int(0) ) }}"
+
+    - name: "Shed LC CT2"
+      unique_id: lc_shed_ct2_watts
+      unit_of_measurement: "W"
+      state: "{{ ( states('sensor.enphase_feed_to_shed_watts') | int(0) ) }}"
+
+    - name: "Shed LC CT3"
+      unique_id: lc_shed_ct3_watts
+      unit_of_measurement: "W"
+      state: "{{ ( states('sensor.shed_ct_grid_to_lc2_watts') | int(0) ) }}"
+
+    - name: "House1 LC CT1"
+      unique_id: lc_house1_ct1_watts
+      unit_of_measurement: "W"
+      state: "{{ ( states('sensor.main_panel_watts_2') | int(0) ) }}"
+
+    - name: "House2 LC CT1"
+      unique_id: lc_house2_ct1_watts
+      unit_of_measurement: "W"
+      state: "{{ ( states('sensor.house2_lc_watts') | int(0) ) }}"
+
+    - name: "Shed LC Total"
+      unique_id: lc_shed_total_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set ct1  = states('sensor.lc_shed_ct1_watts') | int(0) %}
+        {% set ct2  = states('sensor.lc_shed_ct2_watts') | int(0) %}
+        {% set ct3  = states('sensor.lc_shed_ct3_watts') | int(0) %}
+        {% set x  = ct1 + ct2 + ct3 | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "Shed Load Center"
+      unique_id: lc_shed_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set ct1  = states('sensor.lc_shed_ct1_watts') | int(0) %}
+        {% set ct2  = states('sensor.lc_shed_ct2_watts') | int(0) %}
+        {% set ct3  = states('sensor.lc_shed_ct3_watts') | int(0) %}
+        {% set x  = ct1 + ct2 + ct3 | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "Shed LC Other"
+      unique_id: lc_shed_other_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set shed_total  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set x  = shed_total - hp_in | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "Shed LC Heat Pump"
+      unique_id: shed_load_center_exclude_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {{ hp_in | int(0) }}
+
+    - name: "Shed LC Net"
+      unique_id: shed_load_center_net_consumption_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set shed_total  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set x  = shed_total - hp_in | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "House1 LC Other"
+      unique_id: lc_house1_other_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set house1_total  = states('sensor.lc_house1_ct1_watts') | int(0) %}
+        {% set aux_heater  = states('sensor.aux_heat_power_watts') | int(0) %}
+        {% set x  = house1_total - aux_heater | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "House2 LC Other"
+      unique_id: lc_house2_other_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set house2_total  = states('sensor.lc_house2_ct1_watts') | int(0) %}
+        {{ house2_total | int(0) }}
+
+    - name: "Shed LC Other"
+      unique_id: shed_load_center_other_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set shed_total  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set x  = shed_total - hp_in | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "House Main LC"
+      unique_id: house_main_load_center_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set house1  = states('sensor.lc_house1_ct1_watts') | int(0) %}
+        {{ house1 | int(0) }}
+
+    - name: "House Aux LC"
+      unique_id: house_aux_load_center_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set house2  = states('sensor.lc_house2_ct1_watts') | int(0) %}
+        {{ house2 | int(0) }}
+
+    - name: "HVAC Power"
+      unique_id: hvac_power_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set hp_in  = states('sensor.cx50_heat_pump_watts') | int(0) %}
+        {% set aux_heater  = states('sensor.aux_heat_power_watts') | int(0) %}
+        {% set x  = hp_in + aux_heater | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "Total Power Consumption"
+      unique_id: 50clark_total_power_consumption_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set main  = states('sensor.house_main_load_center_watts') | int(0) %}
+        {% set aux  = states('sensor.house_aux_load_center_watts') | int(0) %}
+        {% set shed  = states('sensor.lc_shed_watts') | int(0) %}
+        {% set x  = main + aux + shed | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "50 Clark Daily Power Consumption"
+      unique_id: 50clark_daily_power_consumption
+      unit_of_measurement: "kWh"
+      state: >-
+        {% set x = states('sensor.daily_power_consumption_mwh') | float(0) %}
+        {% set x = x * 1000.0 %}
+        {{ x | float }}
+
+    - name: "Solar Power Production"
+      unique_id: solar_power_production_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set enphase = states('sensor.envoy_202425002148_current_power_production') | float(0) %}
+        {% set enphase_watts = enphase * 1000 | float %}
+        {{ enphase_watts | float }}
+
+    - name: "Net Power Consumption"
+      unique_id: net_power_consumption_watts
+      unit_of_measurement: "W"
+      state: >-
+        {% set consumption  = states('sensor.50clark_total_power_consumption_watts') | int(0) %}
+        {% set production  = states('sensor.solar_power_production_watts') | int(0) %}
+        {% set x  = consumption - production | int(0) %}
+        {{ x | int(0) }}
+
+    - name: "Battery Rated Capacity"
+      unique_id: battery_rated_capacity
+      unit_of_measurement: "Wh"
+      state: "26880"
