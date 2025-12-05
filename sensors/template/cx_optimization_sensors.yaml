@@ -345,7 +345,7 @@
 
   - name: "Model Heat Loss Per Hour"
     unique_id: model_heat_loss_per_hour
-    unit_of_measurement: "kW"
+    unit_of_measurement: "kWh"
     device_class: power
     state_class: measurement
     icon: mdi:fire
@@ -365,7 +365,7 @@
 
   - name: "Model Heat Loss Per Day"
     unique_id: model_heat_loss_per_day
-    unit_of_measurement: "kW"
+    unit_of_measurement: "kWh"
     device_class: power
     state_class: measurement
     icon: mdi:fire

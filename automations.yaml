@@ -255,7 +255,7 @@
       entity_id:
       - light.shed_sconce
       - light.cavern_sconce
-      - light.driveway_downlight_2
+      - light.driveway_downlight
   mode: single
 - id: '1735826596716'
   alias: Turn off outside lights in the morning
@@ -277,7 +277,7 @@
   description: ''
   triggers:
   - trigger: time
-    at: '23:30:00'
+    at: '22:00:00'
   conditions: []
   actions:
   - action: light.turn_off
@@ -1012,35 +1012,6 @@
         }}°F - {{ states('input_number.supply_temp_max_limit') }}°F)\n{% else %}\n
         \ ⏸️ DISABLED - Manual control only\n{% endif %}\n"
       entity_id: input_boolean.enable_supply_temp_optimization
-  mode: single
-- id: reminder_llm_optimization_20251119
-  alias: 'Reminder: Consider AI/LLM for Optimization'
-  description: One-time reminder to consider AI/LLM features for thermal optimization
-  triggers:
-  - platform: time
-    at: 09:00:00
-  conditions:
-  - condition: template
-    value_template: '{{ now().date() == strptime(''2025-11-19'', ''%Y-%m-%d'').date()
-      }}'
-  actions:
-  - action: persistent_notification.create
-    data:
-      title: 'Reminder: AI/LLM for Optimization'
-      message: 'Consider whether HA''s AI/LLM integrations would be useful for thermal
-        optimization.
-
-        Options to explore: - Daily analysis reports via conversation.process - Anomaly
-        detection for unusual patterns - Weather-aware recommendations
-
-        Setup required: OpenAI, Anthropic, or Ollama integration
-
-        '
-      notification_id: llm_optimization_reminder
-  - action: notify.mobile_app_pixel_8_pro
-    data:
-      title: 'Reminder: AI/LLM for Optimization'
-      message: Consider AI/LLM features for thermal optimization analysis
   mode: single
 - id: '1763830420340'
   alias: test last changed detection for utility meter

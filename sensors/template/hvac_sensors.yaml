@@ -54,6 +54,9 @@
     device_class: volume_flow_rate
     state_class: measurement
     icon: mdi:waves-arrow-left
+    availability: >-
+      {{ states('sensor.hydronic_flow_flow_rate') not in ['unknown', 'unavailable', 0] }}
+
     state: >-
       {% set flow  = states('sensor.hydronic_flow_flow_rate') | float(0) %}
       {{ flow | round(0) }}
