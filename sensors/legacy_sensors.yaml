@@ -25,17 +25,6 @@
 
 - platform: template
   sensors:
-    grid_power_consumption_watts:
-      value_template: >-
-        {% set enphase_grid_kw = states('sensor.envoy_202425002148_current_net_power_consumption') | float(0) %}
-        {% set enphase_grid_watts  = enphase_grid_kw * 1000 | float %}
-        {% set lc2_grid_watts  = states('sensor.lc2_grid_power_watts_2') | int(0) %}
-        {% set x  = lc2_grid_watts + enphase_grid_watts | int(0) %}
-        {{ x | int(0) }}
-      unit_of_measurement: "W"
-      unique_id: grid_power_consumption_watts
-      friendly_name: Grid Power Consumption
-
     lc_shed_lc_watts:
       value_template: "{{ ( states('sensor.sub_panel_watts_2') | int(0) ) }}"
       unit_of_measurement: "W"
